@@ -8,15 +8,15 @@ part 'category_state.dart';
 class CategoryCubit extends Cubit<CategoryState> {
   final CategoryRepository _repository;
 
-  CategoryCubit(this._repository) : super(CategoryInitial());
+  CategoryCubit(this._repository) : super(CategoryState.initial());
 
   Future<void> loadCategories() async {
     try {
-      emit(CategoryLoading());
+      emit(CategoryState.loading());
       final categories = await _repository.getAllCategories();
-      emit(CategoryLoaded(categories));
+      emit(CategoryState.loaded(categories));
     } catch (e) {
-      emit(CategoryError(e.toString()));
+      emit(CategoryState.error(e.toString()));
     }
   }
 
@@ -31,10 +31,10 @@ class CategoryCubit extends Cubit<CategoryState> {
       );
 
       await _repository.createCategory(category);
-      emit(CategoryOperationSuccess('Category created successfully'));
-      await loadCategories();
+      final categories = await _repository.getAllCategories();
+      emit(CategoryState.success('Category created successfully', categories));
     } catch (e) {
-      emit(CategoryError(e.toString()));
+      emit(CategoryState.error(e.toString()));
       await loadCategories();
     }
   }
@@ -42,10 +42,10 @@ class CategoryCubit extends Cubit<CategoryState> {
   Future<void> updateCategory(CategoryModel category) async {
     try {
       await _repository.updateCategory(category);
-      emit(CategoryOperationSuccess('Category updated successfully'));
-      await loadCategories();
+      final categories = await _repository.getAllCategories();
+      emit(CategoryState.success('Category updated successfully', categories));
     } catch (e) {
-      emit(CategoryError(e.toString()));
+      emit(CategoryState.error(e.toString()));
       await loadCategories();
     }
   }
@@ -53,12 +53,11 @@ class CategoryCubit extends Cubit<CategoryState> {
   Future<void> deleteCategory(String id) async {
     try {
       await _repository.deleteCategory(id);
-      emit(CategoryOperationSuccess('Category deleted successfully'));
-      await loadCategories();
+      final categories = await _repository.getAllCategories();
+      emit(CategoryState.success('Category deleted successfully', categories));
     } catch (e) {
-      emit(CategoryError(e.toString()));
+      emit(CategoryState.error(e.toString()));
       await loadCategories();
     }
   }
 }
-

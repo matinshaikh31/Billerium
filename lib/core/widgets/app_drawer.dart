@@ -29,9 +29,9 @@ class AppDrawer extends StatelessWidget {
                 ),
                 BlocBuilder<AuthCubit, AuthState>(
                   builder: (context, state) {
-                    if (state is Authenticated) {
+                    if (state.isAuthenticated && state.admin != null) {
                       return Text(
-                        state.admin.email,
+                        state.admin!.email,
                         style: Theme.of(
                           context,
                         ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
@@ -133,7 +133,11 @@ class _DrawerItem extends StatelessWidget {
       ),
       selected: isSelected,
       onTap: () {
-        Navigator.of(context).pop();
+        // Only pop if there's a drawer to close (mobile)
+        if (Scaffold.of(context).hasDrawer &&
+            Scaffold.of(context).isDrawerOpen) {
+          Navigator.of(context).pop();
+        }
         if (!isSelected) {
           context.go(route);
         }

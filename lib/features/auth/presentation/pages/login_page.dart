@@ -55,28 +55,21 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
-          if (state is AuthError) {
+          if (state.message != null && state.message!.isNotEmpty) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
-          } else if (state is PasswordResetSent) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Password reset email sent!'),
-                backgroundColor: Colors.green,
+                content: Text(state.message!),
+                backgroundColor: state.isAuthenticated
+                    ? Colors.green
+                    : Colors.red,
               ),
             );
           }
         },
         builder: (context, state) {
-          final isLoading = state is AuthLoading;
-
           return ResponsiveWidget(
-            mobile: _buildMobileLayout(isLoading),
-            desktop: _buildDesktopLayout(isLoading),
+            mobile: _buildMobileLayout(state.isLoading),
+            desktop: _buildDesktopLayout(state.isLoading),
           );
         },
       ),

@@ -15,6 +15,7 @@ migrate_working_dir/
 #fiebase
 .env
 .env.*
+.md
 lib/firebase_options.dart
 
 # IntelliJ related

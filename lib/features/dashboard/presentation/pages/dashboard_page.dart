@@ -8,17 +8,17 @@ class DashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard'),
-      ),
-      drawer: ResponsiveHelper.isMobile(context) ? const AppDrawer() : null,
+      appBar: AppBar(title: const Text('Dashboard')),
+      // Remove const here
+      drawer: ResponsiveHelper.isMobile(context) ? AppDrawer() : null,
       body: ResponsiveWidget(
         mobile: _buildMobileLayout(),
         desktop: Row(
           children: [
-            const SizedBox(
+            // Remove const here and add a unique key
+            SizedBox(
               width: 250,
-              child: AppDrawer(),
+              child: AppDrawer(key: const ValueKey('desktop_drawer')),
             ),
             Expanded(child: _buildMobileLayout()),
           ],
@@ -87,10 +87,7 @@ class DashboardPage extends StatelessWidget {
           children: [
             const Text(
               'Recent Transactions',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             const Center(
@@ -135,10 +132,7 @@ class _StatCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title,
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                   ),
                 ),
                 Icon(icon, color: color, size: 24),
@@ -158,4 +152,3 @@ class _StatCard extends StatelessWidget {
     );
   }
 }
-

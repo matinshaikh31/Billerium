@@ -44,58 +44,49 @@ class _ProductsPageState extends State<ProductsPage> {
       drawer: ResponsiveHelper.isMobile(context) ? const AppDrawer() : null,
       body: BlocConsumer<ProductCubit, ProductState>(
         listener: (context, state) {
-          if (state is ProductError) {
+          if (state.message != null && state.message!.isNotEmpty) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
-          } else if (state is ProductOperationSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.green,
+                content: Text(state.message!),
+                backgroundColor: state.products.isNotEmpty
+                    ? Colors.green
+                    : Colors.red,
               ),
             );
           }
         },
         builder: (context, state) {
-          if (state is ProductLoading) {
+          if (state.isLoading) {
             return const LoadingWidget(message: 'Loading products...');
           }
 
-          if (state is ProductError) {
+          if (state.products.isEmpty && state.message != null) {
             return CustomErrorWidget(
-              message: state.message,
+              message: state.message!,
               onRetry: () => context.read<ProductCubit>().loadProducts(),
             );
           }
 
-          if (state is ProductLoaded) {
-            if (state.products.isEmpty) {
-              return EmptyStateWidget(
-                message: 'No products yet',
-                icon: Icons.inventory_2_outlined,
-                onAction: () {
-                  // TODO: Implement add product dialog
-                },
-                actionLabel: 'Add Product',
-              );
-            }
-
-            return ResponsiveWidget(
-              mobile: _buildProductList(state.products),
-              desktop: Row(
-                children: [
-                  const SizedBox(width: 250, child: AppDrawer()),
-                  Expanded(child: _buildProductList(state.products)),
-                ],
-              ),
+          if (state.products.isEmpty) {
+            return EmptyStateWidget(
+              message: 'No products yet',
+              icon: Icons.inventory_2_outlined,
+              onAction: () {
+                // TODO: Implement add product dialog
+              },
+              actionLabel: 'Add Product',
             );
           }
 
-          return const SizedBox.shrink();
+          return ResponsiveWidget(
+            mobile: _buildProductList(state.products),
+            desktop: Row(
+              children: [
+                const SizedBox(width: 250, child: AppDrawer()),
+                Expanded(child: _buildProductList(state.products)),
+              ],
+            ),
+          );
         },
       ),
       floatingActionButton: ResponsiveHelper.isMobile(context)
@@ -129,7 +120,9 @@ class _ProductsPageState extends State<ProductsPage> {
               product.name,
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
-            subtitle: Text('Stock: ${product.stockQty} | Price: ₹${product.price}'),
+            subtitle: Text(
+              'Stock: ${product.stockQty} | Price: ₹${product.price}',
+            ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -150,4 +143,3 @@ class _ProductsPageState extends State<ProductsPage> {
     );
   }
 }
-

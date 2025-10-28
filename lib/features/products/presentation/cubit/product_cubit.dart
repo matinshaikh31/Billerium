@@ -8,35 +8,35 @@ part 'product_state.dart';
 class ProductCubit extends Cubit<ProductState> {
   final ProductRepository _repository;
 
-  ProductCubit(this._repository) : super(ProductInitial());
+  ProductCubit(this._repository) : super(ProductState.initial());
 
   Future<void> loadProducts() async {
     try {
-      emit(ProductLoading());
+      emit(ProductState.loading());
       final products = await _repository.getAllProducts();
-      emit(ProductLoaded(products));
+      emit(ProductState.loaded(products));
     } catch (e) {
-      emit(ProductError(e.toString()));
+      emit(ProductState.error(e.toString()));
     }
   }
 
   Future<void> searchProducts(String query) async {
     try {
-      emit(ProductLoading());
+      emit(ProductState.loading());
       final products = await _repository.searchProducts(query);
-      emit(ProductLoaded(products));
+      emit(ProductState.loaded(products));
     } catch (e) {
-      emit(ProductError(e.toString()));
+      emit(ProductState.error(e.toString()));
     }
   }
 
   Future<void> createProduct(ProductModel product) async {
     try {
       await _repository.createProduct(product);
-      emit(ProductOperationSuccess('Product created successfully'));
-      await loadProducts();
+      final products = await _repository.getAllProducts();
+      emit(ProductState.success('Product created successfully', products));
     } catch (e) {
-      emit(ProductError(e.toString()));
+      emit(ProductState.error(e.toString()));
       await loadProducts();
     }
   }
@@ -44,10 +44,10 @@ class ProductCubit extends Cubit<ProductState> {
   Future<void> updateProduct(ProductModel product) async {
     try {
       await _repository.updateProduct(product);
-      emit(ProductOperationSuccess('Product updated successfully'));
-      await loadProducts();
+      final products = await _repository.getAllProducts();
+      emit(ProductState.success('Product updated successfully', products));
     } catch (e) {
-      emit(ProductError(e.toString()));
+      emit(ProductState.error(e.toString()));
       await loadProducts();
     }
   }
@@ -55,22 +55,21 @@ class ProductCubit extends Cubit<ProductState> {
   Future<void> deleteProduct(String id) async {
     try {
       await _repository.deleteProduct(id);
-      emit(ProductOperationSuccess('Product deleted successfully'));
-      await loadProducts();
+      final products = await _repository.getAllProducts();
+      emit(ProductState.success('Product deleted successfully', products));
     } catch (e) {
-      emit(ProductError(e.toString()));
+      emit(ProductState.error(e.toString()));
       await loadProducts();
     }
   }
 
   Future<void> loadLowStockProducts() async {
     try {
-      emit(ProductLoading());
+      emit(ProductState.loading());
       final products = await _repository.getLowStockProducts();
-      emit(ProductLoaded(products));
+      emit(ProductState.loaded(products));
     } catch (e) {
-      emit(ProductError(e.toString()));
+      emit(ProductState.error(e.toString()));
     }
   }
 }
-

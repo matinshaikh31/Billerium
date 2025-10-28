@@ -26,7 +26,7 @@ class AppRouter {
       initialLocation: login,
       refreshListenable: GoRouterRefreshStream(authCubit.stream),
       redirect: (context, state) {
-        final isAuthenticated = authCubit.state is Authenticated;
+        final isAuthenticated = authCubit.state.isAuthenticated;
         final isLoggingIn = state.matchedLocation == login;
 
         // If not authenticated and not on login page, redirect to login

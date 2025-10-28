@@ -1,40 +1,63 @@
 part of 'category_cubit.dart';
 
-abstract class CategoryState extends Equatable {
-  const CategoryState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-class CategoryInitial extends CategoryState {}
-
-class CategoryLoading extends CategoryState {}
-
-class CategoryLoaded extends CategoryState {
+class CategoryState extends Equatable {
+  final bool isLoading;
+  final String? message;
   final List<CategoryModel> categories;
 
-  const CategoryLoaded(this.categories);
+  const CategoryState({
+    required this.isLoading,
+    this.message,
+    required this.categories,
+  });
+
+  factory CategoryState.initial() {
+    return const CategoryState(isLoading: false, message: null, categories: []);
+  }
+
+  factory CategoryState.loading() {
+    return const CategoryState(isLoading: true, message: null, categories: []);
+  }
+
+  factory CategoryState.loaded(List<CategoryModel> categories) {
+    return CategoryState(
+      isLoading: false,
+      message: null,
+      categories: categories,
+    );
+  }
+
+  factory CategoryState.error(String message) {
+    return CategoryState(
+      isLoading: false,
+      message: message,
+      categories: const [],
+    );
+  }
+
+  factory CategoryState.success(
+    String message,
+    List<CategoryModel> categories,
+  ) {
+    return CategoryState(
+      isLoading: false,
+      message: message,
+      categories: categories,
+    );
+  }
+
+  CategoryState copyWith({
+    bool? isLoading,
+    String? message,
+    List<CategoryModel>? categories,
+  }) {
+    return CategoryState(
+      isLoading: isLoading ?? this.isLoading,
+      message: message ?? this.message,
+      categories: categories ?? this.categories,
+    );
+  }
 
   @override
-  List<Object?> get props => [categories];
+  List<Object?> get props => [isLoading, message, categories];
 }
-
-class CategoryError extends CategoryState {
-  final String message;
-
-  const CategoryError(this.message);
-
-  @override
-  List<Object?> get props => [message];
-}
-
-class CategoryOperationSuccess extends CategoryState {
-  final String message;
-
-  const CategoryOperationSuccess(this.message);
-
-  @override
-  List<Object?> get props => [message];
-}
-

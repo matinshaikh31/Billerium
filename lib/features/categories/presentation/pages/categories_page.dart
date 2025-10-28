@@ -53,51 +53,42 @@ class _CategoriesPageState extends State<CategoriesPage> {
       ),
       body: BlocConsumer<CategoryCubit, CategoryState>(
         listener: (context, state) {
-          if (state is CategoryError) {
+          if (state.message != null && state.message!.isNotEmpty) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
-          } else if (state is CategoryOperationSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.green,
+                content: Text(state.message!),
+                backgroundColor: state.categories.isNotEmpty
+                    ? Colors.green
+                    : Colors.red,
               ),
             );
           }
         },
         builder: (context, state) {
-          if (state is CategoryLoading) {
+          if (state.isLoading) {
             return const LoadingWidget(message: 'Loading categories...');
           }
 
-          if (state is CategoryError) {
+          if (state.categories.isEmpty && state.message != null) {
             return CustomErrorWidget(
-              message: state.message,
+              message: state.message!,
               onRetry: () => context.read<CategoryCubit>().loadCategories(),
             );
           }
 
-          if (state is CategoryLoaded) {
-            if (state.categories.isEmpty) {
-              return EmptyStateWidget(
-                message: 'No categories yet',
-                icon: Icons.category_outlined,
-                onAction: _showAddCategoryDialog,
-                actionLabel: 'Add Category',
-              );
-            }
-
-            return ResponsiveWidget(
-              mobile: _buildMobileList(state.categories),
-              desktop: _buildDesktopGrid(state.categories),
+          if (state.categories.isEmpty) {
+            return EmptyStateWidget(
+              message: 'No categories yet',
+              icon: Icons.category_outlined,
+              onAction: _showAddCategoryDialog,
+              actionLabel: 'Add Category',
             );
           }
 
-          return const SizedBox.shrink();
+          return ResponsiveWidget(
+            mobile: _buildMobileList(state.categories),
+            desktop: _buildDesktopGrid(state.categories),
+          );
         },
       ),
       floatingActionButton: ResponsiveHelper.isMobile(context)
@@ -135,4 +126,3 @@ class _CategoriesPageState extends State<CategoriesPage> {
     );
   }
 }
-
