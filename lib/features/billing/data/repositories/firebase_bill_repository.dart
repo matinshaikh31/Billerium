@@ -264,4 +264,13 @@ class FirebaseBillRepository implements BillRepository {
       'timestamp': Timestamp.fromDate(timestamp),
     });
   }
+
+  @override
+  Future<void> deleteBill(String id) async {
+    try {
+      await _billsCollection.doc(id).delete();
+    } catch (e) {
+      throw Exception('Failed to delete bill: ${e.toString()}');
+    }
+  }
 }

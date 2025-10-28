@@ -7,6 +7,8 @@ import 'features/categories/data/repositories/firebase_category_repository.dart'
 import 'features/categories/presentation/cubit/category_cubit.dart';
 import 'features/products/data/repositories/firebase_product_repository.dart';
 import 'features/products/presentation/cubit/product_cubit.dart';
+import 'features/billing/data/repositories/firebase_bill_repository.dart';
+import 'features/billing/presentation/cubit/billing_cubit.dart';
 
 class BillingApp extends StatelessWidget {
   const BillingApp({super.key});
@@ -18,6 +20,7 @@ class BillingApp extends StatelessWidget {
         RepositoryProvider(create: (context) => FirebaseAuthRepository()),
         RepositoryProvider(create: (context) => FirebaseCategoryRepository()),
         RepositoryProvider(create: (context) => FirebaseProductRepository()),
+        RepositoryProvider(create: (context) => FirebaseBillRepository()),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -33,6 +36,10 @@ class BillingApp extends StatelessWidget {
           BlocProvider(
             create: (context) =>
                 ProductCubit(context.read<FirebaseProductRepository>()),
+          ),
+          BlocProvider(
+            create: (context) =>
+                BillingCubit(context.read<FirebaseBillRepository>()),
           ),
         ],
         child: Builder(

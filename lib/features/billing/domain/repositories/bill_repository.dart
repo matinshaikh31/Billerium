@@ -6,6 +6,7 @@ abstract class BillRepository {
   Future<BillModel> getBillById(String id);
   Future<String> createBill(BillModel bill);
   Future<void> updateBill(BillModel bill);
+  Future<void> deleteBill(String id);
   Future<void> addPayment(String billId, PaymentModel payment);
   Future<List<BillModel>> getBillsByStatus(String status);
   Future<List<BillModel>> getBillsByDateRange(DateTime start, DateTime end);
