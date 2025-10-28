@@ -8,7 +8,7 @@ class FirebaseProductRepository implements ProductRepository {
   final FirebaseFirestore _firestore;
 
   FirebaseProductRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   CollectionReference get _productsCollection =>
       _firestore.collection(AppConstants.productsCollection);
@@ -19,10 +19,12 @@ class FirebaseProductRepository implements ProductRepository {
       final snapshot = await _productsCollection.orderBy('name').get();
 
       return snapshot.docs
-          .map((doc) => ProductDto.fromJson(
-                doc.data() as Map<String, dynamic>,
-                doc.id,
-              ).toModel())
+          .map(
+            (doc) => ProductDto.fromJson(
+              doc.data() as Map<String, dynamic>,
+              doc.id,
+            ).toModel(),
+          )
           .toList();
     } catch (e) {
       throw Exception('Failed to get products: ${e.toString()}');
@@ -56,10 +58,12 @@ class FirebaseProductRepository implements ProductRepository {
           .get();
 
       return snapshot.docs
-          .map((doc) => ProductDto.fromJson(
-                doc.data() as Map<String, dynamic>,
-                doc.id,
-              ).toModel())
+          .map(
+            (doc) => ProductDto.fromJson(
+              doc.data() as Map<String, dynamic>,
+              doc.id,
+            ).toModel(),
+          )
           .toList();
     } catch (e) {
       throw Exception('Failed to get products by category: ${e.toString()}');
@@ -89,10 +93,12 @@ class FirebaseProductRepository implements ProductRepository {
       for (var doc in [...nameSnapshot.docs, ...skuSnapshot.docs]) {
         if (!seenIds.contains(doc.id)) {
           seenIds.add(doc.id);
-          products.add(ProductDto.fromJson(
-            doc.data() as Map<String, dynamic>,
-            doc.id,
-          ).toModel());
+          products.add(
+            ProductDto.fromJson(
+              doc.data() as Map<String, dynamic>,
+              doc.id,
+            ).toModel(),
+          );
         }
       }
 
@@ -158,7 +164,12 @@ class FirebaseProductRepository implements ProductRepository {
         throw Exception('Product not found');
       }
 
-      final currentStock = doc.data()!['stockQty'] as int;
+      final data = doc.data() as Map<String, dynamic>?;
+      if (data == null) {
+        throw Exception('Product data is null');
+      }
+
+      final currentStock = data['stockQty'] as int;
       final newStock = currentStock + quantity;
 
       await _productsCollection.doc(productId).update({
@@ -179,10 +190,12 @@ class FirebaseProductRepository implements ProductRepository {
           .get();
 
       return snapshot.docs
-          .map((doc) => ProductDto.fromJson(
-                doc.data() as Map<String, dynamic>,
-                doc.id,
-              ).toModel())
+          .map(
+            (doc) => ProductDto.fromJson(
+              doc.data() as Map<String, dynamic>,
+              doc.id,
+            ).toModel(),
+          )
           .toList();
     } catch (e) {
       throw Exception('Failed to get low stock products: ${e.toString()}');
@@ -193,12 +206,13 @@ class FirebaseProductRepository implements ProductRepository {
   Stream<List<ProductModel>> watchProducts() {
     return _productsCollection.orderBy('name').snapshots().map((snapshot) {
       return snapshot.docs
-          .map((doc) => ProductDto.fromJson(
-                doc.data() as Map<String, dynamic>,
-                doc.id,
-              ).toModel())
+          .map(
+            (doc) => ProductDto.fromJson(
+              doc.data() as Map<String, dynamic>,
+              doc.id,
+            ).toModel(),
+          )
           .toList();
     });
   }
 }
-

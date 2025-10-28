@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -40,14 +42,8 @@ class AppRouter {
         return null;
       },
       routes: [
-        GoRoute(
-          path: login,
-          builder: (context, state) => const LoginPage(),
-        ),
-        GoRoute(
-          path: home,
-          builder: (context, state) => const DashboardPage(),
-        ),
+        GoRoute(path: login, builder: (context, state) => const LoginPage()),
+        GoRoute(path: home, builder: (context, state) => const DashboardPage()),
         GoRoute(
           path: products,
           builder: (context, state) => const ProductsPage(),
@@ -70,16 +66,15 @@ class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {
     notifyListeners();
     _subscription = stream.asBroadcastStream().listen(
-          (dynamic _) => notifyListeners(),
-        );
+      (dynamic _) => notifyListeners(),
+    );
   }
 
-  late final Stream _subscription;
+  late final StreamSubscription<dynamic> _subscription;
 
   @override
   void dispose() {
-    // _subscription.cancel();
+    _subscription.cancel();
     super.dispose();
   }
 }
-

@@ -10,7 +10,7 @@ class FirebaseBillRepository implements BillRepository {
   final FirebaseFirestore _firestore;
 
   FirebaseBillRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   CollectionReference get _billsCollection =>
       _firestore.collection(AppConstants.billsCollection);
@@ -18,14 +18,17 @@ class FirebaseBillRepository implements BillRepository {
   @override
   Future<List<BillModel>> getAllBills() async {
     try {
-      final snapshot =
-          await _billsCollection.orderBy('createdAt', descending: true).get();
+      final snapshot = await _billsCollection
+          .orderBy('createdAt', descending: true)
+          .get();
 
       return snapshot.docs
-          .map((doc) => BillDto.fromJson(
-                doc.data() as Map<String, dynamic>,
-                doc.id,
-              ).toModel())
+          .map(
+            (doc) => BillDto.fromJson(
+              doc.data() as Map<String, dynamic>,
+              doc.id,
+            ).toModel(),
+          )
           .toList();
     } catch (e) {
       throw Exception('Failed to get bills: ${e.toString()}');
@@ -109,7 +112,7 @@ class FirebaseBillRepository implements BillRepository {
       final updatedPayments = [...bill.payments, payment];
       final totalPaid = updatedPayments.fold<double>(
         0,
-        (sum, p) => sum + p.amount,
+        (total, p) => total + p.amount,
       );
 
       final newStatus = BillingCalculator.getBillStatus(
@@ -124,12 +127,14 @@ class FirebaseBillRepository implements BillRepository {
 
       await _billsCollection.doc(billId).update({
         'payments': updatedPayments
-            .map((p) => {
-                  'id': p.id,
-                  'amount': p.amount,
-                  'mode': p.mode,
-                  'timestamp': Timestamp.fromDate(p.timestamp),
-                })
+            .map(
+              (p) => {
+                'id': p.id,
+                'amount': p.amount,
+                'mode': p.mode,
+                'timestamp': Timestamp.fromDate(p.timestamp),
+              },
+            )
             .toList(),
         'amountPaid': totalPaid,
         'pendingAmount': pendingAmount,
@@ -159,10 +164,12 @@ class FirebaseBillRepository implements BillRepository {
           .get();
 
       return snapshot.docs
-          .map((doc) => BillDto.fromJson(
-                doc.data() as Map<String, dynamic>,
-                doc.id,
-              ).toModel())
+          .map(
+            (doc) => BillDto.fromJson(
+              doc.data() as Map<String, dynamic>,
+              doc.id,
+            ).toModel(),
+          )
           .toList();
     } catch (e) {
       throw Exception('Failed to get bills by status: ${e.toString()}');
@@ -171,20 +178,23 @@ class FirebaseBillRepository implements BillRepository {
 
   @override
   Future<List<BillModel>> getBillsByDateRange(
-      DateTime start, DateTime end) async {
+    DateTime start,
+    DateTime end,
+  ) async {
     try {
       final snapshot = await _billsCollection
-          .where('createdAt',
-              isGreaterThanOrEqualTo: Timestamp.fromDate(start))
+          .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
           .where('createdAt', isLessThanOrEqualTo: Timestamp.fromDate(end))
           .orderBy('createdAt', descending: true)
           .get();
 
       return snapshot.docs
-          .map((doc) => BillDto.fromJson(
-                doc.data() as Map<String, dynamic>,
-                doc.id,
-              ).toModel())
+          .map(
+            (doc) => BillDto.fromJson(
+              doc.data() as Map<String, dynamic>,
+              doc.id,
+            ).toModel(),
+          )
           .toList();
     } catch (e) {
       throw Exception('Failed to get bills by date range: ${e.toString()}');
@@ -197,13 +207,15 @@ class FirebaseBillRepository implements BillRepository {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => BillDto.fromJson(
-                doc.data() as Map<String, dynamic>,
-                doc.id,
-              ).toModel())
-          .toList();
-    });
+          return snapshot.docs
+              .map(
+                (doc) => BillDto.fromJson(
+                  doc.data() as Map<String, dynamic>,
+                  doc.id,
+                ).toModel(),
+              )
+              .toList();
+        });
   }
 
   Future<void> _updateProductStock(String productId, int quantity) async {
@@ -218,9 +230,9 @@ class FirebaseBillRepository implements BillRepository {
           .collection(AppConstants.productsCollection)
           .doc(productId)
           .update({
-        'stockQty': currentStock + quantity,
-        'updatedAt': Timestamp.now(),
-      });
+            'stockQty': currentStock + quantity,
+            'updatedAt': Timestamp.now(),
+          });
     }
   }
 
@@ -253,4 +265,3 @@ class FirebaseBillRepository implements BillRepository {
     });
   }
 }
-
