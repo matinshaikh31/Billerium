@@ -1,63 +1,64 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:equatable/equatable.dart';
-import '../../domain/models/category_model.dart';
-import '../../domain/repositories/category_repository.dart';
+import 'dart:async';
+
+import 'package:billing_software/features/categories/domain/antity/category_model.dart';
+import 'package:billing_software/features/categories/domain/repositories/category_repository.dart';
+import 'package:bloc/bloc.dart';
+import 'package:meta/meta.dart';
 
 part 'category_state.dart';
 
 class CategoryCubit extends Cubit<CategoryState> {
-  final CategoryRepository _repository;
+  final CategoryRepository categoryRepository;
 
-  CategoryCubit(this._repository) : super(CategoryState.initial());
+  CategoryCubit({required this.categoryRepository})
+    : super(CategoryState.initial());
 
-  Future<void> loadCategories() async {
+  StreamSubscription<List<CategoryModel>>? categoriesStream;
+
+  Future<void> fetchCategories() async {
+    emit(state.copyWith(isLoading: true, errorMessage: null));
+    categoriesStream?.cancel();
     try {
-      emit(CategoryState.loading());
-      final categories = await _repository.getAllCategories();
-      emit(CategoryState.loaded(categories));
+      categoriesStream = categoryRepository.getAllCategories().listen((
+        categories,
+      ) {
+        emit(
+          state.copyWith(
+            categories: categories,
+            isLoading: false,
+            errorMessage: null,
+          ),
+        );
+      });
     } catch (e) {
-      emit(CategoryState.error(e.toString()));
-    }
-  }
-
-  Future<void> createCategory(String name, double discountPercent) async {
-    try {
-      final category = CategoryModel(
-        id: '',
-        name: name,
-        defaultDiscountPercent: discountPercent,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-
-      await _repository.createCategory(category);
-      final categories = await _repository.getAllCategories();
-      emit(CategoryState.success('Category created successfully', categories));
-    } catch (e) {
-      emit(CategoryState.error(e.toString()));
-      await loadCategories();
-    }
-  }
-
-  Future<void> updateCategory(CategoryModel category) async {
-    try {
-      await _repository.updateCategory(category);
-      final categories = await _repository.getAllCategories();
-      emit(CategoryState.success('Category updated successfully', categories));
-    } catch (e) {
-      emit(CategoryState.error(e.toString()));
-      await loadCategories();
+      print('Error fetching master hotels: $e');
+      emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
     }
   }
 
   Future<void> deleteCategory(String id) async {
     try {
-      await _repository.deleteCategory(id);
-      final categories = await _repository.getAllCategories();
-      emit(CategoryState.success('Category deleted successfully', categories));
+      emit(state.copyWith(isLoading: true, errorMessage: null));
+      await categoryRepository.deleteCategory(id);
+
+      // Remove from local list
+      final updatedCategories = state.categories
+          .where((category) => category.id != id)
+          .toList();
+
+      emit(
+        state.copyWith(
+          categories: updatedCategories,
+          isLoading: false,
+          successMessage: 'Category deleted successfully',
+        ),
+      );
     } catch (e) {
-      emit(CategoryState.error(e.toString()));
-      await loadCategories();
+      emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
     }
+  }
+
+  void clearMessages() {
+    emit(state.copyWith(errorMessage: null, successMessage: null));
   }
 }

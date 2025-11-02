@@ -1,63 +1,38 @@
 part of 'category_cubit.dart';
 
-class CategoryState extends Equatable {
-  final bool isLoading;
-  final String? message;
+class CategoryState {
   final List<CategoryModel> categories;
+  final bool isLoading;
+  final String? errorMessage;
+  final String? successMessage;
 
   const CategoryState({
-    required this.isLoading,
-    this.message,
     required this.categories,
+    required this.isLoading,
+    this.errorMessage,
+    this.successMessage,
   });
 
   factory CategoryState.initial() {
-    return const CategoryState(isLoading: false, message: null, categories: []);
-  }
-
-  factory CategoryState.loading() {
-    return const CategoryState(isLoading: true, message: null, categories: []);
-  }
-
-  factory CategoryState.loaded(List<CategoryModel> categories) {
-    return CategoryState(
+    return const CategoryState(
+      categories: [],
       isLoading: false,
-      message: null,
-      categories: categories,
-    );
-  }
-
-  factory CategoryState.error(String message) {
-    return CategoryState(
-      isLoading: false,
-      message: message,
-      categories: const [],
-    );
-  }
-
-  factory CategoryState.success(
-    String message,
-    List<CategoryModel> categories,
-  ) {
-    return CategoryState(
-      isLoading: false,
-      message: message,
-      categories: categories,
+      errorMessage: null,
+      successMessage: null,
     );
   }
 
   CategoryState copyWith({
-    bool? isLoading,
-    String? message,
     List<CategoryModel>? categories,
+    bool? isLoading,
+    String? errorMessage,
+    String? successMessage,
   }) {
     return CategoryState(
-      isLoading: isLoading ?? this.isLoading,
-      message: message ?? this.message,
       categories: categories ?? this.categories,
+      isLoading: isLoading ?? this.isLoading,
+      errorMessage: errorMessage,
+      successMessage: successMessage,
     );
   }
-
-  @override
-  List<Object?> get props => [isLoading, message, categories];
 }

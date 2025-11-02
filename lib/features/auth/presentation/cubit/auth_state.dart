@@ -2,85 +2,42 @@ part of 'auth_cubit.dart';
 
 class AuthState extends Equatable {
   final bool isAuthenticated;
-  final bool isLoading;
   final String? message;
-  final AdminModel? admin;
+  final bool isLoading;
+  final bool isPasswordVisible;
 
   const AuthState({
     required this.isAuthenticated,
-    required this.isLoading,
     this.message,
-    this.admin,
+    required this.isLoading,
+    required this.isPasswordVisible,
   });
 
+  // Initial state
   factory AuthState.initial() {
     return const AuthState(
       isAuthenticated: false,
-      isLoading: false,
       message: null,
-      admin: null,
-    );
-  }
-
-  factory AuthState.loading() {
-    return const AuthState(
-      isAuthenticated: false,
-      isLoading: true,
-      message: null,
-      admin: null,
-    );
-  }
-
-  factory AuthState.authenticated(AdminModel admin) {
-    return AuthState(
-      isAuthenticated: true,
       isLoading: false,
-      message: null,
-      admin: admin,
+      isPasswordVisible: false,
     );
   }
 
-  factory AuthState.unauthenticated({String? message}) {
-    return AuthState(
-      isAuthenticated: false,
-      isLoading: false,
-      message: message,
-      admin: null,
-    );
-  }
-
-  factory AuthState.error(String message) {
-    return AuthState(
-      isAuthenticated: false,
-      isLoading: false,
-      message: message,
-      admin: null,
-    );
-  }
-
-  factory AuthState.passwordResetSent() {
-    return const AuthState(
-      isAuthenticated: false,
-      isLoading: false,
-      message: 'Password reset email sent!',
-      admin: null,
-    );
-  }
-
+  // Copy with method to update state
   AuthState copyWith({
     bool? isAuthenticated,
-    bool? isLoading,
     String? message,
-    AdminModel? admin,
+    bool? isLoading,
+    bool? isPasswordVisible,
   }) {
     return AuthState(
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
-      isLoading: isLoading ?? this.isLoading,
       message: message ?? this.message,
-      admin: admin ?? this.admin,
+      isLoading: isLoading ?? this.isLoading,
+      isPasswordVisible: isPasswordVisible ?? this.isPasswordVisible,
     );
   }
 
   @override
-  List<Object?> get props => [isAuthenticated, isLoading, message, admin];
+  List<Object?> get props => [isAuthenticated, message, isLoading];
 }

@@ -1,61 +1,97 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:async';
+
+import 'package:billing_software/core/routes/routes.dart';
+import 'package:billing_software/features/auth/domain/repo/auth_repo.dart';
+import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import '../../domain/models/admin_model.dart';
-import '../../domain/repositories/auth_repository.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:go_router/go_router.dart';
 
 part 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
-  final AuthRepository _authRepository;
+  final AuthRepo authRepo;
+  AuthCubit({required this.authRepo}) : super(AuthState.initial());
+  StreamSubscription<bool>? authStream;
+  final loginFormKey = GlobalKey<FormState>();
 
-  AuthCubit(this._authRepository) : super(AuthState.initial());
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
 
-  Future<void> checkAuthStatus() async {
-    try {
-      emit(AuthState.loading());
-      final admin = await _authRepository.getCurrentAdmin();
-      if (admin != null) {
-        emit(AuthState.authenticated(admin));
-      } else {
-        emit(AuthState.unauthenticated());
+  void checkAuth() {
+    authStream = authRepo.authStateChanges().listen((isAuthenticated) {
+      emit(state.copyWith(isAuthenticated: isAuthenticated));
+    });
+  }
+
+  void login(String email, String password) async {
+    if (loginFormKey.currentState?.validate() ?? false) {
+      try {
+        emit(state.copyWith(isLoading: true));
+        await authRepo.login(email.trim().toLowerCase(), password);
+        emit(
+          state.copyWith(
+            isAuthenticated: true,
+            isLoading: false,
+            message: null, // Clear any previous error messages
+          ),
+        );
+        // Router will automatically redirect due to the redirect logic
+      } catch (e) {
+        emit(
+          state.copyWith(
+            isLoading: false,
+            message: e.toString(),
+            isAuthenticated: false,
+          ),
+        );
       }
-    } catch (e) {
-      emit(AuthState.unauthenticated());
     }
   }
 
-  Future<void> login(String email, String password) async {
+  void logout(BuildContext context) async {
     try {
-      emit(AuthState.loading());
-      final admin = await _authRepository.login(email, password);
-      emit(AuthState.authenticated(admin));
+      emit(state.copyWith(isLoading: true));
+      await authRepo.logout();
+      // Clear form data
+      emailController.clear();
+      passwordController.clear();
+      emit(
+        state.copyWith(isAuthenticated: false, isLoading: false, message: null),
+      );
+
+      context.go(Routes.login);
     } catch (e) {
-      emit(AuthState.error(e.toString()));
-      await Future.delayed(const Duration(seconds: 2));
-      emit(AuthState.unauthenticated());
+      emit(state.copyWith(isLoading: false, message: e.toString()));
     }
   }
 
-  Future<void> logout() async {
+  //forget password
+  Future<void> forgetPassword(String email) async {
+    if (email.isEmpty) {
+      emit(state.copyWith(message: "Please enter your email first"));
+      return;
+    }
+
+    emit(state.copyWith(isLoading: true, message: null));
     try {
-      await _authRepository.logout();
-      emit(AuthState.unauthenticated());
+      await authRepo.forgetPassword(email);
+      emit(
+        state.copyWith(
+          message: "Password reset email sent successfully",
+          isLoading: false,
+        ),
+      );
     } catch (e) {
-      emit(AuthState.error(e.toString()));
+      emit(state.copyWith(message: e.toString(), isLoading: false));
     }
   }
 
-  Future<void> resetPassword(String email) async {
-    try {
-      await _authRepository.resetPassword(email);
-      emit(AuthState.passwordResetSent());
-      // Return to unauthenticated state after a delay
-      await Future.delayed(const Duration(seconds: 2));
-      emit(AuthState.unauthenticated());
-    } catch (e) {
-      emit(AuthState.error(e.toString()));
-      await Future.delayed(const Duration(seconds: 2));
-      emit(AuthState.unauthenticated());
-    }
+  @override
+  Future<void> close() {
+    authStream?.cancel();
+    emailController.dispose();
+    passwordController.dispose();
+    return super.close();
   }
 }

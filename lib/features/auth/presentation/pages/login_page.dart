@@ -1,220 +1,269 @@
+import 'package:billing_software/core/routes/routes.dart';
+import 'package:billing_software/core/theme/app_colors.dart';
+import 'package:firebase_ui_auth/firebase_ui_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/navigation/router.dart';
-import '../../../../core/responsive/responsive_helper.dart';
-import '../../../../core/utils/validators.dart';
-import '../../../../core/widgets/custom_button.dart';
-import '../../../../core/widgets/custom_text_field.dart';
-import '../cubit/auth_cubit.dart';
 
-class LoginPage extends StatefulWidget {
+class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
-}
-
-class _LoginPageState extends State<LoginPage> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
-
-  void _handleLogin() {
-    if (_formKey.currentState!.validate()) {
-      context.read<AuthCubit>().login(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
-    }
-  }
-
-  void _handleForgotPassword() {
-    if (_emailController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter your email to reset password'),
-        ),
-      );
-      return;
-    }
-
-    context.read<AuthCubit>().resetPassword(_emailController.text.trim());
-  }
-
-  @override
   Widget build(BuildContext context) {
+    // Define your auth providers
+    final providers = [EmailAuthProvider()];
+
+    // Check if mobile/tablet
+    final isMobile = MediaQuery.of(context).size.width < 900;
+
     return Scaffold(
-      body: BlocConsumer<AuthCubit, AuthState>(
-        listener: (context, state) {
-          if (state.message != null && state.message!.isNotEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message!),
-                backgroundColor: state.isAuthenticated
-                    ? Colors.green
-                    : Colors.red,
+      // Add colored background for mobile
+      backgroundColor: isMobile ? AppColors.primary : null,
+      body: Column(
+        children: [
+          // Mobile logo section at top
+          if (isMobile)
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.primary.withValues(alpha: 0.9),
+                    AppColors.primary,
+                  ],
+                ),
               ),
-            );
-          }
-        },
-        builder: (context, state) {
-          return ResponsiveWidget(
-            mobile: _buildMobileLayout(state.isLoading),
-            desktop: _buildDesktopLayout(state.isLoading),
-          );
-        },
-      ),
-    );
-  }
 
-  Widget _buildMobileLayout(bool isLoading) {
-    return SafeArea(
-      child: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: _buildLoginForm(isLoading),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDesktopLayout(bool isLoading) {
-    return Row(
-      children: [
-        // Left side - Branding
-        Expanded(
-          child: Container(
-            color: Theme.of(context).primaryColor,
-            child: Center(
+              padding: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top + 24,
+                bottom: 32,
+                left: 24,
+                right: 24,
+              ),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.receipt_long, size: 120, color: Colors.white),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Billing & Inventory',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  SizedBox(
+                    width: 160,
+                    child: Icon(Icons.task, size: 50, color: Colors.white),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
                   Text(
-                    'Manage your business efficiently',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.titleMedium?.copyWith(color: Colors.white70),
+                    'Welcome to Billerium',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
                   ),
                 ],
               ),
             ),
-          ),
-        ),
-        // Right side - Login form
-        Expanded(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(48.0),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 400),
-                child: _buildLoginForm(isLoading),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
-  Widget _buildLoginForm(bool isLoading) {
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Logo for mobile
-          if (ResponsiveHelper.isMobile(context)) ...[
-            Icon(
-              Icons.receipt_long,
-              size: 80,
-              color: Theme.of(context).primaryColor,
-            ),
-            const SizedBox(height: 16),
-          ],
-          Text(
-            'Admin Login',
-            style: Theme.of(
-              context,
-            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-            textAlign: ResponsiveHelper.isMobile(context)
-                ? TextAlign.center
-                : TextAlign.left,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Sign in to access your dashboard',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(color: Colors.grey.shade600),
-            textAlign: ResponsiveHelper.isMobile(context)
-                ? TextAlign.center
-                : TextAlign.left,
-          ),
-          const SizedBox(height: 32),
-          CustomTextField(
-            label: 'Email',
-            hint: 'Enter your email',
-            controller: _emailController,
-            validator: Validators.validateEmail,
-            keyboardType: TextInputType.emailAddress,
-            prefixIcon: const Icon(Icons.email_outlined),
-            textInputAction: TextInputAction.next,
-          ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            label: 'Password',
-            hint: 'Enter your password',
-            controller: _passwordController,
-            validator: Validators.validatePassword,
-            obscureText: _obscurePassword,
-            prefixIcon: const Icon(Icons.lock_outlined),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword ? Icons.visibility : Icons.visibility_off,
+          // Login form
+          Expanded(
+            child: Container(
+              decoration: isMobile
+                  ? BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(24),
+                        topRight: Radius.circular(24),
+                      ),
+                    )
+                  : null,
+              child: SignInScreen(
+                providers: providers,
+                showAuthActionSwitch: false,
+
+                // Side panel with your logo (desktop only)
+                sideBuilder: (context, constraints) {
+                  // Hide side panel on mobile
+                  if (isMobile) return const SizedBox.shrink();
+
+                  return Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppColors.primary.withValues(alpha: 0.9),
+                          AppColors.primary,
+                        ],
+                      ),
+                    ),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 270,
+                            child: Icon(
+                              Icons.task,
+                              size: 50,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 40),
+                            child: Text(
+                              'Welcome to Billerium',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+
+                // Header builder for customization
+                // headerBuilder: (context, constraints, shrinkOffset) {
+                //   final isMobile = constraints.maxWidth < 600;
+
+                //   return Padding(
+                //     padding: EdgeInsets.only(
+                //       left: 20,
+                //       right: 20,
+                //       top: isMobile ? 8 : 20,
+                //     ),
+                //     child: Column(
+                //       mainAxisSize: MainAxisSize.min,
+                //       children: [
+                //         Text(
+                //           'Welcome Back',
+                //           style: TextStyle(
+                //             fontSize: isMobile ? 22 : 28,
+                //             fontWeight: FontWeight.bold,
+                //             color: AppColors.slateGray,
+                //           ),
+                //         ),
+                //         const SizedBox(height: 8),
+                //         Text(
+                //           'Sign in to continue to your dashboard',
+                //           textAlign: TextAlign.center,
+                //           style: TextStyle(
+                //             fontSize: isMobile ? 13 : 14,
+                //             color: AppColors.slateGray.withValues(alpha: 0.7),
+                //           ),
+                //         ),
+                //       ],
+                //     ),
+                //   );
+                // },
+
+                // Footer builder for custom footer
+                // footerBuilder: (context, action) {
+                //   return Padding(
+                //     padding: const EdgeInsets.only(top: 32, bottom: 16),
+                //     child: Column(
+                //       children: [
+                //         Row(
+                //           children: [
+                //             Expanded(
+                //               child: Divider(
+                //                 color: AppColors.slateGray.withValues(
+                //                   alpha: 0.2,
+                //                 ),
+                //               ),
+                //             ),
+                //             Padding(
+                //               padding: const EdgeInsets.symmetric(
+                //                 horizontal: 16,
+                //               ),
+                //               child: Text(
+                //                 'Developed by',
+                //                 style: TextStyle(
+                //                   fontSize: 12,
+                //                   color: AppColors.slateGray.withValues(
+                //                     alpha: 0.5,
+                //                   ),
+                //                 ),
+                //               ),
+                //             ),
+                //             Expanded(
+                //               child: Divider(
+                //                 color: AppColors.slateGray.withValues(
+                //                   alpha: 0.2,
+                //                 ),
+                //               ),
+                //             ),
+                //           ],
+                //         ),
+                //         const SizedBox(height: 16),
+                //         GestureDetector(
+                //           onTap: () {
+                //             // Launch URL
+                //           },
+                //           child: Container(
+                //             padding: const EdgeInsets.symmetric(
+                //               horizontal: 20,
+                //               vertical: 10,
+                //             ),
+                //             decoration: BoxDecoration(
+                //               color: AppColors.primary.withValues(alpha: 0.1),
+                //               borderRadius: BorderRadius.circular(20),
+                //             ),
+                //             child: Row(
+                //               mainAxisSize: MainAxisSize.min,
+                //               children: [
+                //                 Icon(
+                //                   Icons.auto_awesome,
+                //                   size: 16,
+                //                   color: AppColors.primary,
+                //                 ),
+                //                 const SizedBox(width: 8),
+                //                 Text(
+                //                   'Diwizon',
+                //                   style: TextStyle(
+                //                     fontSize: 14,
+                //                     fontWeight: FontWeight.bold,
+                //                     color: AppColors.primary,
+                //                   ),
+                //                 ),
+                //               ],
+                //             ),
+                //           ),
+                //         ),
+                //       ],
+                //     ),
+                //   );
+                // },
+
+                // Actions for navigation after sign in
+                actions: [
+                  ForgotPasswordAction((context, email) {
+                    // Navigate to forgot password screen or show dialog
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => ForgotPasswordScreen(),
+                      ),
+                    );
+                  }),
+                  AuthStateChangeAction<SignedIn>((context, state) {
+                    if (state.user != null) {
+                      context.go(Routes.dashboard);
+                    }
+                  }),
+                  AuthStateChangeAction<UserCreated>((context, state) {
+                    // Handle user creation if needed
+                  }),
+                ],
+
+                // Styling
+                styles: const {
+                  EmailFormStyle(signInButtonVariant: ButtonVariant.filled),
+                },
               ),
-              onPressed: () {
-                setState(() {
-                  _obscurePassword = !_obscurePassword;
-                });
-              },
             ),
-            textInputAction: TextInputAction.done,
-            onFieldSubmitted: (_) => _handleLogin(),
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: isLoading ? null : _handleForgotPassword,
-              child: const Text('Forgot Password?'),
-            ),
-          ),
-          const SizedBox(height: 24),
-          CustomButton(
-            text: 'Login',
-            onPressed: _handleLogin,
-            isLoading: isLoading,
-            icon: Icons.login,
           ),
         ],
       ),
