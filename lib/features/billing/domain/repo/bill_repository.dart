@@ -1,7 +1,7 @@
 import 'package:billing_software/core/services/firebase.dart';
-import 'package:billing_software/features/billing2/data/firebase_bill_repository.dart';
-import 'package:billing_software/features/billing2/domain/entity/bill_model.dart';
-import 'package:billing_software/features/billing2/domain/entity/payment_model.dart';
+import 'package:billing_software/features/billing/data/firebase_bill_repository.dart';
+import 'package:billing_software/features/billing/domain/entity/bill_model.dart';
+import 'package:billing_software/features/billing/domain/entity/payment_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FirebaseBillRepository extends BillRepository {
@@ -33,9 +33,42 @@ class FirebaseBillRepository extends BillRepository {
       );
 
       await docRef.set(newBill.toJson());
+
+      // Create transaction for each payment
+      for (final payment in bill.payments) {
+        await _createTransaction(
+          billId: docRef.id,
+          customerName: bill.customerName ?? 'Guest',
+          amount: payment.amount,
+          mode: payment.mode,
+        );
+      }
+
       return docRef.id;
     } catch (e) {
       throw Exception('Failed to create bill: ${e.toString()}');
+    }
+  }
+
+  // Helper method to create transaction
+  Future<void> _createTransaction({
+    required String billId,
+    required String customerName,
+    required double amount,
+    required String mode,
+  }) async {
+    try {
+      final transactionRef = FBFireStore.transactions.doc();
+      await transactionRef.set({
+        'id': transactionRef.id,
+        'billId': billId,
+        'customerName': customerName,
+        'amount': amount,
+        'mode': mode,
+        'timestamp': Timestamp.now(),
+      });
+    } catch (e) {
+      print('Failed to create transaction: ${e.toString()}');
     }
   }
 
@@ -76,6 +109,14 @@ class FirebaseBillRepository extends BillRepository {
       );
 
       await updateBill(updatedBill);
+
+      // Create transaction for the payment
+      await _createTransaction(
+        billId: billId,
+        customerName: bill.customerName ?? 'Guest',
+        amount: payment.amount,
+        mode: payment.mode,
+      );
     } catch (e) {
       throw Exception('Failed to add payment: ${e.toString()}');
     }

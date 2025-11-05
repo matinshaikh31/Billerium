@@ -1,5 +1,5 @@
-import 'package:billing_software/features/billing2/domain/entity/bill_item_model.dart';
-import 'package:billing_software/features/billing2/domain/entity/payment_model.dart';
+import 'package:billing_software/features/billing/domain/entity/bill_item_model.dart';
+import 'package:billing_software/features/billing/domain/entity/payment_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 
@@ -43,7 +43,9 @@ class BillModel extends Equatable {
   factory BillModel.fromJson(Map<String, dynamic> json, String id) {
     return BillModel(
       id: id,
-      items: (json['items'] as List).map((item) => BillItemModel.fromJson(item)).toList(),
+      items: (json['items'] as List)
+          .map((item) => BillItemModel.fromJson(item))
+          .toList(),
       customerName: json['customerName'] as String?,
       customerPhone: json['customerPhone'] as String?,
       subtotal: (json['subtotal'] as num).toDouble(),
@@ -55,13 +57,17 @@ class BillModel extends Equatable {
       amountPaid: (json['amountPaid'] as num).toDouble(),
       pendingAmount: (json['pendingAmount'] as num).toDouble(),
       status: json['status'] as String,
-      payments: (json['payments'] as List).map((p) => PaymentModel.fromJson(p)).toList(),
+      payments: (json['payments'] as List)
+          .map((p) => PaymentModel.fromJson(p))
+          .toList(),
       createdAt: json['createdAt'] as Timestamp,
       updatedAt: json['updatedAt'] as Timestamp,
     );
   }
 
-  factory BillModel.fromDocSnap(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+  factory BillModel.fromDocSnap(
+    QueryDocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
     return BillModel.fromJson(doc.data(), doc.id);
   }
 
@@ -125,21 +131,21 @@ class BillModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        items,
-        customerName,
-        customerPhone,
-        subtotal,
-        totalDiscount,
-        totalTax,
-        billDiscountPercent,
-        billDiscountAmount,
-        finalAmount,
-        amountPaid,
-        pendingAmount,
-        status,
-        payments,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    items,
+    customerName,
+    customerPhone,
+    subtotal,
+    totalDiscount,
+    totalTax,
+    billDiscountPercent,
+    billDiscountAmount,
+    finalAmount,
+    amountPaid,
+    pendingAmount,
+    status,
+    payments,
+    createdAt,
+    updatedAt,
+  ];
 }

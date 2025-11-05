@@ -1,9 +1,9 @@
 import 'package:billing_software/features/categories/domain/antity/category_model.dart';
 import 'package:billing_software/features/categories/presentation/cubit/category_cubit.dart';
-import 'package:billing_software/features/products3/domain/entity/product_model.dart';
-import 'package:billing_software/features/products3/presentation/cubit/product_cubit.dart';
-import 'package:billing_software/features/products3/presentation/cubit/product_form_cubit.dart';
-import 'package:billing_software/features/products3/presentation/widget/product_form_dialog.dart';
+import 'package:billing_software/features/products/domain/entity/product_model.dart';
+import 'package:billing_software/features/products/presentation/cubit/product_cubit.dart';
+import 'package:billing_software/features/products/presentation/cubit/product_form_cubit.dart';
+import 'package:billing_software/features/products/presentation/widget/product_form_dialog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

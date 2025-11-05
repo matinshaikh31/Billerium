@@ -1,11 +1,11 @@
 import 'package:billing_software/core/routes/routes.dart';
 import 'package:billing_software/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:billing_software/features/auth/presentation/pages/login_page.dart';
-import 'package:billing_software/features/billing2/presentation/page/create_bill_page.dart';
+import 'package:billing_software/features/billing/presentation/page/create_bill_page.dart';
 import 'package:billing_software/features/categories/presentation/pages/categories_page.dart';
 import 'package:billing_software/features/dashboard/presentation/pages/dashboard.dart';
 import 'package:billing_software/features/dashboard/presentation/pages/dashboard_page.dart';
-import 'package:billing_software/features/products3/presentation/page/prooduct_page.dart';
+import 'package:billing_software/features/products/presentation/page/prooduct_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';

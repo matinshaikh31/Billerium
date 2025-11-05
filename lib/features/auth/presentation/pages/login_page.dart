@@ -1,8 +1,10 @@
 import 'package:billing_software/core/routes/routes.dart';
 import 'package:billing_software/core/theme/app_colors.dart';
+import 'package:billing_software/features/categories/presentation/cubit/category_cubit.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class LoginPage extends StatelessWidget {
@@ -250,6 +252,8 @@ class LoginPage extends StatelessWidget {
                   }),
                   AuthStateChangeAction<SignedIn>((context, state) {
                     if (state.user != null) {
+                      // Fetch categories immediately after login
+                      context.read<CategoryCubit>().fetchCategories();
                       context.go(Routes.dashboard);
                     }
                   }),

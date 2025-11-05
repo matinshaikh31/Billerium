@@ -3,16 +3,16 @@ import 'package:billing_software/core/routes/app_router.dart';
 import 'package:billing_software/core/theme/app_theme.dart';
 import 'package:billing_software/features/auth/data/auth_firebaserepo.dart';
 import 'package:billing_software/features/auth/presentation/cubit/auth_cubit.dart';
-import 'package:billing_software/features/billing2/domain/repo/bill_repository.dart';
-import 'package:billing_software/features/billing2/presentation/cubit/bill_cubit.dart';
-import 'package:billing_software/features/billing2/presentation/cubit/create_bill_cubit.dart';
+import 'package:billing_software/features/billing/domain/repo/bill_repository.dart';
+import 'package:billing_software/features/billing/presentation/cubit/bill_cubit.dart';
+import 'package:billing_software/features/billing/presentation/cubit/create_bill_cubit.dart';
 import 'package:billing_software/features/categories/data/repositories/firebase_category_repository.dart';
 import 'package:billing_software/features/categories/presentation/cubit/category_cubit.dart';
 import 'package:billing_software/features/categories/presentation/cubit/category_form_cubit.dart';
 
-import 'package:billing_software/features/products3/data/firebase_product_repository.dart';
-import 'package:billing_software/features/products3/presentation/cubit/product_cubit.dart';
-import 'package:billing_software/features/products3/presentation/cubit/product_form_cubit.dart';
+import 'package:billing_software/features/products/data/firebase_product_repository.dart';
+import 'package:billing_software/features/products/presentation/cubit/product_cubit.dart';
+import 'package:billing_software/features/products/presentation/cubit/product_form_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

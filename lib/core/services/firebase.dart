@@ -12,7 +12,7 @@ class FBFireStore {
   static final products = fb.collection('products');
   static final categories = fb.collection('categories');
   static final bills = fb.collection('bills');
-  static final transcations = fb.collection('transcations');
+  static final transactions = fb.collection('transactions');
   static final settings = fb.collection('settings').doc("sets");
 }
 

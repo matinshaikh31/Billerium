@@ -1,4 +1,3 @@
-
 part of 'bill_cubit.dart';
 
 class BillState {
@@ -12,6 +11,10 @@ class BillState {
   final String? message;
   final String searchQuery;
   final String? statusFilter; // null = All, 'Paid', 'PartiallyPaid', 'Unpaid'
+  final String?
+  dateRangeFilter; // null = All, 'LastMonth', 'Last3Months', 'Custom'
+  final DateTime? customStartDate;
+  final DateTime? customEndDate;
 
   BillState({
     required this.bills,
@@ -24,6 +27,9 @@ class BillState {
     this.message,
     required this.searchQuery,
     this.statusFilter,
+    this.dateRangeFilter,
+    this.customStartDate,
+    this.customEndDate,
   });
 
   factory BillState.initial() {
@@ -38,6 +44,9 @@ class BillState {
       message: null,
       searchQuery: '',
       statusFilter: null,
+      dateRangeFilter: null,
+      customStartDate: null,
+      customEndDate: null,
     );
   }
 
@@ -52,7 +61,12 @@ class BillState {
     String? message,
     String? searchQuery,
     String? statusFilter,
+    String? dateRangeFilter,
+    DateTime? customStartDate,
+    DateTime? customEndDate,
     bool clearStatusFilter = false,
+    bool clearDateRangeFilter = false,
+    bool clearCustomDates = false,
   }) {
     return BillState(
       bills: bills ?? this.bills,
@@ -64,8 +78,18 @@ class BillState {
       isLoading: isLoading ?? this.isLoading,
       message: message ?? this.message,
       searchQuery: searchQuery ?? this.searchQuery,
-      statusFilter: clearStatusFilter ? null : (statusFilter ?? this.statusFilter),
+      statusFilter: clearStatusFilter
+          ? null
+          : (statusFilter ?? this.statusFilter),
+      dateRangeFilter: clearDateRangeFilter
+          ? null
+          : (dateRangeFilter ?? this.dateRangeFilter),
+      customStartDate: clearCustomDates
+          ? null
+          : (customStartDate ?? this.customStartDate),
+      customEndDate: clearCustomDates
+          ? null
+          : (customEndDate ?? this.customEndDate),
     );
   }
 }
-

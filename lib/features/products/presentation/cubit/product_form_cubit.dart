@@ -1,146 +1,154 @@
+import 'package:billing_software/core/services/firebase.dart';
+import 'package:billing_software/features/products/data/firebase_product_repository.dart';
+import 'package:billing_software/features/products/domain/entity/product_model.dart';
+import 'package:billing_software/features/products/domain/repositories/product_repository.dart';
+import 'package:billing_software/features/products/presentation/cubit/product_cubit.dart';
+import 'package:bloc/bloc.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:equatable/equatable.dart';
-import '../../domain/models/product_model.dart';
-import '../../domain/repositories/product_repository.dart';
 
 part 'product_form_state.dart';
 
 class ProductFormCubit extends Cubit<ProductFormState> {
-  final ProductRepository _repository;
+  FirebaseProductRepository productRepository;
 
-  ProductFormCubit(this._repository) : super(ProductFormState.initial());
+  ProductFormCubit({required this.productRepository})
+    : super(ProductFormState.initial());
 
-  void setEditMode(ProductModel product) {
-    emit(
-      state.copyWith(
-        isEditMode: true,
-        editingProduct: product,
-        name: product.name,
-        categoryId: product.categoryId,
-        price: product.price.toString(),
-        costPrice: product.costPrice.toString(),
-        discountPercent: product.discountPercent?.toString() ?? '',
-        taxPercent: product.taxPercent.toString(),
-        sku: product.sku ?? '',
-        imageUrl: product.imageUrl ?? '',
-        stockQty: product.stockQty.toString(),
-      ),
-    );
-  }
+  final formKey = GlobalKey<FormState>();
+  final nameController = TextEditingController();
+  final priceController = TextEditingController();
+  final discountController = TextEditingController();
+  final skuController = TextEditingController();
+  final stockController = TextEditingController();
+  String? selectedCategoryId;
 
-  void resetForm() {
-    emit(ProductFormState.initial());
-  }
-
-  void updateName(String value) {
-    emit(state.copyWith(name: value));
-  }
-
-  void updateCategoryId(String value) {
-    emit(state.copyWith(categoryId: value));
-  }
-
-  void updatePrice(String value) {
-    emit(state.copyWith(price: value));
-  }
-
-  void updateCostPrice(String value) {
-    emit(state.copyWith(costPrice: value));
-  }
-
-  void updateDiscountPercent(String value) {
-    emit(state.copyWith(discountPercent: value));
-  }
-
-  void updateTaxPercent(String value) {
-    emit(state.copyWith(taxPercent: value));
-  }
-
-  void updateSku(String value) {
-    emit(state.copyWith(sku: value));
-  }
-
-  void updateImageUrl(String value) {
-    emit(state.copyWith(imageUrl: value));
-  }
-
-  void updateStockQty(String value) {
-    emit(state.copyWith(stockQty: value));
-  }
-
-  Future<bool> submitForm() async {
-    if (!_validateForm()) {
-      emit(
-        state.copyWith(
-          isSubmitting: false,
-          errorMessage: 'Please fill all required fields',
-        ),
-      );
-      return false;
+  void initializeForm(ProductModel? product) {
+    if (product != null) {
+      nameController.text = product.name;
+      priceController.text = product.price.toString();
+      discountController.text = product.discountPercent?.toString() ?? '';
+      skuController.text = product.sku ?? '';
+      stockController.text = product.stockQty.toString();
+      selectedCategoryId = product.categoryId;
+    } else {
+      clearForm();
     }
+  }
+
+  void clearForm() {
+    nameController.clear();
+    priceController.clear();
+    discountController.clear();
+    skuController.clear();
+    stockController.clear();
+    selectedCategoryId = null;
+  }
+
+  void setSelectedCategory(String? categoryId) {
+    selectedCategoryId = categoryId;
+    emit(state.copyWith());
+  }
+
+  Future<void> submitForm(
+    ProductModel? editProduct,
+    BuildContext context,
+  ) async {
+    if (state.isLoading) return;
+
+    if (!(formKey.currentState?.validate() ?? false)) {
+      emit(
+        state.copyWith(message: 'Please fill all required fields correctly'),
+      );
+      return;
+    }
+
+    if (selectedCategoryId == null) {
+      emit(state.copyWith(message: 'Please select a category'));
+      return;
+    }
+
+    emit(state.copyWith(isLoading: true, message: ''));
 
     try {
-      emit(state.copyWith(isSubmitting: true, errorMessage: null));
-
       final product = ProductModel(
-        id: state.isEditMode ? state.editingProduct!.id : '',
-        name: state.name,
-        categoryId: state.categoryId,
-        price: double.parse(state.price),
-        costPrice: double.parse(state.costPrice),
-        discountPercent: state.discountPercent.isNotEmpty
-            ? double.parse(state.discountPercent)
+        id: editProduct?.id ?? '',
+        name: nameController.text.trim(),
+        categoryId: selectedCategoryId!,
+        price: double.parse(priceController.text.trim()),
+        discountPercent: discountController.text.trim().isNotEmpty
+            ? double.parse(discountController.text.trim())
             : null,
-        taxPercent: double.parse(state.taxPercent),
-        sku: state.sku.isNotEmpty ? state.sku : null,
-        imageUrl: state.imageUrl.isNotEmpty ? state.imageUrl : null,
-        stockQty: int.parse(state.stockQty),
-        createdAt: state.isEditMode
-            ? state.editingProduct!.createdAt
-            : DateTime.now(),
-        updatedAt: DateTime.now(),
+        sku: skuController.text.trim().isNotEmpty
+            ? skuController.text.trim()
+            : null,
+        stockQty: int.parse(stockController.text.trim()),
+        createdAt: editProduct?.createdAt ?? Timestamp.now(),
+        updatedAt: Timestamp.now(),
       );
 
-      if (state.isEditMode) {
-        await _repository.updateProduct(product);
+      if (editProduct != null) {
+        await productRepository.updateProduct(product);
+
+        final updatedProduct = await FBFireStore.products
+            .doc(editProduct.id)
+            .get();
+        context.read<ProductCubit>().updateProductInList(
+          ProductModel.fromJson(updatedProduct.data()!, updatedProduct.id),
+        );
+
+        emit(
+          state.copyWith(
+            isLoading: false,
+            message: 'Product updated successfully',
+          ),
+        );
       } else {
-        await _repository.createProduct(product);
+        final id = await productRepository.createProduct(product);
+        context.read<ProductCubit>().addProductToList(
+          ProductModel(
+            id: id,
+            name: product.name,
+            categoryId: product.categoryId,
+            price: product.price,
+            discountPercent: product.discountPercent,
+            sku: product.sku,
+            stockQty: product.stockQty,
+            createdAt: product.createdAt,
+            updatedAt: product.updatedAt,
+          ),
+        );
+
+        emit(
+          state.copyWith(
+            isLoading: false,
+            message: 'Product created successfully',
+          ),
+        );
       }
 
-      emit(
-        state.copyWith(
-          isSubmitting: false,
-          isSuccess: true,
-          errorMessage: null,
-        ),
-      );
-      return true;
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      if (context.mounted) {
+        Navigator.pop(context, true);
+      }
     } catch (e) {
-      emit(state.copyWith(isSubmitting: false, errorMessage: e.toString()));
-      return false;
+      emit(state.copyWith(isLoading: false, message: 'Error: ${e.toString()}'));
     }
   }
 
-  bool _validateForm() {
-    return state.name.isNotEmpty &&
-        state.categoryId.isNotEmpty &&
-        state.price.isNotEmpty &&
-        state.costPrice.isNotEmpty &&
-        state.taxPercent.isNotEmpty &&
-        state.stockQty.isNotEmpty &&
-        _isValidNumber(state.price) &&
-        _isValidNumber(state.costPrice) &&
-        _isValidNumber(state.taxPercent) &&
-        _isValidInteger(state.stockQty) &&
-        (state.discountPercent.isEmpty ||
-            _isValidNumber(state.discountPercent));
+  void clearMessage() {
+    emit(state.copyWith(message: null));
   }
 
-  bool _isValidNumber(String value) {
-    return double.tryParse(value) != null;
-  }
-
-  bool _isValidInteger(String value) {
-    return int.tryParse(value) != null;
+  @override
+  Future<void> close() {
+    nameController.dispose();
+    priceController.dispose();
+    discountController.dispose();
+    skuController.dispose();
+    stockController.dispose();
+    return super.close();
   }
 }

@@ -1,6 +1,6 @@
 import 'package:billing_software/core/services/firebase.dart';
-import 'package:billing_software/features/products3/domain/entity/product_model.dart';
-import 'package:billing_software/features/products3/domain/repositories/product_repository.dart';
+import 'package:billing_software/features/products/domain/entity/product_model.dart';
+import 'package:billing_software/features/products/domain/repositories/product_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FirebaseProductRepository extends ProductRepository {

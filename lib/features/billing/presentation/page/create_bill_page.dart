@@ -1,8 +1,7 @@
-
-import 'package:billing_software/features/billing2/domain/entity/bill_item_model.dart';
-import 'package:billing_software/features/billing2/presentation/cubit/create_bill_cubit.dart';
-import 'package:billing_software/features/products3/domain/entity/product_model.dart';
-import 'package:billing_software/features/products3/presentation/cubit/product_cubit.dart';
+import 'package:billing_software/features/billing/domain/entity/bill_item_model.dart';
+import 'package:billing_software/features/billing/presentation/cubit/create_bill_cubit.dart';
+import 'package:billing_software/features/products/domain/entity/product_model.dart';
+import 'package:billing_software/features/products/presentation/cubit/product_cubit.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,7 +23,9 @@ class _CreateBillPageState extends State<CreateBillPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message!),
-              backgroundColor: state.message!.contains('success') ? Colors.green : Colors.red,
+              backgroundColor: state.message!.contains('success')
+                  ? Colors.green
+                  : Colors.red,
             ),
           );
         }
@@ -56,9 +57,7 @@ class _CreateBillPageState extends State<CreateBillPage> {
                       ),
                     ),
                     const SizedBox(width: 24),
-                    Expanded(
-                      child: _buildSummary(context, state),
-                    ),
+                    Expanded(child: _buildSummary(context, state)),
                   ],
                 ),
               ],
@@ -103,7 +102,10 @@ class _CreateBillPageState extends State<CreateBillPage> {
               const SizedBox(width: 8),
               Text(
                 'Product Search',
-                style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -116,26 +118,39 @@ class _CreateBillPageState extends State<CreateBillPage> {
                     return const Iterable<ProductModel>.empty();
                   }
                   return productState.filteredProducts.where((product) {
-                    return product.name.toLowerCase().contains(textEditingValue.text.toLowerCase()) ||
-                        (product.sku?.toLowerCase().contains(textEditingValue.text.toLowerCase()) ?? false);
+                    return product.name.toLowerCase().contains(
+                          textEditingValue.text.toLowerCase(),
+                        ) ||
+                        (product.sku?.toLowerCase().contains(
+                              textEditingValue.text.toLowerCase(),
+                            ) ??
+                            false);
                   });
                 },
                 displayStringForOption: (ProductModel option) => option.name,
                 onSelected: (ProductModel selection) {
                   _showQuantityDialog(context, selection);
                 },
-                fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-                  return TextField(
-                    controller: controller,
-                    focusNode: focusNode,
-                    decoration: InputDecoration(
-                      hintText: 'Search by product name or scan barcode...',
-                      prefixIcon: const Icon(CupertinoIcons.search, size: 20),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  );
-                },
+                fieldViewBuilder:
+                    (context, controller, focusNode, onFieldSubmitted) {
+                      return TextField(
+                        controller: controller,
+                        focusNode: focusNode,
+                        decoration: InputDecoration(
+                          hintText: 'Search by product name or scan barcode...',
+                          prefixIcon: const Icon(
+                            CupertinoIcons.search,
+                            size: 20,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 12,
+                          ),
+                        ),
+                      );
+                    },
               );
             },
           ),
@@ -166,7 +181,11 @@ class _CreateBillPageState extends State<CreateBillPage> {
                 padding: const EdgeInsets.all(40),
                 child: Column(
                   children: [
-                    Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey[300]),
+                    Icon(
+                      Icons.shopping_cart_outlined,
+                      size: 64,
+                      color: Colors.grey[300],
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       'No items in cart',
@@ -209,7 +228,10 @@ class _CreateBillPageState extends State<CreateBillPage> {
                 const SizedBox(height: 4),
                 Text(
                   '₹${item.price} | Disc: ${item.discountPercent}%',
-                  style: GoogleFonts.inter(fontSize: 12, color: Colors.grey[600]),
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
                 ),
               ],
             ),
@@ -219,7 +241,10 @@ class _CreateBillPageState extends State<CreateBillPage> {
               IconButton(
                 icon: const Icon(Icons.remove_circle_outline, size: 20),
                 onPressed: () {
-                  context.read<CreateBillCubit>().updateItemQuantity(item.productId, item.quantity - 1);
+                  context.read<CreateBillCubit>().updateItemQuantity(
+                    item.productId,
+                    item.quantity - 1,
+                  );
                 },
               ),
               Text(
@@ -229,7 +254,10 @@ class _CreateBillPageState extends State<CreateBillPage> {
               IconButton(
                 icon: const Icon(Icons.add_circle_outline, size: 20),
                 onPressed: () {
-                  context.read<CreateBillCubit>().updateItemQuantity(item.productId, item.quantity + 1);
+                  context.read<CreateBillCubit>().updateItemQuantity(
+                    item.productId,
+                    item.quantity + 1,
+                  );
                 },
               ),
             ],
@@ -245,7 +273,9 @@ class _CreateBillPageState extends State<CreateBillPage> {
           IconButton(
             icon: const Icon(Icons.delete_outline, size: 20, color: Colors.red),
             onPressed: () {
-              context.read<CreateBillCubit>().removeItemFromCart(item.productId);
+              context.read<CreateBillCubit>().removeItemFromCart(
+                item.productId,
+              );
             },
           ),
         ],
@@ -273,19 +303,25 @@ class _CreateBillPageState extends State<CreateBillPage> {
             controller: context.read<CreateBillCubit>().customerNameController,
             decoration: InputDecoration(
               labelText: 'Customer Name',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-            onChanged: (value) => context.read<CreateBillCubit>().updateCustomerName(value),
+            onChanged: (value) =>
+                context.read<CreateBillCubit>().updateCustomerName(value),
           ),
           const SizedBox(height: 16),
           TextField(
             controller: context.read<CreateBillCubit>().customerPhoneController,
             decoration: InputDecoration(
               labelText: 'Phone Number',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             keyboardType: TextInputType.phone,
-            onChanged: (value) => context.read<CreateBillCubit>().updateCustomerPhone(value),
+            onChanged: (value) =>
+                context.read<CreateBillCubit>().updateCustomerPhone(value),
           ),
         ],
       ),
@@ -309,14 +345,20 @@ class _CreateBillPageState extends State<CreateBillPage> {
           ),
           const SizedBox(height: 16),
           TextField(
-            controller: context.read<CreateBillCubit>().amountReceivedController,
+            controller: context
+                .read<CreateBillCubit>()
+                .amountReceivedController,
             decoration: InputDecoration(
               labelText: 'Amount Received (₹)',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             keyboardType: TextInputType.number,
             onChanged: (value) {
-              context.read<CreateBillCubit>().updateAmountReceived(double.tryParse(value) ?? 0);
+              context.read<CreateBillCubit>().updateAmountReceived(
+                double.tryParse(value) ?? 0,
+              );
             },
           ),
           const SizedBox(height: 16),
@@ -324,7 +366,9 @@ class _CreateBillPageState extends State<CreateBillPage> {
             value: state.paymentMode,
             decoration: InputDecoration(
               labelText: 'Payment Mode',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             items: ['Cash', 'Card', 'UPI', 'Net Banking'].map((mode) {
               return DropdownMenuItem(value: mode, child: Text(mode));
@@ -340,7 +384,9 @@ class _CreateBillPageState extends State<CreateBillPage> {
             value: state.paymentStatus,
             decoration: InputDecoration(
               labelText: 'Payment Status',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             items: ['Pending', 'Paid', 'Partially Paid'].map((status) {
               return DropdownMenuItem(value: status, child: Text(status));
@@ -397,14 +443,21 @@ class _CreateBillPageState extends State<CreateBillPage> {
               const SizedBox(width: 8),
               Text(
                 'Cart Items: ${state.cartItems.length}',
-                style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
           const Divider(height: 32),
           _buildSummaryRow('Subtotal', '₹${state.subtotal.toStringAsFixed(2)}'),
           const SizedBox(height: 12),
-          _buildSummaryRow('Bill Discount', '-₹${state.billDiscountAmount.toStringAsFixed(2)}', isDiscount: true),
+          _buildSummaryRow(
+            'Bill Discount',
+            '-₹${state.billDiscountAmount.toStringAsFixed(2)}',
+            isDiscount: true,
+          ),
           const Divider(height: 24),
           _buildSummaryRow(
             'Grand Total',
@@ -424,13 +477,18 @@ class _CreateBillPageState extends State<CreateBillPage> {
                 backgroundColor: const Color(0xFF3B82F6),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: state.isLoading
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -439,7 +497,10 @@ class _CreateBillPageState extends State<CreateBillPage> {
                         const SizedBox(width: 8),
                         Text(
                           'Save & Print Invoice',
-                          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
@@ -449,15 +510,16 @@ class _CreateBillPageState extends State<CreateBillPage> {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
-              onPressed: state.isLoading ? null : () => context.read<CreateBillCubit>().clearBill(),
+              onPressed: state.isLoading
+                  ? null
+                  : () => context.read<CreateBillCubit>().clearBill(),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
-              child: Text(
-                'Cancel',
-                style: GoogleFonts.inter(fontSize: 16),
-              ),
+              child: Text('Cancel', style: GoogleFonts.inter(fontSize: 16)),
             ),
           ),
         ],
@@ -465,7 +527,12 @@ class _CreateBillPageState extends State<CreateBillPage> {
     );
   }
 
-  Widget _buildSummaryRow(String label, String value, {bool isDiscount = false, bool isTotal = false}) {
+  Widget _buildSummaryRow(
+    String label,
+    String value, {
+    bool isDiscount = false,
+    bool isTotal = false,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -482,7 +549,9 @@ class _CreateBillPageState extends State<CreateBillPage> {
           style: GoogleFonts.inter(
             fontSize: isTotal ? 20 : 16,
             fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,
-            color: isTotal ? const Color(0xFF3B82F6) : (isDiscount ? Colors.red : null),
+            color: isTotal
+                ? const Color(0xFF3B82F6)
+                : (isDiscount ? Colors.red : null),
           ),
         ),
       ],
@@ -502,15 +571,24 @@ class _CreateBillPageState extends State<CreateBillPage> {
           children: [
             Expanded(
               child: TextField(
-                controller: context.read<CreateBillCubit>().billDiscountController,
+                controller: context
+                    .read<CreateBillCubit>()
+                    .billDiscountController,
                 decoration: InputDecoration(
                   labelText: 'Discount Value',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
                 ),
                 keyboardType: TextInputType.number,
                 onChanged: (value) {
-                  context.read<CreateBillCubit>().updateBillDiscount(double.tryParse(value) ?? 0);
+                  context.read<CreateBillCubit>().updateBillDiscount(
+                    double.tryParse(value) ?? 0,
+                  );
                 },
               ),
             ),
@@ -540,7 +618,10 @@ class _CreateBillPageState extends State<CreateBillPage> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text('Add ${product.name}', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+        title: Text(
+          'Add ${product.name}',
+          style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+        ),
         content: TextField(
           controller: quantityController,
           decoration: InputDecoration(
@@ -558,7 +639,10 @@ class _CreateBillPageState extends State<CreateBillPage> {
           ElevatedButton(
             onPressed: () {
               final quantity = int.tryParse(quantityController.text) ?? 1;
-              context.read<CreateBillCubit>().addProductToCart(product, quantity);
+              context.read<CreateBillCubit>().addProductToCart(
+                product,
+                quantity,
+              );
               Navigator.pop(dialogContext);
             },
             child: Text('Add to Cart', style: GoogleFonts.inter()),

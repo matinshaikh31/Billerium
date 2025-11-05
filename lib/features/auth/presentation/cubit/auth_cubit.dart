@@ -24,7 +24,7 @@ class AuthCubit extends Cubit<AuthState> {
     });
   }
 
-  void login(String email, String password) async {
+  void login(String email, String password, {Function? onSuccess}) async {
     if (loginFormKey.currentState?.validate() ?? false) {
       try {
         emit(state.copyWith(isLoading: true));
@@ -36,6 +36,10 @@ class AuthCubit extends Cubit<AuthState> {
             message: null, // Clear any previous error messages
           ),
         );
+        // Call onSuccess callback to fetch categories
+        if (onSuccess != null) {
+          onSuccess();
+        }
         // Router will automatically redirect due to the redirect logic
       } catch (e) {
         emit(

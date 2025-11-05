@@ -1,9 +1,9 @@
-import 'package:billing_software/features/billing2/data/firebase_bill_repository.dart';
-import 'package:billing_software/features/billing2/domain/entity/bill_item_model.dart';
-import 'package:billing_software/features/billing2/domain/entity/bill_model.dart';
-import 'package:billing_software/features/billing2/domain/entity/payment_model.dart';
-import 'package:billing_software/features/products3/domain/entity/product_model.dart';
-import 'package:billing_software/features/products3/domain/repositories/product_repository.dart';
+import 'package:billing_software/features/billing/data/firebase_bill_repository.dart';
+import 'package:billing_software/features/billing/domain/entity/bill_item_model.dart';
+import 'package:billing_software/features/billing/domain/entity/bill_model.dart';
+import 'package:billing_software/features/billing/domain/entity/payment_model.dart';
+import 'package:billing_software/features/products/domain/entity/product_model.dart';
+import 'package:billing_software/features/products/domain/repositories/product_repository.dart';
 import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';

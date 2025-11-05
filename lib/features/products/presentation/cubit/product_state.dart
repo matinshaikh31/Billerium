@@ -1,102 +1,74 @@
 part of 'product_cubit.dart';
 
-class ProductState extends Equatable {
+
+
+class ProductState {
+  // Products pagination
+  final List<List<ProductModel>> products;
+  final List<ProductModel> filteredProducts;
+  final int currentPage;
+  final int totalPages;
+  final DocumentSnapshot? lastFetchedDoc;
+  final DocumentSnapshot? firstFetchedDoc;
+
+  // Common state
   final bool isLoading;
   final String? message;
-  final List<ProductModel> products;
-  final List<ProductModel> filteredProducts;
   final String searchQuery;
-  final String selectedCategory;
+  final String? selectedCategoryFilter; // null means "All Categories"
 
-  const ProductState({
-    required this.isLoading,
-    this.message,
+  ProductState({
     required this.products,
     required this.filteredProducts,
+    required this.currentPage,
+    required this.totalPages,
+    this.lastFetchedDoc,
+    this.firstFetchedDoc,
+    required this.isLoading,
+    this.message,
     required this.searchQuery,
-    required this.selectedCategory,
+    this.selectedCategoryFilter,
   });
 
   factory ProductState.initial() {
-    return const ProductState(
-      isLoading: false,
-      message: null,
+    return ProductState(
       products: [],
       filteredProducts: [],
-      searchQuery: '',
-      selectedCategory: 'All Categories',
-    );
-  }
-
-  factory ProductState.loading() {
-    return const ProductState(
-      isLoading: true,
-      message: null,
-      products: [],
-      filteredProducts: [],
-      searchQuery: '',
-      selectedCategory: 'All Categories',
-    );
-  }
-
-  factory ProductState.loaded(List<ProductModel> products) {
-    return ProductState(
+      currentPage: 1,
+      totalPages: 1,
+      lastFetchedDoc: null,
+      firstFetchedDoc: null,
       isLoading: false,
       message: null,
-      products: products,
-      filteredProducts: products,
       searchQuery: '',
-      selectedCategory: 'All Categories',
-    );
-  }
-
-  factory ProductState.error(String message) {
-    return ProductState(
-      isLoading: false,
-      message: message,
-      products: const [],
-      filteredProducts: const [],
-      searchQuery: '',
-      selectedCategory: 'All Categories',
-    );
-  }
-
-  factory ProductState.success(String message, List<ProductModel> products) {
-    return ProductState(
-      isLoading: false,
-      message: message,
-      products: products,
-      filteredProducts: products,
-      searchQuery: '',
-      selectedCategory: 'All Categories',
+      selectedCategoryFilter: null,
     );
   }
 
   ProductState copyWith({
+    List<List<ProductModel>>? products,
+    List<ProductModel>? filteredProducts,
+    int? currentPage,
+    int? totalPages,
+    DocumentSnapshot? lastFetchedDoc,
+    DocumentSnapshot? firstFetchedDoc,
     bool? isLoading,
     String? message,
-    List<ProductModel>? products,
-    List<ProductModel>? filteredProducts,
     String? searchQuery,
-    String? selectedCategory,
+    String? selectedCategoryFilter,
+    bool clearCategoryFilter = false,
   }) {
     return ProductState(
-      isLoading: isLoading ?? this.isLoading,
-      message: message,
       products: products ?? this.products,
       filteredProducts: filteredProducts ?? this.filteredProducts,
+      currentPage: currentPage ?? this.currentPage,
+      totalPages: totalPages ?? this.totalPages,
+      lastFetchedDoc: lastFetchedDoc ?? this.lastFetchedDoc,
+      firstFetchedDoc: firstFetchedDoc ?? this.firstFetchedDoc,
+      isLoading: isLoading ?? this.isLoading,
+      message: message ?? this.message,
       searchQuery: searchQuery ?? this.searchQuery,
-      selectedCategory: selectedCategory ?? this.selectedCategory,
+      selectedCategoryFilter: clearCategoryFilter ? null : (selectedCategoryFilter ?? this.selectedCategoryFilter),
     );
   }
-
-  @override
-  List<Object?> get props => [
-    isLoading,
-    message,
-    products,
-    filteredProducts,
-    searchQuery,
-    selectedCategory,
-  ];
 }
