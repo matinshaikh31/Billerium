@@ -1,11 +1,14 @@
 import 'package:billing_software/core/routes/routes.dart';
+import 'package:billing_software/features/analytics/presentation/pages/analytics_dashboard_page.dart';
 import 'package:billing_software/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:billing_software/features/auth/presentation/pages/login_page.dart';
+import 'package:billing_software/features/billing/presentation/page/bill_page.dart';
 import 'package:billing_software/features/billing/presentation/page/create_bill_page.dart';
 import 'package:billing_software/features/categories/presentation/pages/categories_page.dart';
 import 'package:billing_software/features/dashboard/presentation/pages/dashboard.dart';
 import 'package:billing_software/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:billing_software/features/products/presentation/page/prooduct_page.dart';
+import 'package:billing_software/features/transactions/presentation/page/transcation_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -47,7 +50,7 @@ final GoRouter appRoute = GoRouter(
         GoRoute(
           path: Routes.dashboard,
           pageBuilder: (context, state) =>
-              const NoTransitionPage(child: DashboardPage()),
+              const NoTransitionPage(child: AnalyticsDashboardPage()),
         ),
         GoRoute(
           path: Routes.products,
@@ -67,12 +70,12 @@ final GoRouter appRoute = GoRouter(
         GoRoute(
           path: Routes.bills,
           pageBuilder: (context, state) =>
-              const NoTransitionPage(child: DashboardPage()),
+              const NoTransitionPage(child: BillsPage()),
         ),
         GoRoute(
           path: Routes.transcations,
           pageBuilder: (context, state) =>
-              const NoTransitionPage(child: DashboardPage()),
+              const NoTransitionPage(child: TransactionsPage()),
         ),
       ],
     ),

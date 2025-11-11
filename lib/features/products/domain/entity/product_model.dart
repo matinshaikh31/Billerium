@@ -1,3 +1,4 @@
+import 'package:billing_software/features/categories/domain/antity/category_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProductModel {
@@ -22,6 +23,24 @@ class ProductModel {
     required this.createdAt,
     required this.updatedAt,
   });
+  // Helper method to get category name from list of categories
+  String getCategoryName(List<CategoryModel> categories) {
+    try {
+      final category = categories.firstWhere(
+        (cat) => cat.id == categoryId,
+        orElse: () => CategoryModel(
+          id: '',
+          name: 'Uncategorized',
+          defaultDiscountPercent: 0,
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        ),
+      );
+      return category.name;
+    } catch (e) {
+      return 'Uncategorized';
+    }
+  }
 
   factory ProductModel.fromJson(Map<String, dynamic> json, String id) {
     return ProductModel(

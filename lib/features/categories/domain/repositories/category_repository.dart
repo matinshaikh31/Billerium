@@ -5,4 +5,5 @@ abstract class CategoryRepository {
   Future<String> createCategory(CategoryModel category);
   Future<void> updateCategory(CategoryModel category);
   Future<void> deleteCategory(String id);
+  Future<int> getCategoryCount();
 }

@@ -1,9 +1,11 @@
-import 'package:billing_software/features/billing/data/firebase_bill_repository.dart';
+import 'package:billing_software/features/billing/domain/repo/fbill_repository.dart';
 import 'package:billing_software/features/billing/domain/entity/bill_item_model.dart';
 import 'package:billing_software/features/billing/domain/entity/bill_model.dart';
 import 'package:billing_software/features/billing/domain/entity/payment_model.dart';
 import 'package:billing_software/features/products/domain/entity/product_model.dart';
 import 'package:billing_software/features/products/domain/repositories/product_repository.dart';
+import 'package:billing_software/core/services/firebase.dart';
+import 'package:billing_software/features/transactions/domain/models/transaction_model.dart';
 import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -22,22 +24,19 @@ class CreateBillCubit extends Cubit<CreateBillState> {
 
   final customerNameController = TextEditingController();
   final customerPhoneController = TextEditingController();
-  final billDiscountController = TextEditingController();
   final amountReceivedController = TextEditingController();
 
-  // Add product to cart
+  // Add product to cart (without discount)
   void addProductToCart(ProductModel product, int quantity) {
-    final discountAmount =
-        (product.price * quantity) * (product.discountPercent ?? 0) / 100;
-    final itemTotal = (product.price * quantity) - discountAmount;
+    final itemTotal = product.price * quantity;
 
     final item = BillItemModel(
       productId: product.id,
       productName: product.name,
       price: product.price,
       quantity: quantity,
-      discountPercent: product.discountPercent ?? 0,
-      discountAmount: discountAmount,
+      discountPercent: 0,
+      discountAmount: 0,
       itemTotal: itemTotal,
     );
 
@@ -51,17 +50,15 @@ class CreateBillCubit extends Cubit<CreateBillState> {
       updatedCart = List.from(state.cartItems);
       final existingItem = updatedCart[existingIndex];
       final newQuantity = existingItem.quantity + quantity;
-      final newDiscountAmount =
-          (product.price * newQuantity) * (product.discountPercent ?? 0) / 100;
-      final newItemTotal = (product.price * newQuantity) - newDiscountAmount;
+      final newItemTotal = product.price * newQuantity;
 
       updatedCart[existingIndex] = BillItemModel(
         productId: existingItem.productId,
         productName: existingItem.productName,
         price: existingItem.price,
         quantity: newQuantity,
-        discountPercent: existingItem.discountPercent,
-        discountAmount: newDiscountAmount,
+        discountPercent: 0,
+        discountAmount: 0,
         itemTotal: newItemTotal,
       );
     } else {
@@ -80,17 +77,15 @@ class CreateBillCubit extends Cubit<CreateBillState> {
 
     final updatedCart = state.cartItems.map((item) {
       if (item.productId == productId) {
-        final newDiscountAmount =
-            (item.price * newQuantity) * item.discountPercent / 100;
-        final newItemTotal = (item.price * newQuantity) - newDiscountAmount;
+        final newItemTotal = item.price * newQuantity;
 
         return BillItemModel(
           productId: item.productId,
           productName: item.productName,
           price: item.price,
           quantity: newQuantity,
-          discountPercent: item.discountPercent,
-          discountAmount: newDiscountAmount,
+          discountPercent: 0,
+          discountAmount: 0,
           itemTotal: newItemTotal,
         );
       }
@@ -108,51 +103,28 @@ class CreateBillCubit extends Cubit<CreateBillState> {
     emit(state.copyWith(cartItems: updatedCart));
   }
 
-  // Update customer details
-  void updateCustomerName(String name) {
-    customerNameController.text = name;
-    emit(state.copyWith(customerName: name));
-  }
-
-  void updateCustomerPhone(String phone) {
-    customerPhoneController.text = phone;
-    emit(state.copyWith(customerPhone: phone));
-  }
-
-  // Update bill discount
-  void updateBillDiscount(double value) {
-    billDiscountController.text = value.toString();
-    emit(state.copyWith(billDiscountPercent: value));
-  }
-
-  void updateBillDiscountType(String type) {
-    emit(state.copyWith(billDiscountType: type));
-  }
-
-  // Update payment details
-  void updateAmountReceived(double amount) {
-    amountReceivedController.text = amount.toString();
-    emit(state.copyWith(amountReceived: amount));
-  }
-
+  // Update payment mode
   void updatePaymentMode(String mode) {
     emit(state.copyWith(paymentMode: mode));
   }
 
-  void updatePaymentStatus(String status) {
-    emit(state.copyWith(paymentStatus: status));
+  // Update amount received (for real-time pending amount calculation)
+  void updateAmountReceived(double amount) {
+    emit(state.copyWith(amountReceived: amount));
   }
 
   // Create bill
   Future<void> createBill() async {
-    if (state.cartItems.isEmpty) {
-      emit(state.copyWith(message: 'Please add items to cart'));
-      return;
-    }
+    // final validationError = validateForm();
+    // if (validationError != null) {
+    //   emit(state.copyWith(message: validationError));
+    //   return;
+    // }
 
     emit(state.copyWith(isLoading: true, message: null));
 
     try {
+      // Determine bill status
       String billStatus;
       if (state.amountReceived >= state.grandTotal) {
         billStatus = 'Paid';
@@ -162,6 +134,7 @@ class CreateBillCubit extends Cubit<CreateBillState> {
         billStatus = 'Unpaid';
       }
 
+      // Create payment record
       final List<PaymentModel> payments = [];
       if (state.amountReceived > 0) {
         payments.add(
@@ -174,16 +147,17 @@ class CreateBillCubit extends Cubit<CreateBillState> {
         );
       }
 
+      // Create bill
       final bill = BillModel(
         id: '',
         items: state.cartItems,
-        customerName: state.customerName,
-        customerPhone: state.customerPhone,
+        customerName: customerNameController.text,
+        customerPhone: customerPhoneController.text,
         subtotal: state.subtotal,
-        totalDiscount: state.totalItemDiscount,
-        totalTax: 0, // Add tax logic if needed
-        billDiscountPercent: state.billDiscountPercent,
-        billDiscountAmount: state.billDiscountAmount,
+        totalDiscount: 0,
+        totalTax: 0,
+        billDiscountPercent: 0,
+        billDiscountAmount: 0,
         finalAmount: state.grandTotal,
         amountPaid: state.amountReceived,
         pendingAmount: state.pendingAmount,
@@ -193,13 +167,31 @@ class CreateBillCubit extends Cubit<CreateBillState> {
         updatedAt: Timestamp.now(),
       );
 
-      await billRepository.createBill(bill);
+      // Save bill
+      final billId = await billRepository.createBill(bill);
+        
+      // Create transaction
+      if (state.amountReceived > 0) {
+        final transaction = TransactionModel(
+          id: '',
+          billId: billId,
+          customerName: customerNameController.text,
+          customerPhone: customerPhoneController.text,
+          amount: state.amountReceived,
+          mode: state.paymentMode,
+          timestamp: Timestamp.now(),
+        );
+
+        // Save transaction to Firestore
+        await FBFireStore.transactions.add(transaction.toJson());
+      }
 
       emit(
         state.copyWith(isLoading: false, message: 'Bill created successfully'),
       );
 
-      // Reset form
+      // Reset form after short delay
+      await Future.delayed(const Duration(milliseconds: 500));
       clearBill();
     } catch (e) {
       emit(state.copyWith(isLoading: false, message: 'Error: ${e.toString()}'));
@@ -210,7 +202,6 @@ class CreateBillCubit extends Cubit<CreateBillState> {
   void clearBill() {
     customerNameController.clear();
     customerPhoneController.clear();
-    billDiscountController.clear();
     amountReceivedController.clear();
 
     emit(CreateBillState.initial());
@@ -220,7 +211,6 @@ class CreateBillCubit extends Cubit<CreateBillState> {
   Future<void> close() {
     customerNameController.dispose();
     customerPhoneController.dispose();
-    billDiscountController.dispose();
     amountReceivedController.dispose();
     return super.close();
   }

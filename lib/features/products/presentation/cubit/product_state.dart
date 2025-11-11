@@ -1,74 +1,88 @@
 part of 'product_cubit.dart';
 
-
-
-class ProductState {
-  // Products pagination
-  final List<List<ProductModel>> products;
+class ProductState extends Equatable {
   final List<ProductModel> filteredProducts;
-  final int currentPage;
-  final int totalPages;
+  final List<ProductModel> searchedProducts;
   final DocumentSnapshot? lastFetchedDoc;
   final DocumentSnapshot? firstFetchedDoc;
-
-  // Common state
+  final int currentPage;
+  final int totalPages;
   final bool isLoading;
-  final String? message;
+  final String? error;
   final String searchQuery;
-  final String? selectedCategoryFilter; // null means "All Categories"
+  final String selectedCategory;
+  final Map<String, dynamic>? productStats;
 
-  ProductState({
-    required this.products,
+  const ProductState({
     required this.filteredProducts,
-    required this.currentPage,
-    required this.totalPages,
+    required this.searchedProducts,
     this.lastFetchedDoc,
     this.firstFetchedDoc,
+    required this.currentPage,
+    required this.totalPages,
     required this.isLoading,
-    this.message,
+    this.error,
     required this.searchQuery,
-    this.selectedCategoryFilter,
+    required this.selectedCategory,
+    this.productStats,
   });
 
   factory ProductState.initial() {
-    return ProductState(
-      products: [],
+    return const ProductState(
       filteredProducts: [],
-      currentPage: 1,
-      totalPages: 1,
+      searchedProducts: [],
       lastFetchedDoc: null,
       firstFetchedDoc: null,
+      currentPage: 1,
+      totalPages: 1,
       isLoading: false,
-      message: null,
+      error: null,
       searchQuery: '',
-      selectedCategoryFilter: null,
+      selectedCategory: 'All',
+      productStats: null,
     );
   }
 
   ProductState copyWith({
-    List<List<ProductModel>>? products,
     List<ProductModel>? filteredProducts,
-    int? currentPage,
-    int? totalPages,
+    List<ProductModel>? searchedProducts,
     DocumentSnapshot? lastFetchedDoc,
     DocumentSnapshot? firstFetchedDoc,
+    int? currentPage,
+    int? totalPages,
     bool? isLoading,
-    String? message,
+    String? error,
     String? searchQuery,
-    String? selectedCategoryFilter,
-    bool clearCategoryFilter = false,
+    String? selectedCategory,
+    Map<String, dynamic>? productStats,
   }) {
     return ProductState(
-      products: products ?? this.products,
       filteredProducts: filteredProducts ?? this.filteredProducts,
-      currentPage: currentPage ?? this.currentPage,
-      totalPages: totalPages ?? this.totalPages,
+      searchedProducts: searchedProducts ?? this.searchedProducts,
       lastFetchedDoc: lastFetchedDoc ?? this.lastFetchedDoc,
       firstFetchedDoc: firstFetchedDoc ?? this.firstFetchedDoc,
+      currentPage: currentPage ?? this.currentPage,
+      totalPages: totalPages ?? this.totalPages,
       isLoading: isLoading ?? this.isLoading,
-      message: message ?? this.message,
+      error: error,
       searchQuery: searchQuery ?? this.searchQuery,
-      selectedCategoryFilter: clearCategoryFilter ? null : (selectedCategoryFilter ?? this.selectedCategoryFilter),
+      selectedCategory: selectedCategory ?? this.selectedCategory,
+      productStats: productStats ?? this.productStats,
     );
   }
+
+  @override
+  List<Object?> get props => [
+    filteredProducts,
+    searchedProducts,
+    lastFetchedDoc,
+    firstFetchedDoc,
+    currentPage,
+    totalPages,
+    isLoading,
+    error,
+    searchQuery,
+    selectedCategory,
+    productStats,
+  ];
 }

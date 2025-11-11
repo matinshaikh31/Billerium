@@ -1,87 +1,94 @@
 part of 'transaction_cubit.dart';
 
-class TransactionState {
-  final List<List<TransactionModel>> transactions;
+class TransactionState extends Equatable {
   final List<TransactionModel> filteredTransactions;
-  final int currentPage;
-  final int totalPages;
+  final List<TransactionModel> searchedTransactions;
   final DocumentSnapshot? lastFetchedDoc;
   final DocumentSnapshot? firstFetchedDoc;
+  final int currentPage;
+  final int totalPages;
   final bool isLoading;
-  final String? message;
+  final String? error;
   final String searchQuery;
-  final String? paymentModeFilter; // null = All, 'Cash', 'Card', 'UPI', etc.
-  final String? dateRangeFilter; // null = All, 'LastMonth', 'Last3Months', 'Custom'
-  final DateTime? customStartDate;
-  final DateTime? customEndDate;
+  final String? dateRangeFilter;
+  final Timestamp? startDate;
+  final Timestamp? endDate;
 
-  TransactionState({
-    required this.transactions,
+  const TransactionState({
     required this.filteredTransactions,
-    required this.currentPage,
-    required this.totalPages,
+    required this.searchedTransactions,
     this.lastFetchedDoc,
     this.firstFetchedDoc,
+    required this.currentPage,
+    required this.totalPages,
     required this.isLoading,
-    this.message,
+    this.error,
     required this.searchQuery,
-    this.paymentModeFilter,
     this.dateRangeFilter,
-    this.customStartDate,
-    this.customEndDate,
+    this.startDate,
+    this.endDate,
   });
 
   factory TransactionState.initial() {
-    return TransactionState(
-      transactions: [],
+    return const TransactionState(
       filteredTransactions: [],
-      currentPage: 1,
-      totalPages: 1,
+      searchedTransactions: [],
       lastFetchedDoc: null,
       firstFetchedDoc: null,
+      currentPage: 1,
+      totalPages: 1,
       isLoading: false,
-      message: null,
+      error: null,
       searchQuery: '',
-      paymentModeFilter: null,
       dateRangeFilter: null,
-      customStartDate: null,
-      customEndDate: null,
+      startDate: null,
+      endDate: null,
     );
   }
 
   TransactionState copyWith({
-    List<List<TransactionModel>>? transactions,
     List<TransactionModel>? filteredTransactions,
-    int? currentPage,
-    int? totalPages,
+    List<TransactionModel>? searchedTransactions,
     DocumentSnapshot? lastFetchedDoc,
     DocumentSnapshot? firstFetchedDoc,
+    int? currentPage,
+    int? totalPages,
     bool? isLoading,
-    String? message,
+    String? error,
     String? searchQuery,
-    String? paymentModeFilter,
     String? dateRangeFilter,
-    DateTime? customStartDate,
-    DateTime? customEndDate,
-    bool clearPaymentModeFilter = false,
-    bool clearDateRangeFilter = false,
-    bool clearCustomDates = false,
+    Timestamp? startDate,
+    Timestamp? endDate,
   }) {
     return TransactionState(
-      transactions: transactions ?? this.transactions,
       filteredTransactions: filteredTransactions ?? this.filteredTransactions,
-      currentPage: currentPage ?? this.currentPage,
-      totalPages: totalPages ?? this.totalPages,
+      searchedTransactions: searchedTransactions ?? this.searchedTransactions,
       lastFetchedDoc: lastFetchedDoc ?? this.lastFetchedDoc,
       firstFetchedDoc: firstFetchedDoc ?? this.firstFetchedDoc,
+      currentPage: currentPage ?? this.currentPage,
+      totalPages: totalPages ?? this.totalPages,
       isLoading: isLoading ?? this.isLoading,
-      message: message ?? this.message,
+      error: error ?? this.error,
       searchQuery: searchQuery ?? this.searchQuery,
-      paymentModeFilter: clearPaymentModeFilter ? null : (paymentModeFilter ?? this.paymentModeFilter),
-      dateRangeFilter: clearDateRangeFilter ? null : (dateRangeFilter ?? this.dateRangeFilter),
-      customStartDate: clearCustomDates ? null : (customStartDate ?? this.customStartDate),
-      customEndDate: clearCustomDates ? null : (customEndDate ?? this.customEndDate),
+      dateRangeFilter: dateRangeFilter ?? this.dateRangeFilter,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
     );
   }
-}
 
+  @override
+  List<Object?> get props => [
+    filteredTransactions,
+    searchedTransactions,
+    lastFetchedDoc,
+    firstFetchedDoc,
+    currentPage,
+    totalPages,
+    isLoading,
+    error,
+    searchQuery,
+    dateRangeFilter,
+    startDate,
+    endDate,
+  ];
+}

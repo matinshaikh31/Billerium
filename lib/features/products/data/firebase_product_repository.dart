@@ -77,4 +77,9 @@ class FirebaseProductRepository extends ProductRepository {
       throw Exception('Failed to search products: ${e.toString()}');
     }
   }
+
+  Future<int> getProductCount() async {
+    final snapshot = await productsCollectionRef.count().get();
+    return snapshot.count ?? 0;
+  }
 }

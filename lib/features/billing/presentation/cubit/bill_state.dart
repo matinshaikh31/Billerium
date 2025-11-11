@@ -1,95 +1,100 @@
 part of 'bill_cubit.dart';
 
-class BillState {
-  final List<List<BillModel>> bills;
+class BillState extends Equatable {
   final List<BillModel> filteredBills;
-  final int currentPage;
-  final int totalPages;
+  final List<BillModel> searchedBills;
   final DocumentSnapshot? lastFetchedDoc;
   final DocumentSnapshot? firstFetchedDoc;
+  final int currentPage;
+  final int totalPages;
   final bool isLoading;
-  final String? message;
+  final String? error;
   final String searchQuery;
-  final String? statusFilter; // null = All, 'Paid', 'PartiallyPaid', 'Unpaid'
-  final String?
-  dateRangeFilter; // null = All, 'LastMonth', 'Last3Months', 'Custom'
-  final DateTime? customStartDate;
-  final DateTime? customEndDate;
+  final String? statusFilter;
+  final String? dateRangeFilter;
+  final Timestamp? startDate;
+  final Timestamp? endDate;
 
-  BillState({
-    required this.bills,
+  const BillState({
     required this.filteredBills,
-    required this.currentPage,
-    required this.totalPages,
+    required this.searchedBills,
     this.lastFetchedDoc,
     this.firstFetchedDoc,
+    required this.currentPage,
+    required this.totalPages,
     required this.isLoading,
-    this.message,
+    this.error,
     required this.searchQuery,
     this.statusFilter,
     this.dateRangeFilter,
-    this.customStartDate,
-    this.customEndDate,
+    this.startDate,
+    this.endDate,
   });
 
   factory BillState.initial() {
-    return BillState(
-      bills: [],
+    return const BillState(
       filteredBills: [],
-      currentPage: 1,
-      totalPages: 1,
+      searchedBills: [],
       lastFetchedDoc: null,
       firstFetchedDoc: null,
+      currentPage: 1,
+      totalPages: 1,
       isLoading: false,
-      message: null,
+      error: null,
       searchQuery: '',
-      statusFilter: null,
+      statusFilter: 'All',
       dateRangeFilter: null,
-      customStartDate: null,
-      customEndDate: null,
+      startDate: null,
+      endDate: null,
     );
   }
 
   BillState copyWith({
-    List<List<BillModel>>? bills,
     List<BillModel>? filteredBills,
-    int? currentPage,
-    int? totalPages,
+    List<BillModel>? searchedBills,
     DocumentSnapshot? lastFetchedDoc,
     DocumentSnapshot? firstFetchedDoc,
+    int? currentPage,
+    int? totalPages,
     bool? isLoading,
-    String? message,
+    String? error,
     String? searchQuery,
     String? statusFilter,
     String? dateRangeFilter,
-    DateTime? customStartDate,
-    DateTime? customEndDate,
-    bool clearStatusFilter = false,
-    bool clearDateRangeFilter = false,
-    bool clearCustomDates = false,
+    Timestamp? startDate,
+    Timestamp? endDate,
   }) {
     return BillState(
-      bills: bills ?? this.bills,
       filteredBills: filteredBills ?? this.filteredBills,
-      currentPage: currentPage ?? this.currentPage,
-      totalPages: totalPages ?? this.totalPages,
+      searchedBills: searchedBills ?? this.searchedBills,
       lastFetchedDoc: lastFetchedDoc ?? this.lastFetchedDoc,
       firstFetchedDoc: firstFetchedDoc ?? this.firstFetchedDoc,
+      currentPage: currentPage ?? this.currentPage,
+      totalPages: totalPages ?? this.totalPages,
       isLoading: isLoading ?? this.isLoading,
-      message: message ?? this.message,
+      error: error ?? this.error,
       searchQuery: searchQuery ?? this.searchQuery,
-      statusFilter: clearStatusFilter
-          ? null
-          : (statusFilter ?? this.statusFilter),
-      dateRangeFilter: clearDateRangeFilter
-          ? null
-          : (dateRangeFilter ?? this.dateRangeFilter),
-      customStartDate: clearCustomDates
-          ? null
-          : (customStartDate ?? this.customStartDate),
-      customEndDate: clearCustomDates
-          ? null
-          : (customEndDate ?? this.customEndDate),
+      statusFilter: statusFilter ?? this.statusFilter,
+      dateRangeFilter: dateRangeFilter ?? this.dateRangeFilter,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
     );
   }
+
+  @override
+  List<Object?> get props => [
+    filteredBills,
+    searchedBills,
+    lastFetchedDoc,
+    firstFetchedDoc,
+    currentPage,
+    totalPages,
+    isLoading,
+    error,
+    searchQuery,
+    statusFilter,
+    dateRangeFilter,
+    startDate,
+    endDate,
+  ];
 }

@@ -67,4 +67,9 @@ class FirebaseCategoryRepository extends CategoryRepository {
       throw Exception('Failed to update category: ${e.toString()}');
     }
   }
+
+  Future<int> getCategoryCount() async {
+    final snapshot = await categoriesCollectionRef.count().get();
+    return snapshot.count ?? 0;
+  }
 }

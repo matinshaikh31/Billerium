@@ -1,7 +1,6 @@
 import 'package:billing_software/core/services/firebase.dart';
 import 'package:billing_software/features/products/data/firebase_product_repository.dart';
 import 'package:billing_software/features/products/domain/entity/product_model.dart';
-import 'package:billing_software/features/products/domain/repositories/product_repository.dart';
 import 'package:billing_software/features/products/presentation/cubit/product_cubit.dart';
 import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -74,29 +73,42 @@ class ProductFormCubit extends Cubit<ProductFormState> {
     try {
       final product = ProductModel(
         id: editProduct?.id ?? '',
-        name: nameController.text.trim(),
+        name: nameController.text.trim().toLowerCase(),
         categoryId: selectedCategoryId!,
         price: double.parse(priceController.text.trim()),
         discountPercent: discountController.text.trim().isNotEmpty
             ? double.parse(discountController.text.trim())
             : null,
         sku: skuController.text.trim().isNotEmpty
-            ? skuController.text.trim()
+            ? skuController.text.trim().toLowerCase()
             : null,
         stockQty: int.parse(stockController.text.trim()),
         createdAt: editProduct?.createdAt ?? Timestamp.now(),
         updatedAt: Timestamp.now(),
       );
 
+      final productCubit = context.read<ProductCubit>();
+
       if (editProduct != null) {
+        // UPDATE PRODUCT
         await productRepository.updateProduct(product);
 
         final updatedProduct = await FBFireStore.products
             .doc(editProduct.id)
             .get();
-        context.read<ProductCubit>().updateProductInList(
-          ProductModel.fromJson(updatedProduct.data()!, updatedProduct.id),
+
+        final updatedProductModel = ProductModel.fromJson(
+          updatedProduct.data()!,
+          updatedProduct.id,
         );
+
+        // If on page 1, refresh to get latest data
+        if (productCubit.state.currentPage == 1) {
+          await productCubit.initializeProductsPagination();
+        } else {
+          // If on other pages, update the product in current list
+          productCubit.updateProductInList(updatedProductModel);
+        }
 
         emit(
           state.copyWith(
@@ -105,20 +117,14 @@ class ProductFormCubit extends Cubit<ProductFormState> {
           ),
         );
       } else {
+        // CREATE NEW PRODUCT
         final id = await productRepository.createProduct(product);
-        context.read<ProductCubit>().addProductToList(
-          ProductModel(
-            id: id,
-            name: product.name,
-            categoryId: product.categoryId,
-            price: product.price,
-            discountPercent: product.discountPercent,
-            sku: product.sku,
-            stockQty: product.stockQty,
-            createdAt: product.createdAt,
-            updatedAt: product.updatedAt,
-          ),
-        );
+
+        // Only refresh if on page 1 (new products appear on page 1)
+        if (productCubit.state.currentPage == 1) {
+          await productCubit.initializeProductsPagination();
+        }
+        // If on other pages, do nothing - they'll see it when they navigate to page 1
 
         emit(
           state.copyWith(

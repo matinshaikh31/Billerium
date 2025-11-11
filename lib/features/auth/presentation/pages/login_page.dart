@@ -20,10 +20,12 @@ class LoginPage extends StatelessWidget {
 
     return Scaffold(
       // Add colored background for mobile
-      backgroundColor: isMobile ? AppColors.primary : null,
+      backgroundColor: isMobile ? AppColors.primary : AppColors.backgroundColor,
       body: Column(
         children: [
-          // Mobile logo section at top
+          // ---------------------------
+          // Mobile Logo Section (Top)
+          // ---------------------------
           if (isMobile)
             Container(
               width: double.infinity,
@@ -32,12 +34,11 @@ class LoginPage extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    AppColors.primary.withValues(alpha: 0.9),
-                    AppColors.primary,
+                    AppColors.secondary.withValues(alpha: 0.9),
+                    AppColors.secondary,
                   ],
                 ),
               ),
-
               padding: EdgeInsets.only(
                 top: MediaQuery.of(context).padding.top + 24,
                 bottom: 32,
@@ -48,23 +49,25 @@ class LoginPage extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: 160,
-                    child: Icon(Icons.task, size: 50, color: Colors.white),
+                    child: Image.asset("logo.png", color: Colors.white),
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Welcome to Billerium',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
+                  // const SizedBox(height: 16),
+                  // Text(
+                  //   'Welcome to Billerium',
+                  //   textAlign: TextAlign.center,
+                  //   style: TextStyle(
+                  //     fontSize: 16,
+                  //     fontWeight: FontWeight.w600,
+                  //     color: Colors.white,
+                  //   ),
+                  // ),
                 ],
               ),
             ),
 
-          // Login form
+          // ---------------------------
+          // Login Form Section
+          // ---------------------------
           Expanded(
             child: Container(
               decoration: isMobile
@@ -75,7 +78,7 @@ class LoginPage extends StatelessWidget {
                         topRight: Radius.circular(24),
                       ),
                     )
-                  : null,
+                  : BoxDecoration(color: AppColors.backgroundColor),
               child: SignInScreen(
                 providers: providers,
                 showAuthActionSwitch: false,
@@ -91,8 +94,8 @@ class LoginPage extends StatelessWidget {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          AppColors.primary.withValues(alpha: 0.9),
-                          AppColors.primary,
+                          AppColors.secondary.withValues(alpha: 0.9),
+                          AppColors.secondary,
                         ],
                       ),
                     ),
@@ -100,27 +103,20 @@ class LoginPage extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          SizedBox(
-                            width: 270,
-                            child: Icon(
-                              Icons.task,
-                              size: 50,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 40),
-                            child: Text(
-                              'Welcome to Billerium',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
+                          Image.asset("logo.png"),
+                          // const SizedBox(height: 32),
+                          // Padding(
+                          //   padding: const EdgeInsets.symmetric(horizontal: 40),
+                          //   child: Text(
+                          //     'Welcome to Billerium',
+                          //     textAlign: TextAlign.center,
+                          //     style: TextStyle(
+                          //       fontSize: 24,
+                          //       fontWeight: FontWeight.bold,
+                          //       color: Colors.white,
+                          //     ),
+                          //   ),
+                          // ),
                         ],
                       ),
                     ),
@@ -130,7 +126,7 @@ class LoginPage extends StatelessWidget {
                 // Header builder for customization
                 // headerBuilder: (context, constraints, shrinkOffset) {
                 //   final isMobile = constraints.maxWidth < 600;
-
+                //
                 //   return Padding(
                 //     padding: EdgeInsets.only(
                 //       left: 20,
@@ -240,7 +236,9 @@ class LoginPage extends StatelessWidget {
                 //   );
                 // },
 
-                // Actions for navigation after sign in
+                // ---------------------------
+                // Auth Actions
+                // ---------------------------
                 actions: [
                   ForgotPasswordAction((context, email) {
                     // Navigate to forgot password screen or show dialog

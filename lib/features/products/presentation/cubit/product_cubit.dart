@@ -1,158 +1,52 @@
 import 'dart:async';
+import 'package:billing_software/core/services/firebase.dart';
 import 'package:billing_software/features/products/domain/entity/product_model.dart';
-import 'package:billing_software/features/products/domain/repositories/product_repository.dart';
 import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
-import 'package:billing_software/core/services/firebase.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 part 'product_state.dart';
 
 class ProductCubit extends Cubit<ProductState> {
-  final ProductRepository productRepository;
-  static const int _pageSize = 4;
-
-  ProductCubit({required this.productRepository})
-    : super(ProductState.initial());
-  final searchController = TextEditingController();
+  final TextEditingController searchController = TextEditingController();
+  final int _pageSize = 2;
   Timer? debounce;
 
-  // Fetch products page
-  Future<void> fetchProductsPage() async {
-    try {
-      int pageZeroIndex = state.currentPage - 1;
+  ProductCubit() : super(ProductState.initial());
 
-      // Check if we already have this page
-      if (pageZeroIndex < state.products.length &&
-          state.products[pageZeroIndex].isNotEmpty) {
-        return;
-      }
-
-      Query query = FBFireStore.products
-          .orderBy('createdAt', descending: true)
-          .limit(_pageSize);
-
-      // Apply category filter if selected
-      if (state.selectedCategoryFilter != null) {
-        query = FBFireStore.products
-            .where('categoryId', isEqualTo: state.selectedCategoryFilter)
-            .orderBy('createdAt', descending: true)
-            .limit(_pageSize);
-      }
-
-      if (state.lastFetchedDoc != null) {
-        query = query.startAfterDocument(state.lastFetchedDoc!);
-      }
-
-      final snap = await query.get();
-
-      if (snap.docs.isNotEmpty) {
-        final products = snap.docs
-            .map(
-              (doc) => ProductModel.fromDocSnap(
-                doc as QueryDocumentSnapshot<Map<String, dynamic>>,
-              ),
-            )
-            .toList();
-
-        final newLastFetchedDoc = snap.docs.last;
-        final updatedProducts = List<List<ProductModel>>.from(state.products);
-
-        while (updatedProducts.length <= pageZeroIndex) {
-          updatedProducts.add([]);
-        }
-        updatedProducts[pageZeroIndex] = products;
-
-        int newTotalPages = state.totalPages;
-        if (snap.docs.length == _pageSize) {
-          newTotalPages = state.currentPage + 1;
-        } else {
-          newTotalPages = state.currentPage;
-        }
-
-        emit(
-          state.copyWith(
-            products: updatedProducts,
-            lastFetchedDoc: newLastFetchedDoc,
-            totalPages: newTotalPages,
-          ),
-        );
-      } else {
-        emit(state.copyWith(totalPages: state.currentPage - 1));
-      }
-    } catch (e) {
-      print('Error fetching products page: $e');
-    }
+  @override
+  Future<void> close() {
+    debounce?.cancel();
+    searchController.dispose();
+    return super.close();
   }
 
   // Initialize products pagination
   Future<void> initializeProductsPagination() async {
     searchController.clear();
 
-    if (state.products.isNotEmpty) {
-      final currentPageIndex = state.currentPage - 1;
-      if (currentPageIndex < state.products.length) {
-        emit(
-          state.copyWith(
-            filteredProducts: state.products[currentPageIndex],
-            isLoading: false,
-            searchQuery: '',
-          ),
-        );
-      }
-      return;
-    }
-
     emit(
       state.copyWith(
         isLoading: true,
-        products: [],
         filteredProducts: [],
         lastFetchedDoc: null,
+        firstFetchedDoc: null,
+        searchedProducts: [],
         currentPage: 1,
         totalPages: 1,
-        message: null,
+        error: null,
+        searchQuery: '',
       ),
     );
 
+    final totalPages = (await getTotalProductsCount() / _pageSize).ceil();
+
     try {
-      await fetchProductsPage();
-      emit(
-        state.copyWith(
-          isLoading: false,
-          filteredProducts: state.products.isNotEmpty ? state.products[0] : [],
-          searchQuery: '',
-        ),
-      );
-    } catch (e) {
-      print('Error initializing products: $e');
-      emit(state.copyWith(isLoading: false, message: e.toString()));
-    }
-  }
-
-  // Fetch next products page
-  Future<void> fetchNextProductsPage({required int page}) async {
-    final isNextPage = page > state.currentPage;
-    emit(state.copyWith(isLoading: true, currentPage: page));
-
-    if (isNextPage) {
-      Query query = FBFireStore.products
-          .orderBy('createdAt', descending: true)
-          .limit(_pageSize);
-
-      if (state.selectedCategoryFilter != null) {
-        query = FBFireStore.products
-            .where('categoryId', isEqualTo: state.selectedCategoryFilter)
-            .orderBy('createdAt', descending: true)
-            .limit(_pageSize);
-      }
-
-      if (state.lastFetchedDoc != null) {
-        query = query.startAfterDocument(state.lastFetchedDoc!);
-      }
+      Query query = _buildBaseQuery(null).limit(_pageSize);
 
       final snap = await query.get();
-
       if (snap.docs.isNotEmpty) {
         final products = snap.docs
             .map(
@@ -165,81 +59,182 @@ class ProductCubit extends Cubit<ProductState> {
         final newLastFetchedDoc = snap.docs.last;
         final newFirstFetchedDoc = snap.docs.first;
 
-        int newTotalPages = state.totalPages;
-        if (snap.docs.length == _pageSize) {
-          newTotalPages = state.currentPage + 1;
-        } else {
-          newTotalPages = state.currentPage;
-        }
-
         emit(
           state.copyWith(
             filteredProducts: products,
             lastFetchedDoc: newLastFetchedDoc,
             firstFetchedDoc: newFirstFetchedDoc,
-            totalPages: newTotalPages,
+            totalPages: totalPages,
+            isLoading: false,
           ),
         );
       } else {
-        emit(state.copyWith(totalPages: state.currentPage - 1));
-      }
-    } else {
-      // Previous page logic
-      Query query = FBFireStore.products
-          .orderBy('createdAt', descending: false)
-          .limit(_pageSize);
-
-      if (state.selectedCategoryFilter != null) {
-        query = FBFireStore.products
-            .where('categoryId', isEqualTo: state.selectedCategoryFilter)
-            .orderBy('createdAt', descending: false)
-            .limit(_pageSize);
-      }
-
-      if (state.firstFetchedDoc != null) {
-        query = query.startAfterDocument(state.firstFetchedDoc!);
-      }
-
-      final snap = await query.get();
-
-      if (snap.docs.isNotEmpty) {
-        final products = snap.docs
-            .map(
-              (doc) => ProductModel.fromDocSnap(
-                doc as QueryDocumentSnapshot<Map<String, dynamic>>,
-              ),
-            )
-            .toList();
-
-        // snap.docs.sort(
-        //   (a, b) => ((b.data())!['createdAt'] as Timestamp).compareTo(
-        //     (a.data())['createdAt'] as Timestamp,
-        //   ),
-        // );
-
-        final newFirstFetchedDoc = snap.docs.last;
-        final newLastFetchedDoc = snap.docs.first;
-
-        products.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
         emit(
-          state.copyWith(
-            filteredProducts: products,
-            firstFetchedDoc: newFirstFetchedDoc,
-            lastFetchedDoc: newLastFetchedDoc,
-          ),
+          state.copyWith(totalPages: state.currentPage - 1, isLoading: false),
         );
       }
+    } catch (e) {
+      emit(state.copyWith(isLoading: false, error: e.toString()));
+    }
+  }
+
+  // Build base query with filters
+  Query _buildBaseQuery(bool? isNext) {
+    Query query;
+
+    if (isNext == null) {
+      query = FBFireStore.products.orderBy('createdAt', descending: true);
+    } else if (isNext) {
+      query = FBFireStore.products.orderBy('createdAt', descending: true);
+    } else {
+      query = FBFireStore.products.orderBy('createdAt', descending: false);
+    }
+
+    // Apply category filter
+    if (state.selectedCategory != 'All') {
+      query = query.where('categoryId', isEqualTo: state.selectedCategory);
+    }
+
+    return query;
+  }
+
+  // Fetch next page
+  Future<void> fetchNextProductsPage({required int page}) async {
+    try {
+      final isNextPage = page > state.currentPage;
+      emit(state.copyWith(isLoading: true, currentPage: page));
+
+      if (page == 1) {
+        emit(state.copyWith(lastFetchedDoc: null, firstFetchedDoc: null));
+
+        Query query = _buildBaseQuery(null).limit(_pageSize);
+
+        final snap = await query.get();
+        if (snap.docs.isNotEmpty) {
+          final products = snap.docs
+              .map(
+                (doc) => ProductModel.fromDocSnap(
+                  doc as QueryDocumentSnapshot<Map<String, dynamic>>,
+                ),
+              )
+              .toList();
+
+          final newLastFetchedDoc = snap.docs.last;
+          final newFirstFetchedDoc = snap.docs.first;
+
+          emit(
+            state.copyWith(
+              filteredProducts: products,
+              lastFetchedDoc: newLastFetchedDoc,
+              firstFetchedDoc: newFirstFetchedDoc,
+              isLoading: false,
+            ),
+          );
+        } else {
+          emit(
+            state.copyWith(totalPages: state.currentPage - 1, isLoading: false),
+          );
+        }
+
+        return;
+      }
+
+      if (isNextPage) {
+        Query query = _buildBaseQuery(true).limit(_pageSize);
+
+        if (state.lastFetchedDoc != null) {
+          query = query.startAfterDocument(state.lastFetchedDoc!);
+        }
+
+        final snap = await query.get();
+        if (snap.docs.isNotEmpty) {
+          final products = snap.docs
+              .map(
+                (doc) => ProductModel.fromDocSnap(
+                  doc as QueryDocumentSnapshot<Map<String, dynamic>>,
+                ),
+              )
+              .toList();
+
+          final newLastFetchedDoc = snap.docs.last;
+          final newFirstFetchedDoc = snap.docs.first;
+
+          emit(
+            state.copyWith(
+              filteredProducts: products,
+              lastFetchedDoc: newLastFetchedDoc,
+              firstFetchedDoc: newFirstFetchedDoc,
+              isLoading: false,
+            ),
+          );
+        } else {
+          emit(
+            state.copyWith(totalPages: state.currentPage - 1, isLoading: false),
+          );
+        }
+      } else {
+        // Previous page
+        Query query = _buildBaseQuery(false).limit(_pageSize);
+
+        if (state.firstFetchedDoc != null) {
+          query = query.startAfterDocument(state.firstFetchedDoc!);
+        }
+
+        final snap = await query.get();
+
+        if (snap.docs.isNotEmpty) {
+          final products = snap.docs
+              .map(
+                (doc) => ProductModel.fromDocSnap(
+                  doc as QueryDocumentSnapshot<Map<String, dynamic>>,
+                ),
+              )
+              .toList();
+
+          snap.docs.sort(
+            (a, b) =>
+                ((b.data() as Map<String, dynamic>)['createdAt'] as Timestamp)
+                    .compareTo(
+                      ((a.data() as Map<String, dynamic>)['createdAt']
+                          as Timestamp),
+                    ),
+          );
+
+          final newFirstFetchedDoc = snap.docs.first;
+          final newLastFetchedDoc = snap.docs.last;
+
+          products.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+          emit(
+            state.copyWith(
+              filteredProducts: products,
+              firstFetchedDoc: newFirstFetchedDoc,
+              lastFetchedDoc: newLastFetchedDoc,
+              isLoading: false,
+            ),
+          );
+        } else {
+          emit(
+            state.copyWith(totalPages: state.currentPage - 1, isLoading: false),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+      emit(state.copyWith(isLoading: false, error: e.toString()));
     }
   }
 
   // Search products
   void searchProducts(String query) {
     if (debounce?.isActive ?? false) debounce?.cancel();
-    emit(state.copyWith(searchQuery: query));
+
+    emit(state.copyWith(searchQuery: query, isLoading: true));
 
     if (query.trim().isEmpty) {
-      _resetSearchToCurrentPage();
+      emit(
+        state.copyWith(searchedProducts: [], searchQuery: '', isLoading: false),
+      );
       return;
     }
 
@@ -247,135 +242,214 @@ class ProductCubit extends Cubit<ProductState> {
       try {
         emit(state.copyWith(isLoading: true));
 
-        final searchResults = await productRepository.searchProducts(
-          query.trim().toLowerCase(),
-        );
+        Query searchQuery;
 
-        // Apply category filter if selected
-        final filteredResults = state.selectedCategoryFilter != null
-            ? searchResults
-                  .where((p) => p.categoryId == state.selectedCategoryFilter)
-                  .toList()
-            : searchResults;
+        final hasActiveFilter = state.selectedCategory != 'All';
 
-        emit(
-          state.copyWith(filteredProducts: filteredResults, isLoading: false),
-        );
+        if (hasActiveFilter) {
+          searchQuery = _buildBaseQuery(null);
+        } else {
+          searchQuery = FBFireStore.products.orderBy(
+            'createdAt',
+            descending: true,
+          );
+        }
+
+        final snapshot = await searchQuery.limit(20).get();
+
+        final allProducts = snapshot.docs
+            .map(
+              (doc) => ProductModel.fromDocSnap(
+                doc as QueryDocumentSnapshot<Map<String, dynamic>>,
+              ),
+            )
+            .toList();
+
+        final searchLower = query.toLowerCase();
+        final results = allProducts
+            .where((product) {
+              return product.name.toLowerCase().contains(searchLower) ||
+                  (product.sku?.toLowerCase().contains(searchLower) ?? false);
+            })
+            .take(20)
+            .toList();
+
+        emit(state.copyWith(searchedProducts: results, isLoading: false));
       } catch (e) {
-        print('Error searching products: $e');
-        emit(state.copyWith(isLoading: false, message: 'Search failed: $e'));
-        _resetSearchToCurrentPage();
+        emit(state.copyWith(isLoading: false, error: 'Search failed: $e'));
       }
     });
   }
 
   // Filter by category
-  void filterByCategory(String? categoryId) {
-    emit(
-      state.copyWith(
-        selectedCategoryFilter: categoryId,
-        clearCategoryFilter: categoryId == null,
-        products: [],
-        currentPage: 1,
-        lastFetchedDoc: null,
-        firstFetchedDoc: null,
-      ),
-    );
-    initializeProductsPagination();
+  Future<void> filterByCategory(String category) async {
+    emit(state.copyWith(selectedCategory: category, searchQuery: ''));
+    searchController.clear();
+    await initializeProductsPagination();
   }
 
-  // Reset search to current page
-  void _resetSearchToCurrentPage() {
-    if (state.products.isNotEmpty) {
-      final currentPageIndex = state.currentPage - 1;
-      if (currentPageIndex < state.products.length) {
-        emit(
-          state.copyWith(filteredProducts: state.products[currentPageIndex]),
+  Future<int> getTotalProductsCount() async {
+    try {
+      final query = _buildBaseQuery(null);
+      final countSnapshot = await query.count().get();
+      return countSnapshot.count ?? 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  // Refresh current page data
+  Future<void> refreshCurrentPage() async {
+    if (state.currentPage == 1) {
+      // If on page 1, do full refresh
+      await initializeProductsPagination();
+    } else {
+      // If on other pages, refresh that specific page
+      await fetchNextProductsPage(page: state.currentPage);
+    }
+  }
+
+  // Update product in current list (for updates on current page)
+  void updateProductInList(ProductModel updatedProduct) {
+    final currentProducts = List<ProductModel>.from(state.filteredProducts);
+    final index = currentProducts.indexWhere((p) => p.id == updatedProduct.id);
+
+    if (index != -1) {
+      currentProducts[index] = updatedProduct;
+      emit(state.copyWith(filteredProducts: currentProducts));
+    }
+  }
+
+  // Remove product from current list (for deletes on current page)
+  Future<void> removeProductFromList(String productId) async {
+    final currentProducts = List<ProductModel>.from(state.filteredProducts);
+    currentProducts.removeWhere((p) => p.id == productId);
+
+    // If page becomes empty and we're not on page 1, go back
+    if (currentProducts.isEmpty && state.currentPage > 1) {
+      await fetchNextProductsPage(page: state.currentPage - 1);
+    } else {
+      // Otherwise just update the list and refresh to fill the gap
+      emit(state.copyWith(filteredProducts: currentProducts));
+      await refreshCurrentPage();
+    }
+  }
+
+  Future<void> handleDeleteProduct(
+    BuildContext context,
+    ProductModel product,
+  ) async {
+    try {
+      final productCubit = context.read<ProductCubit>();
+
+      // Delete the product from Firebase
+      await FBFireStore.products.doc(product.id).delete();
+
+      // Smart refresh based on current page
+      if (productCubit.state.currentPage == 1) {
+        // If on page 1, refresh to get latest data
+        await productCubit.initializeProductsPagination();
+      } else {
+        // If on other pages, remove from list and refresh current page
+        await productCubit.removeProductFromList(product.id);
+      }
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Product "${product.name}" deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error deleting product: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
   }
 
-  // Update product in list
-  void updateProductInList(ProductModel updatedProduct) {
-    final updatedProducts = List<List<ProductModel>>.from(state.products);
-    for (int i = 0; i < updatedProducts.length; i++) {
-      final pageProducts = List<ProductModel>.from(updatedProducts[i]);
-      final index = pageProducts.indexWhere((p) => p.id == updatedProduct.id);
-      if (index != -1) {
-        pageProducts[index] = updatedProduct;
-        updatedProducts[i] = pageProducts;
-        break;
+  // Fetch product statistics
+  Future<void> fetchProductStats() async {
+    try {
+      final snapshot = await FBFireStore.products.get();
+
+      final allProducts = snapshot.docs
+          .map((doc) => ProductModel.fromDocSnap(doc))
+          .toList();
+
+      final totalProducts = allProducts.length;
+      final inStockProducts = allProducts.where((p) => p.stockQty > 0).length;
+      final outOfStockProducts = allProducts
+          .where((p) => p.stockQty == 0)
+          .length;
+      final lowStockProducts = allProducts
+          .where((p) => p.stockQty > 0 && p.stockQty <= 10)
+          .length;
+
+      // Products with discount
+      final discountedProducts = allProducts
+          .where((p) => p.discountPercent != null && p.discountPercent! > 0)
+          .length;
+
+      // Total inventory value
+      final totalInventoryValue = allProducts.fold<double>(
+        0,
+        (sum, product) => sum + (product.price * product.stockQty),
+      );
+
+      // Average product price
+      final averagePrice = totalProducts > 0
+          ? allProducts.fold<double>(0, (sum, product) => sum + product.price) /
+                totalProducts
+          : 0.0;
+
+      // Count by category (you'll need to fetch categories separately)
+      final categoryCount = <String, int>{};
+      for (var product in allProducts) {
+        categoryCount[product.categoryId] =
+            (categoryCount[product.categoryId] ?? 0) + 1;
       }
-    }
-
-    final currentPageIndex = state.currentPage - 1;
-    final updatedFiltered = currentPageIndex < updatedProducts.length
-        ? updatedProducts[currentPageIndex]
-        : state.filteredProducts;
-
-    emit(
-      state.copyWith(
-        products: updatedProducts,
-        filteredProducts: updatedFiltered,
-      ),
-    );
-  }
-
-  // Add product to list
-  void addProductToList(ProductModel newProduct) {
-    final updatedProducts = List<List<ProductModel>>.from(state.products);
-    if (updatedProducts.isNotEmpty) {
-      updatedProducts[0] = [newProduct, ...updatedProducts[0]];
-
-      final updatedFiltered = state.currentPage == 1
-          ? updatedProducts[0]
-          : state.filteredProducts;
 
       emit(
         state.copyWith(
-          products: updatedProducts,
-          filteredProducts: updatedFiltered,
+          productStats: {
+            'totalProducts': totalProducts,
+            'inStockProducts': inStockProducts,
+            'outOfStockProducts': outOfStockProducts,
+            'lowStockProducts': lowStockProducts,
+            'discountedProducts': discountedProducts,
+            'totalInventoryValue': totalInventoryValue,
+            'averagePrice': averagePrice,
+            'categoryCount': categoryCount,
+          },
+        ),
+      );
+    } catch (e) {
+      emit(
+        state.copyWith(
+          productStats: {
+            'totalProducts': 0,
+            'inStockProducts': 0,
+            'outOfStockProducts': 0,
+            'lowStockProducts': 0,
+            'discountedProducts': 0,
+            'totalInventoryValue': 0.0,
+            'averagePrice': 0.0,
+            'categoryCount': <String, int>{},
+          },
         ),
       );
     }
   }
 
-  // Remove product from list
-  void removeProductFromList(String productId) {
-    final updatedProducts = List<List<ProductModel>>.from(state.products);
-    for (int i = 0; i < updatedProducts.length; i++) {
-      final pageProducts = List<ProductModel>.from(updatedProducts[i]);
-      pageProducts.removeWhere((p) => p.id == productId);
-      updatedProducts[i] = pageProducts;
-    }
-
-    emit(
-      state.copyWith(
-        filteredProducts: state.filteredProducts
-            .where((p) => p.id != productId)
-            .toList(),
-        products: updatedProducts,
-      ),
-    );
-  }
-
-  // Delete product
-  Future<void> deleteProduct(String productId) async {
-    emit(state.copyWith(isLoading: true, message: null));
-    try {
-      await productRepository.deleteProduct(productId);
-      removeProductFromList(productId);
-      emit(state.copyWith(isLoading: false, message: "Product Deleted"));
-    } catch (e) {
-      emit(state.copyWith(isLoading: false, message: e.toString()));
-    }
-  }
-
-  @override
-  Future<void> close() {
-    searchController.dispose();
-    debounce?.cancel();
-    return super.close();
+  // Refresh
+  Future<void> refresh() async {
+    await initializeProductsPagination();
   }
 }

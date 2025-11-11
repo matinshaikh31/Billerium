@@ -14,6 +14,7 @@ class FBFireStore {
   static final bills = fb.collection('bills');
   static final transactions = fb.collection('transactions');
   static final settings = fb.collection('settings').doc("sets");
+  static final analytics = fb.collection("analytics");
 }
 
 class FBStorage {
