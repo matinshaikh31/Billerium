@@ -4,6 +4,7 @@ import 'package:billing_software/features/billing/domain/entity/bill_item_model.
 import 'package:billing_software/features/billing/domain/repo/fbill_repository.dart';
 import 'package:billing_software/features/billing/domain/entity/bill_model.dart';
 import 'package:billing_software/features/billing/domain/entity/payment_model.dart';
+import 'package:billing_software/features/transactions/domain/models/transaction_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FirebaseBillRepository extends BillRepository {
@@ -39,6 +40,7 @@ class FirebaseBillRepository extends BillRepository {
 
       final newBill = BillModel(
         id: docRef.id,
+        billNo: bill.billNo,
         items: bill.items,
         customerName: bill.customerName,
         customerPhone: bill.customerPhone,
@@ -62,16 +64,16 @@ class FirebaseBillRepository extends BillRepository {
       await _updateProductStockAfterSale(newBill.items);
 
       // Create transaction for each payment
-      for (final payment in bill.payments) {
-        await _createTransaction(
-          billId: docRef.id,
-          customerName: bill.customerName ?? 'Walk-in Customer',
-          customerPhone: bill.customerPhone,
-          amount: payment.amount,
-          mode: payment.mode,
-          timestamp: payment.paidAt,
-        );
-      }
+      // for (final payment in bill.payments) {
+      //   await _createTransaction(
+      //     billId: docRef.id,
+      //     customerName: bill.customerName ?? 'Walk-in Customer',
+      //     customerPhone: bill.customerPhone,
+      //     amount: payment.amount,
+      //     mode: payment.mode,
+      //     timestamp: payment.paidAt,
+      //   );
+      // }
       // 🔥 Update analytics instantly
       await analyticsRepo.updateAnalyticsOnBillCreate(newBill);
 
@@ -81,9 +83,10 @@ class FirebaseBillRepository extends BillRepository {
     }
   }
 
-  // Helper method to create transaction
+  // Update _createTransaction to use TransactionModel
   Future<void> _createTransaction({
     required String billId,
+    required String billNo, // ✅ ADDED
     required String customerName,
     String? customerPhone,
     required double amount,
@@ -91,34 +94,33 @@ class FirebaseBillRepository extends BillRepository {
     required Timestamp timestamp,
   }) async {
     try {
-      final transactionRef = FBFireStore.transactions.doc();
-      await transactionRef.set({
-        'billId': billId,
-        'customerName': customerName,
-        'customerPhone': customerPhone,
-        'amount': amount,
-        'mode': mode,
-        'timestamp': timestamp,
-      });
+      // ✅ USE TransactionModel
+      final transaction = TransactionModel(
+        id: '',
+        billId: billId,
+        billNo: billNo,
+        customerName: customerName,
+        customerPhone: customerPhone,
+        amount: amount,
+        mode: mode,
+        timestamp: timestamp,
+      );
+
+      // ✅ USE toJson()
+      await FBFireStore.transactions.add(transaction.toJson());
     } catch (e) {
       print('Failed to create transaction: ${e.toString()}');
     }
   }
 
-  @override
-  Future<void> updateBill(BillModel bill) async {
-    try {
-      await billsCollectionRef.doc(bill.id).update(bill.toJson());
-    } catch (e) {
-      throw Exception('Failed to update bill: ${e.toString()}');
-    }
-  }
-
+  // Update addPayment to pass billNo
   @override
   Future<void> addPayment(String billId, PaymentModel payment) async {
     try {
       final billDoc = await billsCollectionRef.doc(billId).get();
       final bill = BillModel.fromJson(billDoc.data()!, billId);
+
+      final oldPendingAmount = bill.pendingAmount;
 
       final updatedPayments = [...bill.payments, payment];
       final newAmountPaid = bill.amountPaid + payment.amount;
@@ -143,9 +145,9 @@ class FirebaseBillRepository extends BillRepository {
 
       await updateBill(updatedBill);
 
-      // Create transaction for the payment
       await _createTransaction(
         billId: billId,
+        billNo: bill.billNo,
         customerName: bill.customerName ?? 'Walk-in Customer',
         customerPhone: bill.customerPhone,
         amount: payment.amount,
@@ -153,13 +155,25 @@ class FirebaseBillRepository extends BillRepository {
         timestamp: payment.paidAt,
       );
 
+      // ✅ Calculate actual change in pending amount
+      final pendingChange = oldPendingAmount - newPendingAmount;
+
       await analyticsRepo.updateAnalyticsOnPayment(
-        payment.amount,
-        newStatus == 'Paid',
-        payment.paidAt,
+        paymentAmount: payment.amount,
+        pendingChange: pendingChange,
+        timestamp: payment.paidAt,
       );
     } catch (e) {
       throw Exception('Failed to add payment: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> updateBill(BillModel bill) async {
+    try {
+      await billsCollectionRef.doc(bill.id).update(bill.toJson());
+    } catch (e) {
+      throw Exception('Failed to update bill: ${e.toString()}');
     }
   }
 

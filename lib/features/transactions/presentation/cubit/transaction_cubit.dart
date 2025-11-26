@@ -10,7 +10,7 @@ part 'transaction_state.dart';
 
 class TransactionCubit extends Cubit<TransactionState> {
   final TextEditingController searchController = TextEditingController();
-  final int _pageSize = 1;
+  final int _pageSize = 10;
   Timer? debounce;
 
   TransactionCubit() : super(TransactionState.initial());
@@ -73,6 +73,7 @@ class TransactionCubit extends Cubit<TransactionState> {
         );
       }
     } catch (e) {
+      debugPrint(e.toString());
       emit(state.copyWith(isLoading: false, error: e.toString()));
     }
   }
@@ -192,18 +193,11 @@ class TransactionCubit extends Cubit<TransactionState> {
               )
               .toList();
 
-          snap.docs.sort(
-            (a, b) =>
-                ((b.data() as Map<String, dynamic>)['timestamp'] as Timestamp)
-                    .compareTo(
-                      ((a.data() as Map<String, dynamic>)['timestamp']
-                          as Timestamp),
-                    ),
-          );
+          // IMPORTANT: For previous page, reverse the cursor documents
+          final newFirstFetchedDoc = snap.docs.last;
+          final newLastFetchedDoc = snap.docs.first;
 
-          final newFirstFetchedDoc = snap.docs.first;
-          final newLastFetchedDoc = snap.docs.last;
-
+          // Sort transactions in descending order (newest first)
           transactions.sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
           emit(
@@ -260,7 +254,7 @@ class TransactionCubit extends Cubit<TransactionState> {
           );
         }
 
-        final snapshot = await searchQuery.limit(50).get();
+        final snapshot = await searchQuery.limit(20).get();
 
         final allTransactions = snapshot.docs
             .map(
@@ -278,11 +272,12 @@ class TransactionCubit extends Cubit<TransactionState> {
                   )) ||
                   (transaction.id.toLowerCase().contains(searchLower));
             })
-            .take(50)
+            .take(20)
             .toList();
 
         emit(state.copyWith(searchedTransactions: results, isLoading: false));
       } catch (e) {
+        debugPrint('Error searching transactions: $e');
         emit(state.copyWith(isLoading: false, error: 'Search failed: $e'));
       }
     });
@@ -334,15 +329,6 @@ class TransactionCubit extends Cubit<TransactionState> {
       return countSnapshot.count ?? 0;
     } catch (e) {
       return 0;
-    }
-  }
-
-  // Refresh current page
-  Future<void> refreshCurrentPage() async {
-    if (state.currentPage == 1) {
-      await initializeTransactionsPagination();
-    } else {
-      await fetchNextTransactionsPage(page: state.currentPage);
     }
   }
 

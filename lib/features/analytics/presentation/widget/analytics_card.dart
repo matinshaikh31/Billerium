@@ -1,13 +1,13 @@
 import 'package:billing_software/core/theme/app_colors.dart';
+import 'package:billing_software/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AnalyticsCard extends StatelessWidget {
   final String title;
   final String value;
   final IconData icon;
-  final Color color;
-  final Color backgroundColor;
+  final Color color; // icon color
+  final Color backgroundColor; // light tint bg
 
   const AnalyticsCard({
     super.key,
@@ -20,48 +20,48 @@ class AnalyticsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
+
     return Container(
-      width: 260, // auto-wrap in mobile
-      padding: const EdgeInsets.all(16),
+      width: isMobile ? double.infinity : 260,
+      padding: EdgeInsets.all(isMobile ? 14 : 18),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.categoryCard, // SAME AS CATEGORY CARD
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.borderGrey),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadow.withOpacity(0.15),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ICON BOX
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: backgroundColor,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: color, size: 20),
+            child: Icon(icon, color: color, size: isMobile ? 20 : 22),
           ),
-          const SizedBox(height: 12),
+
+          SizedBox(height: isMobile ? 10 : 14),
+
+          // TITLE
           Text(
             title,
-            style: GoogleFonts.inter(
-              color: AppColors.textSecondary,
-              fontSize: 13,
+            style: AppTextStyles.tableRowSecondary.copyWith(
+              fontSize: isMobile ? 13 : 14,
               fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 6),
+
+          // VALUE
           Text(
             value,
-            style: GoogleFonts.inter(
+            style: AppTextStyles.tableRowBoldValue.copyWith(
+              fontSize: isMobile ? 20 : 22,
               color: AppColors.textPrimary,
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
             ),
             overflow: TextOverflow.ellipsis,
           ),

@@ -2,19 +2,28 @@ import 'dart:async';
 import 'package:billing_software/core/services/firebase.dart';
 import 'package:billing_software/features/billing/domain/entity/bill_model.dart';
 import 'package:billing_software/features/billing/domain/entity/payment_model.dart';
+import 'package:billing_software/features/billing/domain/repo/fbill_repository.dart';
 import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:io';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:intl/intl.dart';
 
 part 'bill_state.dart';
 
 class BillCubit extends Cubit<BillState> {
   final TextEditingController searchController = TextEditingController();
-  final int _pageSize = 1;
+  final int _pageSize = 10;
   Timer? debounce;
-
-  BillCubit() : super(BillState.initial());
+  BillRepository billRepository;
+  BillCubit({required this.billRepository}) : super(BillState.initial());
 
   @override
   Future<void> close() {
@@ -180,7 +189,7 @@ class BillCubit extends Cubit<BillState> {
           );
         }
       } else {
-        // Previous page
+        // Previous page - FIXED LOGIC
         Query query = _buildBaseQuery(false).limit(_pageSize);
 
         if (state.firstFetchedDoc != null) {
@@ -198,18 +207,12 @@ class BillCubit extends Cubit<BillState> {
               )
               .toList();
 
-          snap.docs.sort(
-            (a, b) =>
-                ((b.data() as Map<String, dynamic>)['createdAt'] as Timestamp)
-                    .compareTo(
-                      ((a.data() as Map<String, dynamic>)['createdAt']
-                          as Timestamp),
-                    ),
-          );
+          // CRITICAL FIX: Reverse the cursor documents for previous page
+          // DO NOT sort snap.docs - it breaks cursor references!
+          final newFirstFetchedDoc = snap.docs.last;
+          final newLastFetchedDoc = snap.docs.first;
 
-          final newFirstFetchedDoc = snap.docs.first;
-          final newLastFetchedDoc = snap.docs.last;
-
+          // Sort bills in descending order (newest first)
           bills.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
           emit(
@@ -383,32 +386,15 @@ class BillCubit extends Cubit<BillState> {
     }
   }
 
-  // Add payment to bill
   Future<void> addPaymentToBill(
     String billId,
     double amount,
     String mode,
   ) async {
     try {
-      final billDoc = await FBFireStore.bills.doc(billId).get();
-      if (!billDoc.exists) return;
+      emit(state.copyWith(isLoading: true));
 
-      final billData = billDoc.data() as Map<String, dynamic>;
-      final bill = BillModel.fromJson(billData, billDoc.id);
-
-      final newAmountPaid = bill.amountPaid + amount;
-      final newPendingAmount = bill.finalAmount - newAmountPaid;
-
-      String newStatus;
-      if (newPendingAmount <= 0) {
-        newStatus = 'Paid';
-      } else if (newAmountPaid > 0) {
-        newStatus = 'PartiallyPaid';
-      } else {
-        newStatus = 'Unpaid';
-      }
-
-      // Create new payment
+      // Create payment model
       final newPayment = PaymentModel(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         amount: amount,
@@ -416,18 +402,10 @@ class BillCubit extends Cubit<BillState> {
         paidAt: Timestamp.now(),
       );
 
-      // Update payments list
-      final updatedPayments = [...bill.payments, newPayment];
+      // ✅ USE REPOSITORY METHOD (handles transaction creation internally)
+      await billRepository.addPayment(billId, newPayment);
 
-      await FBFireStore.bills.doc(billId).update({
-        'amountPaid': newAmountPaid,
-        'pendingAmount': newPendingAmount,
-        'status': newStatus,
-        'payments': updatedPayments.map((p) => p.toJson()).toList(),
-        'updatedAt': Timestamp.now(),
-      });
-
-      // Fetch updated bill
+      // Fetch updated bill for UI refresh
       final updatedBillDoc = await FBFireStore.bills.doc(billId).get();
       final updatedBillData = updatedBillDoc.data() as Map<String, dynamic>;
       final updatedBill = BillModel.fromJson(
@@ -441,8 +419,10 @@ class BillCubit extends Cubit<BillState> {
       } else {
         updateBillInList(updatedBill);
       }
+
+      emit(state.copyWith(isLoading: false, error: null));
     } catch (e) {
-      emit(state.copyWith(error: 'Payment failed: $e'));
+      emit(state.copyWith(isLoading: false, error: 'Payment failed: $e'));
     }
   }
 
@@ -450,4 +430,434 @@ class BillCubit extends Cubit<BillState> {
   Future<void> refresh() async {
     await initializeBillsPagination();
   }
+
+  // ============================================
+  // 1. Add dependencies to pubspec.yaml
+  // ============================================
+  /*
+dependencies:
+  pdf: ^3.10.0
+  printing: ^5.11.0
+  share_plus: ^7.2.1
+  path_provider: ^2.1.1
+*/
+
+  // ============================================
+  // 2. Add to BillCubit class
+  // ============================================
+
+  // Add this method to your BillCubit class
+  Future<void> generateAndShareInvoice(BillModel bill) async {
+    try {
+      emit(state.copyWith(isLoading: true));
+
+      // Create PDF document
+      final pdf = pw.Document();
+
+      // Add page with invoice content
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          build: (pw.Context context) {
+            return _buildInvoiceContent(bill);
+          },
+        ),
+      );
+
+      // Get temporary directory
+      final output = await getTemporaryDirectory();
+      final file = File('${output.path}/invoice_${bill.billNo}.pdf');
+
+      // Save PDF to file
+      await file.writeAsBytes(await pdf.save());
+
+      emit(state.copyWith(isLoading: false));
+
+      // Share the PDF
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        subject: 'Invoice #${bill.billNo}',
+        text: 'Invoice for ${bill.customerName ?? "Customer"}',
+      );
+    } catch (e) {
+      emit(
+        state.copyWith(isLoading: false, error: 'Failed to generate PDF: $e'),
+      );
+    }
+  }
+
+  // Add this method to print invoice directly
+  Future<void> printInvoice(BillModel bill) async {
+    try {
+      emit(state.copyWith(isLoading: true));
+
+      final pdf = pw.Document();
+
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          build: (pw.Context context) {
+            return _buildInvoiceContent(bill);
+          },
+        ),
+      );
+
+      emit(state.copyWith(isLoading: false));
+
+      // Open print dialog
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdf.save(),
+      );
+    } catch (e) {
+      emit(state.copyWith(isLoading: false, error: 'Failed to print: $e'));
+    }
+  }
+
+  // Build invoice PDF content
+  pw.Widget _buildInvoiceContent(BillModel bill) {
+    final dateFormat = DateFormat('dd MMM yyyy, hh:mm a');
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        // Header
+        pw.Container(
+          padding: const pw.EdgeInsets.all(20),
+          decoration: pw.BoxDecoration(
+            color: PdfColors.blue50,
+            borderRadius: pw.BorderRadius.circular(8),
+          ),
+          child: pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    'YOUR BUSINESS NAME',
+                    style: pw.TextStyle(
+                      fontSize: 24,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.blue900,
+                    ),
+                  ),
+                  pw.SizedBox(height: 5),
+                  pw.Text(
+                    'Business Address Line 1',
+                    style: const pw.TextStyle(fontSize: 10),
+                  ),
+                  pw.Text(
+                    'City, State - PIN',
+                    style: const pw.TextStyle(fontSize: 10),
+                  ),
+                  pw.Text(
+                    'Phone: +91 XXXXX XXXXX',
+                    style: const pw.TextStyle(fontSize: 10),
+                  ),
+                ],
+              ),
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.end,
+                children: [
+                  pw.Text(
+                    'INVOICE',
+                    style: pw.TextStyle(
+                      fontSize: 28,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  pw.SizedBox(height: 5),
+                  pw.Text(
+                    'Bill No: ${bill.billNo}',
+                    style: pw.TextStyle(
+                      fontSize: 12,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  pw.Text(
+                    'Date: ${dateFormat.format(bill.createdAt.toDate())}',
+                    style: const pw.TextStyle(fontSize: 10),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        pw.SizedBox(height: 30),
+
+        // Customer Details
+        pw.Container(
+          padding: const pw.EdgeInsets.all(15),
+          decoration: pw.BoxDecoration(
+            border: pw.Border.all(color: PdfColors.grey300),
+            borderRadius: pw.BorderRadius.circular(8),
+          ),
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(
+                'BILL TO',
+                style: pw.TextStyle(
+                  fontSize: 12,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.grey700,
+                ),
+              ),
+              pw.SizedBox(height: 8),
+              pw.Text(
+                bill.customerName ?? 'Walk-in Customer',
+                style: pw.TextStyle(
+                  fontSize: 14,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+              if (bill.customerPhone != null) ...[
+                pw.SizedBox(height: 3),
+                pw.Text(
+                  'Phone: ${bill.customerPhone}',
+                  style: const pw.TextStyle(fontSize: 11),
+                ),
+              ],
+            ],
+          ),
+        ),
+
+        pw.SizedBox(height: 30),
+
+        // Items Table
+        pw.Table(
+          border: pw.TableBorder.all(color: PdfColors.grey300),
+          children: [
+            // Table Header
+            pw.TableRow(
+              decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+              children: [
+                _buildTableCell('Item', isHeader: true),
+                _buildTableCell(
+                  'Price',
+                  isHeader: true,
+                  align: pw.TextAlign.right,
+                ),
+                _buildTableCell(
+                  'Qty',
+                  isHeader: true,
+                  align: pw.TextAlign.center,
+                ),
+                _buildTableCell(
+                  'Discount',
+                  isHeader: true,
+                  align: pw.TextAlign.right,
+                ),
+                _buildTableCell(
+                  'Total',
+                  isHeader: true,
+                  align: pw.TextAlign.right,
+                ),
+              ],
+            ),
+            // Table Rows
+            ...bill.items.map((item) {
+              return pw.TableRow(
+                children: [
+                  _buildTableCell(item.productName),
+                  _buildTableCell(
+                    '₹${item.price.toStringAsFixed(2)}',
+                    align: pw.TextAlign.right,
+                  ),
+                  _buildTableCell(
+                    '${item.quantity}',
+                    align: pw.TextAlign.center,
+                  ),
+                  _buildTableCell(
+                    '₹${item.discountAmount.toStringAsFixed(2)}',
+                    align: pw.TextAlign.right,
+                  ),
+                  _buildTableCell(
+                    '₹${item.itemTotal.toStringAsFixed(2)}',
+                    align: pw.TextAlign.right,
+                  ),
+                ],
+              );
+            }).toList(),
+          ],
+        ),
+
+        pw.SizedBox(height: 20),
+
+        // Totals Section
+        pw.Row(
+          mainAxisAlignment: pw.MainAxisAlignment.end,
+          children: [
+            pw.Container(
+              width: 250,
+              child: pw.Column(
+                children: [
+                  _buildTotalRow(
+                    'Subtotal:',
+                    '₹${bill.subtotal.toStringAsFixed(2)}',
+                  ),
+                  if (bill.totalDiscount > 0)
+                    _buildTotalRow(
+                      'Discount:',
+                      '-₹${bill.totalDiscount.toStringAsFixed(2)}',
+                    ),
+                  if (bill.totalTax > 0)
+                    _buildTotalRow(
+                      'Tax:',
+                      '₹${bill.totalTax.toStringAsFixed(2)}',
+                    ),
+                  pw.Divider(thickness: 2),
+                  _buildTotalRow(
+                    'Grand Total:',
+                    '₹${bill.finalAmount.toStringAsFixed(2)}',
+                    isBold: true,
+                    fontSize: 16,
+                  ),
+                  pw.SizedBox(height: 10),
+                  _buildTotalRow(
+                    'Amount Paid:',
+                    '₹${bill.amountPaid.toStringAsFixed(2)}',
+                    color: PdfColors.green700,
+                  ),
+                  if (bill.pendingAmount > 0)
+                    _buildTotalRow(
+                      'Pending:',
+                      '₹${bill.pendingAmount.toStringAsFixed(2)}',
+                      color: PdfColors.red700,
+                      isBold: true,
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+
+        pw.SizedBox(height: 30),
+
+        // Payment History (if exists)
+        if (bill.payments.isNotEmpty) ...[
+          pw.Text(
+            'PAYMENT HISTORY',
+            style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+          ),
+          pw.SizedBox(height: 10),
+          pw.Table(
+            border: pw.TableBorder.all(color: PdfColors.grey300),
+            children: [
+              pw.TableRow(
+                decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                children: [
+                  _buildTableCell('Date', isHeader: true),
+                  _buildTableCell('Mode', isHeader: true),
+                  _buildTableCell(
+                    'Amount',
+                    isHeader: true,
+                    align: pw.TextAlign.right,
+                  ),
+                ],
+              ),
+              ...bill.payments.map((payment) {
+                return pw.TableRow(
+                  children: [
+                    _buildTableCell(dateFormat.format(payment.paidAt.toDate())),
+                    _buildTableCell(payment.mode),
+                    _buildTableCell(
+                      '₹${payment.amount.toStringAsFixed(2)}',
+                      align: pw.TextAlign.right,
+                    ),
+                  ],
+                );
+              }).toList(),
+            ],
+          ),
+          pw.SizedBox(height: 30),
+        ],
+
+        // Footer
+        pw.Spacer(),
+        pw.Divider(),
+        pw.SizedBox(height: 10),
+        pw.Center(
+          child: pw.Text(
+            'Thank you for your business!',
+            style: pw.TextStyle(
+              fontSize: 12,
+              fontStyle: pw.FontStyle.italic,
+              color: PdfColors.grey600,
+            ),
+          ),
+        ),
+        pw.Center(
+          child: pw.Text(
+            'For any queries, contact us at support@yourbusiness.com',
+            style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey500),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Helper method to build table cells
+  pw.Widget _buildTableCell(
+    String text, {
+    bool isHeader = false,
+    pw.TextAlign align = pw.TextAlign.left,
+  }) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.all(8),
+      child: pw.Text(
+        text,
+        style: pw.TextStyle(
+          fontSize: isHeader ? 11 : 10,
+          fontWeight: isHeader ? pw.FontWeight.bold : pw.FontWeight.normal,
+        ),
+        textAlign: align,
+      ),
+    );
+  }
+
+  // Helper method to build total rows
+  pw.Widget _buildTotalRow(
+    String label,
+    String value, {
+    bool isBold = false,
+    double fontSize = 12,
+    PdfColor? color,
+  }) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(vertical: 5),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Text(
+            label,
+            style: pw.TextStyle(
+              fontSize: fontSize,
+              fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
+              color: color,
+            ),
+          ),
+          pw.Text(
+            value,
+            style: pw.TextStyle(
+              fontSize: fontSize,
+              fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================
+  // 3. Update your UI code
+  // ============================================
+
+  // In your bills list widget, update the Row:
+
+  // Add this method to show PDF options
+
+
 }

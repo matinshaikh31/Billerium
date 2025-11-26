@@ -25,7 +25,17 @@ class DesktopSidebar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 250,
-      color: AppColors.secondary, // 🌿 Light beige background
+
+      decoration: BoxDecoration(
+        color: AppColors.secondary,
+        border: Border(
+          top: BorderSide.none,
+          left: BorderSide.none,
+          bottom: BorderSide.none,
+          right: BorderSide(color: AppColors.blueGreyBorder),
+        ),
+      ),
+      //🌿 Light beige background
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

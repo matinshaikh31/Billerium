@@ -145,7 +145,16 @@ class _BillsPageState extends State<BillsPage> {
   Widget _buildHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
-      color: AppColors.secondary,
+
+      decoration: BoxDecoration(
+        color: AppColors.secondary,
+        border: Border(
+          top: BorderSide.none,
+          left: BorderSide.none,
+          right: BorderSide.none,
+          bottom: BorderSide(color: AppColors.blueGreyBorder),
+        ),
+      ),
       child: Row(
         children: [
           Icon(Icons.receipt_long_outlined, size: 30, color: AppColors.primary),
@@ -543,6 +552,7 @@ class _BillsPageState extends State<BillsPage> {
             flex: 2,
             child: Text('Customer', style: AppTextStyles.tabelHeader),
           ),
+          Expanded(child: Text('Bill No', style: AppTextStyles.tabelHeader)),
           Expanded(child: Text('Phone', style: AppTextStyles.tabelHeader)),
           Expanded(child: Text('Date', style: AppTextStyles.tabelHeader)),
           Expanded(child: Text('Items', style: AppTextStyles.tabelHeader)),
@@ -575,6 +585,9 @@ class _BillsPageState extends State<BillsPage> {
               bill.customerName ?? 'Walk-in',
               style: AppTextStyles.tableRowPrimary,
             ),
+          ),
+          Expanded(
+            child: Text(bill.billNo, style: AppTextStyles.tableRowSecondary),
           ),
           Expanded(
             child: Text(
@@ -615,9 +628,10 @@ class _BillsPageState extends State<BillsPage> {
           ),
           Expanded(child: _buildStatusBadge(bill.status)),
           SizedBox(
-            width: 100,
+            width: 150, // Increased width for 3 icons
             child: Row(
               children: [
+                // View Details
                 IconButton(
                   icon: Icon(
                     Icons.visibility_outlined,
@@ -626,6 +640,18 @@ class _BillsPageState extends State<BillsPage> {
                   ),
                   onPressed: () => _showBillDetailsDialog(context, bill),
                 ),
+
+                // Print/Share PDF
+                IconButton(
+                  icon: Icon(
+                    Icons.picture_as_pdf,
+                    size: 18,
+                    color: AppColors.success,
+                  ),
+                  onPressed: () => _showPdfOptionsDialog(context, bill),
+                ),
+
+                // Add Payment
                 if (bill.status != 'Paid')
                   IconButton(
                     icon: Icon(
@@ -662,22 +688,26 @@ class _BillsPageState extends State<BillsPage> {
         text = 'Partial';
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color),
-      ),
-      child: Text(
-        text,
-        style: GoogleFonts.inter(
-          color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color),
+          ),
+          child: Text(
+            text,
+            style: GoogleFonts.inter(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
         ),
-        textAlign: TextAlign.center,
-      ),
+      ],
     );
   }
 
@@ -772,6 +802,7 @@ class _BillsPageState extends State<BillsPage> {
                   ],
                 ),
                 const Divider(height: 24),
+                _detailRow('Bill No', bill.billNo),
                 _detailRow('Customer', bill.customerName ?? 'Walk-in'),
                 _detailRow('Phone', bill.customerPhone ?? '-'),
                 _detailRow('Date', date),
@@ -938,6 +969,36 @@ class _BillsPageState extends State<BillsPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showPdfOptionsDialog(BuildContext context, BillModel bill) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Invoice Options'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.print),
+              title: const Text('Print Invoice'),
+              onTap: () {
+                // Navigator.pop(context);
+                context.read<BillCubit>().printInvoice(bill);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.share),
+              title: const Text('Share Invoice'),
+              onTap: () {
+                // Navigator.pop(context);
+                context.read<BillCubit>().generateAndShareInvoice(bill);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

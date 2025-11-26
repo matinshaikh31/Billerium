@@ -5,6 +5,7 @@ import 'package:equatable/equatable.dart';
 
 class BillModel extends Equatable {
   final String id;
+  final String billNo;
   final List<BillItemModel> items;
   final String? customerName;
   final String? customerPhone;
@@ -23,6 +24,7 @@ class BillModel extends Equatable {
 
   const BillModel({
     required this.id,
+    required this.billNo, // ✅ Already required
     required this.items,
     this.customerName,
     this.customerPhone,
@@ -43,6 +45,7 @@ class BillModel extends Equatable {
   factory BillModel.fromJson(Map<String, dynamic> json, String id) {
     return BillModel(
       id: id,
+      billNo: json['billNo'] as String, // ✅ ADD THIS LINE
       items: (json['items'] as List)
           .map((item) => BillItemModel.fromJson(item))
           .toList(),
@@ -73,6 +76,7 @@ class BillModel extends Equatable {
 
   Map<String, dynamic> toJson() {
     return {
+      'billNo': billNo, // ✅ ADD THIS LINE
       'items': items.map((item) => item.toJson()).toList(),
       'customerName': customerName,
       'customerPhone': customerPhone,
@@ -93,6 +97,7 @@ class BillModel extends Equatable {
 
   BillModel copyWith({
     String? id,
+    String? billNo, // ✅ ADD THIS LINE
     List<BillItemModel>? items,
     String? customerName,
     String? customerPhone,
@@ -111,6 +116,7 @@ class BillModel extends Equatable {
   }) {
     return BillModel(
       id: id ?? this.id,
+      billNo: billNo ?? this.billNo, // ✅ ADD THIS LINE
       items: items ?? this.items,
       customerName: customerName ?? this.customerName,
       customerPhone: customerPhone ?? this.customerPhone,
@@ -132,6 +138,7 @@ class BillModel extends Equatable {
   @override
   List<Object?> get props => [
     id,
+    billNo, // ✅ ADD THIS LINE
     items,
     customerName,
     customerPhone,

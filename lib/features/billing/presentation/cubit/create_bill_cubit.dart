@@ -1,3 +1,4 @@
+import 'package:billing_software/core/utils/helpers.dart';
 import 'package:billing_software/features/billing/domain/repo/fbill_repository.dart';
 import 'package:billing_software/features/billing/domain/entity/bill_item_model.dart';
 import 'package:billing_software/features/billing/domain/entity/bill_model.dart';
@@ -124,6 +125,7 @@ class CreateBillCubit extends Cubit<CreateBillState> {
     emit(state.copyWith(isLoading: true, message: null));
 
     try {
+      final String billNo = generateBillNoWithTimestamp();
       // Determine bill status
       String billStatus;
       if (state.amountReceived >= state.grandTotal) {
@@ -150,8 +152,9 @@ class CreateBillCubit extends Cubit<CreateBillState> {
       // Create bill
       final bill = BillModel(
         id: '',
+        billNo: billNo,
         items: state.cartItems,
-        customerName: customerNameController.text,
+        customerName: customerNameController.text.trim().toLowerCase(),
         customerPhone: customerPhoneController.text,
         subtotal: state.subtotal,
         totalDiscount: 0,
@@ -169,12 +172,13 @@ class CreateBillCubit extends Cubit<CreateBillState> {
 
       // Save bill
       final billId = await billRepository.createBill(bill);
-        
+
       // Create transaction
       if (state.amountReceived > 0) {
         final transaction = TransactionModel(
           id: '',
           billId: billId,
+          billNo: billNo,
           customerName: customerNameController.text,
           customerPhone: customerPhoneController.text,
           amount: state.amountReceived,

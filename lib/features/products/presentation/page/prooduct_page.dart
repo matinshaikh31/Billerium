@@ -150,7 +150,16 @@ class _ProductsPageState extends State<ProductsPage> {
   Widget _buildHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
-      color: AppColors.secondary,
+
+      decoration: BoxDecoration(
+        color: AppColors.secondary,
+        border: Border(
+          top: BorderSide.none,
+          left: BorderSide.none,
+          right: BorderSide.none,
+          bottom: BorderSide(color: AppColors.blueGreyBorder),
+        ),
+      ),
       child: Row(
         children: [
           Icon(Icons.inventory_2_outlined, size: 30, color: AppColors.primary),
@@ -706,22 +715,26 @@ class _ProductsPageState extends State<ProductsPage> {
       color = AppColors.success;
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color),
-      ),
-      child: Text(
-        stock.toString(),
-        style: GoogleFonts.inter(
-          color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color),
+          ),
+          child: Text(
+            stock.toString(),
+            style: GoogleFonts.inter(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
         ),
-        textAlign: TextAlign.center,
-      ),
+      ],
     );
   }
 

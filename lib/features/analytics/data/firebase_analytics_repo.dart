@@ -50,20 +50,20 @@ class FirebaseAnalyticsRepository {
     }
   }
 
-  Future<void> updateAnalyticsOnPayment(
-    double amount,
-    bool isFullyPaid,
-    Timestamp time,
-  ) async {
+  Future<void> updateAnalyticsOnPayment({
+    required double paymentAmount,
+    required double pendingChange,
+    required Timestamp timestamp,
+  }) async {
     try {
-      final monthKey = _monthKeyFromTimestamp(time);
+      final monthKey = _monthKeyFromTimestamp(timestamp);
       final docRef = analyticsRef.doc(monthKey);
       final docSnap = await docRef.get();
 
       if (docSnap.exists) {
         await docRef.update({
-          'totalPaid': FieldValue.increment(amount),
-          if (isFullyPaid) 'totalPending': FieldValue.increment(-amount),
+          'totalPaid': FieldValue.increment(paymentAmount),
+          'totalPending': FieldValue.increment(-pendingChange),
           'updatedAt': Timestamp.now(),
         });
       }

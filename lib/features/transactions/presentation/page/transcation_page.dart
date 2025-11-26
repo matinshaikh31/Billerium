@@ -111,7 +111,16 @@ class _TransactionsPageState extends State<TransactionsPage> {
   Widget _buildHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
-      color: AppColors.secondary,
+
+      decoration: BoxDecoration(
+        color: AppColors.secondary,
+        border: Border(
+          top: BorderSide.none,
+          left: BorderSide.none,
+          right: BorderSide.none,
+          bottom: BorderSide(color: AppColors.blueGreyBorder),
+        ),
+      ),
       child: Row(
         children: [
           Icon(Icons.receipt_outlined, size: 30, color: AppColors.primary),
@@ -530,28 +539,32 @@ class _TransactionsPageState extends State<TransactionsPage> {
         icon = Icons.attach_money_outlined;
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 6),
-          Text(
-            mode,
-            style: GoogleFonts.inter(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color),
           ),
-        ],
-      ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 14, color: color),
+              const SizedBox(width: 6),
+              Text(
+                mode,
+                style: GoogleFonts.inter(
+                  color: color,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

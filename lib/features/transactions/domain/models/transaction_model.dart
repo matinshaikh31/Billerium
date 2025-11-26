@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 
-class TransactionModel extends Equatable {
+class TransactionModel {
   final String id;
   final String billId;
+  final String billNo; // ✅ ADDED
   final String customerName;
   final String? customerPhone;
   final double amount;
@@ -13,6 +14,7 @@ class TransactionModel extends Equatable {
   const TransactionModel({
     required this.id,
     required this.billId,
+    required this.billNo, // ✅ ADDED
     required this.customerName,
     this.customerPhone,
     required this.amount,
@@ -24,6 +26,7 @@ class TransactionModel extends Equatable {
     return TransactionModel(
       id: id,
       billId: json['billId'] as String,
+      billNo: json['billNo'] as String, // ✅ ADDED
       customerName: json['customerName'] as String,
       customerPhone: json['customerPhone'] as String?,
       amount: (json['amount'] as num).toDouble(),
@@ -41,6 +44,7 @@ class TransactionModel extends Equatable {
   Map<String, dynamic> toJson() {
     return {
       'billId': billId,
+      'billNo': billNo, // ✅ ADDED
       'customerName': customerName,
       'customerPhone': customerPhone,
       'amount': amount,
@@ -53,6 +57,7 @@ class TransactionModel extends Equatable {
   List<Object?> get props => [
     id,
     billId,
+    billNo, // ✅ ADDED
     customerName,
     customerPhone,
     amount,

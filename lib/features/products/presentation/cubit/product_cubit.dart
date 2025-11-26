@@ -11,7 +11,7 @@ part 'product_state.dart';
 
 class ProductCubit extends Cubit<ProductState> {
   final TextEditingController searchController = TextEditingController();
-  final int _pageSize = 2;
+  final int _pageSize = 10;
   Timer? debounce;
 
   ProductCubit() : super(ProductState.initial());
@@ -173,7 +173,7 @@ class ProductCubit extends Cubit<ProductState> {
           );
         }
       } else {
-        // Previous page
+        // Previous page - FIXED LOGIC
         Query query = _buildBaseQuery(false).limit(_pageSize);
 
         if (state.firstFetchedDoc != null) {
@@ -191,18 +191,12 @@ class ProductCubit extends Cubit<ProductState> {
               )
               .toList();
 
-          snap.docs.sort(
-            (a, b) =>
-                ((b.data() as Map<String, dynamic>)['createdAt'] as Timestamp)
-                    .compareTo(
-                      ((a.data() as Map<String, dynamic>)['createdAt']
-                          as Timestamp),
-                    ),
-          );
+          // CRITICAL FIX: Reverse the cursor documents for previous page
+          // When going backwards with ascending order, last becomes first
+          final newFirstFetchedDoc = snap.docs.last;
+          final newLastFetchedDoc = snap.docs.first;
 
-          final newFirstFetchedDoc = snap.docs.first;
-          final newLastFetchedDoc = snap.docs.last;
-
+          // Sort products in descending order (newest first)
           products.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
           emit(

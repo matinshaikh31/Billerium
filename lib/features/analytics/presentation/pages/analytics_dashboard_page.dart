@@ -1,4 +1,5 @@
 import 'package:billing_software/core/theme/app_colors.dart';
+import 'package:billing_software/core/theme/app_text_styles.dart';
 import 'package:billing_software/core/widgets/responsive_widget.dart';
 import 'package:billing_software/features/analytics/presentation/cubit/analytics_cubit.dart';
 import 'package:billing_software/features/analytics/presentation/widget/AnalyticsShimmer.dart';
@@ -78,20 +79,48 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
   }
 
   Widget _buildHeader(bool isMobile) {
-    return SliverAppBar(
-      expandedHeight: isMobile ? 100 : 130,
-      pinned: true,
-      backgroundColor: AppColors.primary,
-      elevation: 0,
-      flexibleSpace: FlexibleSpaceBar(
-        titlePadding: EdgeInsets.only(left: isMobile ? 16 : 24, bottom: 12),
-        title: Text(
-          'Analytics Dashboard',
-          style: GoogleFonts.inter(
-            color: Colors.white,
-            fontSize: isMobile ? 18 : 22,
-            fontWeight: FontWeight.w600,
-          ),
+    return SliverToBoxAdapter(
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(
+          horizontal: isMobile ? 16 : 24,
+          vertical: isMobile ? 18 : 24,
+        ),
+        decoration: const BoxDecoration(
+          color: AppColors.secondary,
+          border: Border(bottom: BorderSide(color: AppColors.borderGrey)),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.analytics_outlined,
+              size: isMobile ? 24 : 28,
+              color: AppColors.primary,
+            ),
+            SizedBox(width: isMobile ? 12 : 16),
+
+            // Title + Subtitle
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Analytics Dashboard",
+                    style: AppTextStyles.headerHeading.copyWith(
+                      fontSize: isMobile ? 20 : 26,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "Track sales, revenue & business performance",
+                    style: AppTextStyles.headerSubheading.copyWith(
+                      fontSize: isMobile ? 13 : 15,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -103,41 +132,44 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
     bool isMobile,
   ) {
     return Container(
-      padding: EdgeInsets.all(isMobile ? 14 : 18),
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.categoryCard, // SAME AS CATEGORY CARD
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.borderGrey),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadow.withOpacity(0.15),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(
-                Icons.filter_alt_outlined,
-                color: AppColors.primary,
-                size: 20,
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.filter_alt_outlined,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Text(
                 'Filter Period',
                 style: GoogleFonts.inter(
                   fontWeight: FontWeight.w600,
-                  fontSize: 15,
+                  fontSize: isMobile ? 15 : 16,
                   color: AppColors.textPrimary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
+
+          const SizedBox(height: 18),
+
+          // === Monthly / Yearly Buttons ===
           Row(
             children: [
               Expanded(
@@ -159,8 +191,57 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          _buildPeriodDropdown(context, state),
+
+          const SizedBox(height: 20),
+
+          // === Dropdown ===
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: AppColors.containerGreyColor,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.borderGrey),
+            ),
+            child: DropdownButton<String>(
+              value:
+                  (state.currentFilter == AnalyticsFilter.monthly
+                          ? state.availableMonths
+                          : state.availableYears)
+                      .contains(state.selectedPeriod)
+                  ? state.selectedPeriod
+                  : null,
+              isExpanded: true,
+              underline: const SizedBox(),
+              icon: const Icon(Icons.arrow_drop_down, color: AppColors.primary),
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+              ),
+              items:
+                  (state.currentFilter == AnalyticsFilter.monthly
+                          ? state.availableMonths
+                          : state.availableYears)
+                      .map(
+                        (p) => DropdownMenuItem(
+                          value: p,
+                          child: Text(
+                            state.currentFilter == AnalyticsFilter.monthly
+                                ? _getMonthName(p)
+                                : p,
+                          ),
+                        ),
+                      )
+                      .toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  state.currentFilter == AnalyticsFilter.monthly
+                      ? context.read<AnalyticsCubit>().loadMonthlyData(value)
+                      : context.read<AnalyticsCubit>().loadYearlyData(value);
+                }
+              },
+            ),
+          ),
         ],
       ),
     );

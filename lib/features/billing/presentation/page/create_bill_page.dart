@@ -10,6 +10,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:billing_software/core/utils/helpers.dart';
 
 class CreateBillPage extends StatefulWidget {
   const CreateBillPage({super.key});
@@ -119,31 +120,39 @@ class _CreateBillPageState extends State<CreateBillPage> {
     return Form(
       key: _formKey,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        // padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(),
             const SizedBox(height: 24),
-            _buildProductSearch(context),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+
+              child: _buildProductSearch(context),
+            ),
             const SizedBox(height: 24),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(flex: 2, child: _buildCartItems(context, state)),
-                const SizedBox(width: 24),
-                Expanded(
-                  child: Column(
-                    children: [
-                      _buildCustomerDetails(context, state),
-                      const SizedBox(height: 20),
-                      _buildPaymentDetails(context, state),
-                      const SizedBox(height: 20),
-                      _buildSummary(context, state),
-                    ],
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(flex: 2, child: _buildCartItems(context, state)),
+                  const SizedBox(width: 24),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        _buildCustomerDetails(context, state),
+                        const SizedBox(height: 20),
+                        _buildPaymentDetails(context, state),
+                        const SizedBox(height: 20),
+                        _buildSummary(context, state),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
@@ -188,7 +197,16 @@ class _CreateBillPageState extends State<CreateBillPage> {
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(24),
-      color: AppColors.secondary,
+
+      decoration: BoxDecoration(
+        color: AppColors.secondary,
+        border: Border(
+          top: BorderSide.none,
+          left: BorderSide.none,
+          right: BorderSide.none,
+          bottom: BorderSide(color: AppColors.blueGreyBorder),
+        ),
+      ),
       child: Row(
         children: [
           Icon(Icons.add_shopping_cart, size: 30, color: AppColors.primary),
@@ -284,7 +302,7 @@ class _CreateBillPageState extends State<CreateBillPage> {
                             ),
                           ),
                           title: Text(
-                            option.name,
+                            capitalizeWords(option.name),
                             style: AppTextStyles.tableRowPrimary,
                           ),
                           subtitle: Text(

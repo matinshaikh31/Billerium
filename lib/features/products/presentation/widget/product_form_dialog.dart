@@ -1,3 +1,4 @@
+import 'package:billing_software/core/theme/app_colors.dart';
 import 'package:billing_software/features/categories/presentation/cubit/category_cubit.dart';
 import 'package:billing_software/features/products/domain/entity/product_model.dart';
 import 'package:billing_software/features/products/presentation/cubit/product_form_cubit.dart';
@@ -20,8 +21,8 @@ class ProductFormDialog extends StatelessWidget {
             SnackBar(
               content: Text(state.message!),
               backgroundColor: state.message!.contains('success')
-                  ? Colors.green
-                  : Colors.red,
+                  ? AppColors.success
+                  : AppColors.error,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -32,10 +33,9 @@ class ProductFormDialog extends StatelessWidget {
       },
       builder: (context, state) {
         final cubit = context.read<ProductFormCubit>();
-        final isDesktop = MediaQuery.of(context).size.width > 900;
-        final isTablet =
-            MediaQuery.of(context).size.width > 600 &&
-            MediaQuery.of(context).size.width <= 900;
+        final width = MediaQuery.of(context).size.width;
+        final isDesktop = width > 900;
+        final isTablet = width > 600 && width <= 900;
 
         return Dialog(
           shape: RoundedRectangleBorder(
@@ -47,8 +47,16 @@ class ProductFormDialog extends StatelessWidget {
               maxHeight: MediaQuery.of(context).size.height * 0.85,
             ),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.borderGrey),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.shadow,
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Column(
               children: [
@@ -94,21 +102,22 @@ class ProductFormDialog extends StatelessWidget {
   Widget _buildHeader(BuildContext context, bool isLargeScreen) {
     return Container(
       padding: EdgeInsets.all(isLargeScreen ? 20 : 16),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.05),
+        border: Border(bottom: BorderSide(color: AppColors.borderGrey)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFF3B82F6).withOpacity(0.1),
+              color: AppColors.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               CupertinoIcons.cube_box_fill,
-              color: const Color(0xFF3B82F6),
+              color: AppColors.primary,
               size: isLargeScreen ? 24 : 20,
             ),
           ),
@@ -119,215 +128,17 @@ class ProductFormDialog extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: isLargeScreen ? 18 : 16,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFF111827),
+                color: AppColors.textPrimary,
               ),
             ),
           ),
           IconButton(
             onPressed: () => Navigator.pop(context),
             icon: const Icon(CupertinoIcons.xmark_circle_fill),
-            color: Colors.grey[400],
+            color: AppColors.textSecondary.withOpacity(0.5),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildBasicInfoSection(
-    ProductFormCubit cubit,
-    BuildContext context,
-    bool isDesktop,
-    bool isTablet,
-  ) {
-    final isMobile = !isDesktop && !isTablet;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionHeader(
-          icon: CupertinoIcons.info_circle_fill,
-          iconColor: Colors.blue,
-          title: "Basic Information",
-          isMobile: isMobile,
-        ),
-        SizedBox(height: isMobile ? 16 : 20),
-        _buildTextField(
-          controller: cubit.nameController,
-          label: "Product Name *",
-          hint: "e.g., Laptop Stand",
-          validator: (value) => value?.trim().isEmpty ?? true
-              ? 'Please enter product name'
-              : null,
-        ),
-        const SizedBox(height: 16),
-        BlocBuilder<CategoryCubit, CategoryState>(
-          builder: (context, categoryState) {
-            return _buildDropdownField(
-              value: cubit.selectedCategoryId,
-              label: "Category *",
-              hint: "Select category",
-              items: categoryState.categories.map((cat) {
-                return DropdownMenuItem(value: cat.id, child: Text(cat.name));
-              }).toList(),
-              onChanged: (value) => cubit.setSelectedCategory(value),
-              validator: (value) =>
-                  value == null ? 'Please select category' : null,
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPricingSection(
-    ProductFormCubit cubit,
-    bool isDesktop,
-    bool isTablet,
-  ) {
-    final isMobile = !isDesktop && !isTablet;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionHeader(
-          icon: CupertinoIcons.money_dollar_circle_fill,
-          iconColor: Colors.orange,
-          title: "Pricing",
-          isMobile: isMobile,
-        ),
-        SizedBox(height: isMobile ? 16 : 20),
-        if (isMobile) ...[
-          _buildTextField(
-            controller: cubit.priceController,
-            label: "Price *",
-            hint: "0.00",
-            prefix: "₹",
-            keyboardType: TextInputType.number,
-            validator: (value) {
-              if (value?.trim().isEmpty ?? true) return 'Required';
-              if (double.tryParse(value!) == null) return 'Invalid price';
-              return null;
-            },
-          ),
-          const SizedBox(height: 16),
-          _buildTextField(
-            controller: cubit.discountController,
-            label: "Discount %",
-            hint: "0",
-            keyboardType: TextInputType.number,
-            validator: (value) {
-              if (value?.trim().isNotEmpty ?? false) {
-                final discount = double.tryParse(value!);
-                if (discount == null || discount < 0 || discount > 100) {
-                  return 'Invalid discount';
-                }
-              }
-              return null;
-            },
-          ),
-        ] else
-          Row(
-            children: [
-              Expanded(
-                child: _buildTextField(
-                  controller: cubit.priceController,
-                  label: "Price *",
-                  hint: "0.00",
-                  prefix: "₹",
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value?.trim().isEmpty ?? true) return 'Required';
-                    if (double.tryParse(value!) == null) return 'Invalid price';
-                    return null;
-                  },
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildTextField(
-                  controller: cubit.discountController,
-                  label: "Discount %",
-                  hint: "0",
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value?.trim().isNotEmpty ?? false) {
-                      final discount = double.tryParse(value!);
-                      if (discount == null || discount < 0 || discount > 100) {
-                        return 'Invalid discount';
-                      }
-                    }
-                    return null;
-                  },
-                ),
-              ),
-            ],
-          ),
-      ],
-    );
-  }
-
-  Widget _buildInventorySection(
-    ProductFormCubit cubit,
-    bool isDesktop,
-    bool isTablet,
-  ) {
-    final isMobile = !isDesktop && !isTablet;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionHeader(
-          icon: CupertinoIcons.cube_box,
-          iconColor: Colors.green,
-          title: "Inventory",
-          isMobile: isMobile,
-        ),
-        SizedBox(height: isMobile ? 16 : 20),
-        if (isMobile) ...[
-          _buildTextField(
-            controller: cubit.skuController,
-            label: "SKU",
-            hint: "e.g., PROD-001",
-          ),
-          const SizedBox(height: 16),
-          _buildTextField(
-            controller: cubit.stockController,
-            label: "Stock Quantity *",
-            hint: "0",
-            keyboardType: TextInputType.number,
-            validator: (value) {
-              if (value?.trim().isEmpty ?? true) return 'Required';
-              if (int.tryParse(value!) == null) return 'Invalid quantity';
-              return null;
-            },
-          ),
-        ] else
-          Row(
-            children: [
-              Expanded(
-                child: _buildTextField(
-                  controller: cubit.skuController,
-                  label: "SKU",
-                  hint: "e.g., PROD-001",
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildTextField(
-                  controller: cubit.stockController,
-                  label: "Stock Quantity *",
-                  hint: "0",
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value?.trim().isEmpty ?? true) return 'Required';
-                    if (int.tryParse(value!) == null) return 'Invalid quantity';
-                    return null;
-                  },
-                ),
-              ),
-            ],
-          ),
-      ],
     );
   }
 
@@ -345,7 +156,7 @@ class ProductFormDialog extends StatelessWidget {
             color: iconColor.withOpacity(0.1),
             borderRadius: BorderRadius.circular(6),
           ),
-          child: Icon(icon, size: 16, color: iconColor.withOpacity(0.8)),
+          child: Icon(icon, size: 16, color: iconColor),
         ),
         const SizedBox(width: 8),
         Text(
@@ -353,7 +164,7 @@ class ProductFormDialog extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: isMobile ? 14 : 16,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF111827),
+            color: AppColors.textPrimary,
           ),
         ),
       ],
@@ -376,7 +187,7 @@ class ProductFormDialog extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: const Color(0xFF374151),
+            color: AppColors.textSecondary,
           ),
         ),
         const SizedBox(height: 8),
@@ -387,24 +198,27 @@ class ProductFormDialog extends StatelessWidget {
           decoration: InputDecoration(
             hintText: hint,
             prefixText: prefix,
-            hintStyle: GoogleFonts.inter(color: Colors.grey[400], fontSize: 14),
+            hintStyle: GoogleFonts.inter(
+              color: AppColors.textSecondary.withOpacity(0.4),
+              fontSize: 14,
+            ),
             filled: true,
-            fillColor: const Color(0xFFF9FAFB),
+            fillColor: AppColors.containerGreyColor,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+              borderSide: BorderSide(color: AppColors.borderGrey),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+              borderSide: BorderSide(color: AppColors.borderGrey),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 2),
+              borderSide: BorderSide(color: AppColors.primary, width: 2),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Colors.red),
+              borderSide: BorderSide(color: AppColors.error),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
@@ -432,7 +246,7 @@ class ProductFormDialog extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: const Color(0xFF374151),
+            color: AppColors.textSecondary,
           ),
         ),
         const SizedBox(height: 8),
@@ -443,20 +257,23 @@ class ProductFormDialog extends StatelessWidget {
           validator: validator,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.inter(color: Colors.grey[400], fontSize: 14),
+            hintStyle: GoogleFonts.inter(
+              color: AppColors.textSecondary.withOpacity(0.4),
+              fontSize: 14,
+            ),
             filled: true,
-            fillColor: const Color(0xFFF9FAFB),
+            fillColor: AppColors.containerGreyColor,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+              borderSide: BorderSide(color: AppColors.borderGrey),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+              borderSide: BorderSide(color: AppColors.borderGrey),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 2),
+              borderSide: BorderSide(color: AppColors.primary, width: 2),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
@@ -475,8 +292,9 @@ class ProductFormDialog extends StatelessWidget {
   ) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundColor,
+        border: Border(top: BorderSide(color: AppColors.borderGrey)),
       ),
       child: Row(
         children: [
@@ -488,7 +306,7 @@ class ProductFormDialog extends StatelessWidget {
                     ? null
                     : () => Navigator.pop(context),
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFFE5E7EB)),
+                  side: BorderSide(color: AppColors.borderGrey),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -496,7 +314,7 @@ class ProductFormDialog extends StatelessWidget {
                 child: Text(
                   'Cancel',
                   style: GoogleFonts.inter(
-                    color: const Color(0xFF6B7280),
+                    color: AppColors.textSecondary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -512,8 +330,8 @@ class ProductFormDialog extends StatelessWidget {
                     ? null
                     : () => cubit.submitForm(product, context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF3B82F6),
-                  foregroundColor: Colors.white,
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.textLight,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -537,6 +355,205 @@ class ProductFormDialog extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  // Sections (unchanged layout, themed content)
+  Widget _buildBasicInfoSection(
+    ProductFormCubit cubit,
+    BuildContext context,
+    bool isDesktop,
+    bool isTablet,
+  ) {
+    final isMobile = !isDesktop && !isTablet;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(
+          icon: CupertinoIcons.info_circle_fill,
+          iconColor: AppColors.primary,
+          title: "Basic Information",
+          isMobile: isMobile,
+        ),
+        SizedBox(height: isMobile ? 16 : 20),
+        _buildTextField(
+          controller: cubit.nameController,
+          label: "Product Name *",
+          hint: "e.g., Laptop Stand",
+          validator: (value) => value?.trim().isEmpty ?? true
+              ? 'Please enter product name'
+              : null,
+        ),
+        const SizedBox(height: 16),
+        BlocBuilder<CategoryCubit, CategoryState>(
+          builder: (context, categoryState) {
+            return _buildDropdownField(
+              value: cubit.selectedCategoryId,
+              label: "Category *",
+              hint: "Select category",
+              items: categoryState.categories
+                  .map(
+                    (cat) =>
+                        DropdownMenuItem(value: cat.id, child: Text(cat.name)),
+                  )
+                  .toList(),
+              onChanged: (value) => cubit.setSelectedCategory(value),
+              validator: (value) =>
+                  value == null ? 'Please select category' : null,
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPricingSection(
+    ProductFormCubit cubit,
+    bool isDesktop,
+    bool isTablet,
+  ) {
+    final isMobile = !isDesktop && !isTablet;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(
+          icon: CupertinoIcons.money_dollar_circle_fill,
+          iconColor: AppColors.billBtn,
+          title: "Pricing",
+          isMobile: isMobile,
+        ),
+        SizedBox(height: isMobile ? 16 : 20),
+        if (isMobile) ...[
+          _buildTextField(
+            controller: cubit.priceController,
+            label: "Price *",
+            hint: "0.00",
+            prefix: "₹",
+            keyboardType: TextInputType.number,
+            validator: (v) => (v?.trim().isEmpty ?? true)
+                ? 'Required'
+                : double.tryParse(v!) == null
+                ? 'Invalid price'
+                : null,
+          ),
+          const SizedBox(height: 16),
+          _buildTextField(
+            controller: cubit.discountController,
+            label: "Discount %",
+            hint: "0",
+            keyboardType: TextInputType.number,
+            validator: (v) {
+              if (v?.trim().isNotEmpty ?? false) {
+                final d = double.tryParse(v!);
+                if (d == null || d < 0 || d > 100) return 'Invalid discount';
+              }
+              return null;
+            },
+          ),
+        ] else
+          Row(
+            children: [
+              Expanded(
+                child: _buildTextField(
+                  controller: cubit.priceController,
+                  label: "Price *",
+                  hint: "0.00",
+                  prefix: "₹",
+                  keyboardType: TextInputType.number,
+                  validator: (v) => (v?.trim().isEmpty ?? true)
+                      ? 'Required'
+                      : double.tryParse(v!) == null
+                      ? 'Invalid price'
+                      : null,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildTextField(
+                  controller: cubit.discountController,
+                  label: "Discount %",
+                  hint: "0",
+                  keyboardType: TextInputType.number,
+                  validator: (v) {
+                    if (v?.trim().isNotEmpty ?? false) {
+                      final d = double.tryParse(v!);
+                      if (d == null || d < 0 || d > 100)
+                        return 'Invalid discount';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  Widget _buildInventorySection(
+    ProductFormCubit cubit,
+    bool isDesktop,
+    bool isTablet,
+  ) {
+    final isMobile = !isDesktop && !isTablet;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(
+          icon: CupertinoIcons.cube_box,
+          iconColor: AppColors.documentBtn,
+          title: "Inventory",
+          isMobile: isMobile,
+        ),
+        SizedBox(height: isMobile ? 16 : 20),
+        if (isMobile) ...[
+          _buildTextField(
+            controller: cubit.skuController,
+            label: "SKU",
+            hint: "e.g., PROD-001",
+          ),
+          const SizedBox(height: 16),
+          _buildTextField(
+            controller: cubit.stockController,
+            label: "Stock Quantity *",
+            hint: "0",
+            keyboardType: TextInputType.number,
+            validator: (v) => (v?.trim().isEmpty ?? true)
+                ? 'Required'
+                : int.tryParse(v!) == null
+                ? 'Invalid quantity'
+                : null,
+          ),
+        ] else
+          Row(
+            children: [
+              Expanded(
+                child: _buildTextField(
+                  controller: cubit.skuController,
+                  label: "SKU",
+                  hint: "e.g., PROD-001",
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildTextField(
+                  controller: cubit.stockController,
+                  label: "Stock Quantity *",
+                  hint: "0",
+                  keyboardType: TextInputType.number,
+                  validator: (v) => (v?.trim().isEmpty ?? true)
+                      ? 'Required'
+                      : int.tryParse(v!) == null
+                      ? 'Invalid quantity'
+                      : null,
+                ),
+              ),
+            ],
+          ),
+      ],
     );
   }
 }
