@@ -49,7 +49,7 @@ class LoginPage extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: 160,
-                    child: Image.asset("logo.png", color: Colors.white),
+                    child: Image.asset("assets/logo.png", color: Colors.white),
                   ),
                   // const SizedBox(height: 16),
                   // Text(
@@ -103,7 +103,7 @@ class LoginPage extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Image.asset("logo.png"),
+                          Image.asset("assets/logo.png"),
                           // const SizedBox(height: 32),
                           // Padding(
                           //   padding: const EdgeInsets.symmetric(horizontal: 40),

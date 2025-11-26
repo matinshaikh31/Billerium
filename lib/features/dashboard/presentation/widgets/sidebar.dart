@@ -14,8 +14,8 @@ class DesktopSidebar extends StatelessWidget {
 
   static final List<SidebarItem> sidebarItems = [
     SidebarItem("Dashboard", Routes.dashboard, Icons.dashboard_outlined),
-    SidebarItem("Products", Routes.products, Icons.inventory_2_outlined),
     SidebarItem("Categories", Routes.categories, Icons.category_outlined),
+    SidebarItem("Products", Routes.products, Icons.inventory_2_outlined),
     SidebarItem("Create Bill", Routes.createBill, Icons.receipt_long_outlined),
     SidebarItem("Bills", Routes.bills, Icons.description_outlined),
     SidebarItem("Transactions", Routes.transcations, Icons.swap_horiz_outlined),
@@ -41,7 +41,10 @@ class DesktopSidebar extends StatelessWidget {
         children: [
           // Header with visible logo
           Center(
-            child: Image.asset("logo.png", height: 180), // logo stays visible
+            child: Image.asset(
+              "assets/logo.png",
+              height: 180,
+            ), // logo stays visible
           ),
           Divider(color: AppColors.borderGrey, height: 1),
 
