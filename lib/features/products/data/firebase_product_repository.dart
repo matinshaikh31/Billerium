@@ -22,6 +22,7 @@ class FirebaseProductRepository extends ProductRepository {
         stockQty: product.stockQty,
         createdAt: now,
         updatedAt: now,
+        qty: product.qty,
       );
 
       await docRef.set(newProduct.toJson());
@@ -44,6 +45,7 @@ class FirebaseProductRepository extends ProductRepository {
         stockQty: product.stockQty,
         createdAt: product.createdAt,
         updatedAt: Timestamp.now(),
+        qty: product.qty,
       );
 
       await productsCollectionRef

@@ -377,13 +377,29 @@ class ProductFormDialog extends StatelessWidget {
           isMobile: isMobile,
         ),
         SizedBox(height: isMobile ? 16 : 20),
-        _buildTextField(
-          controller: cubit.nameController,
-          label: "Product Name *",
-          hint: "e.g., Laptop Stand",
-          validator: (value) => value?.trim().isEmpty ?? true
-              ? 'Please enter product name'
-              : null,
+        Row(
+          children: [
+            Expanded(
+              child: _buildTextField(
+                controller: cubit.nameController,
+                label: "Product Name *",
+                hint: "e.g., Laptop Stand",
+                validator: (value) => value?.trim().isEmpty ?? true
+                    ? 'Please enter product name'
+                    : null,
+              ),
+            ),
+            SizedBox(width: 20),
+            Expanded(
+              child: _buildTextField(
+                controller: cubit.qtyController,
+                label: "Product Qty *",
+                hint: "e.g., 60",
+                validator: (value) =>
+                    value?.trim().isEmpty ?? true ? 'Please Qty' : null,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
         BlocBuilder<CategoryCubit, CategoryState>(

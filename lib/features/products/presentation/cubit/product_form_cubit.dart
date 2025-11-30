@@ -13,7 +13,7 @@ class ProductFormCubit extends Cubit<ProductFormState> {
   FirebaseProductRepository productRepository;
 
   ProductFormCubit({required this.productRepository})
-    : super(ProductFormState.initial());
+      : super(ProductFormState.initial());
 
   final formKey = GlobalKey<FormState>();
   final nameController = TextEditingController();
@@ -21,6 +21,7 @@ class ProductFormCubit extends Cubit<ProductFormState> {
   final discountController = TextEditingController();
   final skuController = TextEditingController();
   final stockController = TextEditingController();
+  final qtyController = TextEditingController(); // NEW
   String? selectedCategoryId;
 
   void initializeForm(ProductModel? product) {
@@ -30,6 +31,7 @@ class ProductFormCubit extends Cubit<ProductFormState> {
       discountController.text = product.discountPercent?.toString() ?? '';
       skuController.text = product.sku ?? '';
       stockController.text = product.stockQty.toString();
+      qtyController.text = (product.qty).toString(); // NEW
       selectedCategoryId = product.categoryId;
     } else {
       clearForm();
@@ -42,6 +44,7 @@ class ProductFormCubit extends Cubit<ProductFormState> {
     discountController.clear();
     skuController.clear();
     stockController.clear();
+    qtyController.clear(); // NEW
     selectedCategoryId = null;
   }
 
@@ -83,6 +86,7 @@ class ProductFormCubit extends Cubit<ProductFormState> {
             ? skuController.text.trim().toLowerCase()
             : null,
         stockQty: int.parse(stockController.text.trim()),
+        qty: int.tryParse(qtyController.text.trim()) ?? 0, // NEW: safe parse with default 0
         createdAt: editProduct?.createdAt ?? Timestamp.now(),
         updatedAt: Timestamp.now(),
       );
@@ -93,9 +97,8 @@ class ProductFormCubit extends Cubit<ProductFormState> {
         // UPDATE PRODUCT
         await productRepository.updateProduct(product);
 
-        final updatedProduct = await FBFireStore.products
-            .doc(editProduct.id)
-            .get();
+        final updatedProduct =
+            await FBFireStore.products.doc(editProduct.id).get();
 
         final updatedProductModel = ProductModel.fromJson(
           updatedProduct.data()!,
@@ -155,6 +158,7 @@ class ProductFormCubit extends Cubit<ProductFormState> {
     discountController.dispose();
     skuController.dispose();
     stockController.dispose();
+    qtyController.dispose(); // NEW
     return super.close();
   }
 }

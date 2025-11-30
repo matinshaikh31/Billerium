@@ -9,6 +9,7 @@ class ProductModel {
   final double? discountPercent;
   final String? sku;
   final int stockQty;
+  final int qty; // NEW FIELD
   final Timestamp createdAt;
   final Timestamp updatedAt;
 
@@ -20,10 +21,12 @@ class ProductModel {
     this.discountPercent,
     this.sku,
     required this.stockQty,
+    required this.qty, // NEW FIELD
     required this.createdAt,
     required this.updatedAt,
   });
-  // Helper method to get category name from list of categories
+
+  // Helper method to get category name
   String getCategoryName(List<CategoryModel> categories) {
     try {
       final category = categories.firstWhere(
@@ -53,6 +56,7 @@ class ProductModel {
           : null,
       sku: json['sku'] as String?,
       stockQty: json['stockQty'] as int,
+      qty: (json['qty'] ?? 0) as int, // DEFAULT 0 IF NULL / MISSING
       createdAt: json['createdAt'] as Timestamp,
       updatedAt: json['updatedAt'] as Timestamp,
     );
@@ -72,6 +76,7 @@ class ProductModel {
       'discountPercent': discountPercent,
       'sku': sku,
       'stockQty': stockQty,
+      'qty': qty, // ADDED HERE
       'createdAt': createdAt,
       'updatedAt': updatedAt,
     };

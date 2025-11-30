@@ -5,6 +5,7 @@ import 'package:billing_software/features/categories/presentation/cubit/category
 import 'package:billing_software/features/categories/presentation/cubit/category_form_cubit.dart';
 import 'package:billing_software/features/categories/presentation/widget/category_form_dilog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CategoryCard extends StatelessWidget {
@@ -102,7 +103,7 @@ class CategoryCard extends StatelessWidget {
                   constraints: const BoxConstraints(),
                   onPressed: () => _showEditDialog(context),
                 ),
-                SizedBox(width: 6),
+                const SizedBox(width: 6),
                 IconButton(
                   icon: const Icon(Icons.delete_outline, size: 18),
                   color: AppColors.warning,
@@ -116,7 +117,7 @@ class CategoryCard extends StatelessWidget {
 
           const Spacer(),
 
-          // ---------------- FOOTER ----------------
+          // ---------------- FOOTER (CATEGORY ID) ----------------
           Container(
             padding: EdgeInsets.symmetric(
               horizontal: isMobile ? 12 : 16,
@@ -129,24 +130,70 @@ class CategoryCard extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Default Discount',
-                  style: AppTextStyles.tableRowSecondary.copyWith(
-                    fontSize: isMobile ? 12 : 13,
-                    fontWeight: FontWeight.w500,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Category ID',
+                        style: AppTextStyles.tableRowSecondary.copyWith(
+                          fontSize: isMobile ? 11 : 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        category.id,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.tableRowPrimary.copyWith(
+                          fontSize: isMobile ? 12 : 13,
+                          color: AppColors.categoryAccent,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Text(
-                  '${category.defaultDiscountPercent.toStringAsFixed(0)}%',
-                  style: AppTextStyles.tableRowBoldValue.copyWith(
-                    fontSize: isMobile ? 14 : 15,
-                    color: AppColors.categoryAccent,
+                const SizedBox(width: 8),
+                // COPY BUTTON
+                IconButton(
+                  icon: const Icon(Icons.copy, size: 18),
+                  color: AppColors.primary,
+                  padding: const EdgeInsets.all(8),
+                  constraints: const BoxConstraints(),
+                  tooltip: 'Copy Category ID',
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppColors.primary.withOpacity(0.1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                   ),
+                  onPressed: () => _copyToClipboard(context, category.id),
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _copyToClipboard(BuildContext context, String text) {
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: const [
+            Icon(Icons.check_circle, color: Colors.white, size: 20),
+            SizedBox(width: 8),
+            Text('Category ID copied to clipboard'),
+          ],
+        ),
+        backgroundColor: AppColors.success,
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }

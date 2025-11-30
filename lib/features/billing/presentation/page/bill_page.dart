@@ -1,5 +1,6 @@
 import 'package:billing_software/core/theme/app_colors.dart';
 import 'package:billing_software/core/theme/app_text_styles.dart';
+import 'package:billing_software/core/utils/helpers.dart';
 import 'package:billing_software/core/widgets/responsive_widget.dart';
 import 'package:billing_software/core/widgets/pagination.dart';
 import 'package:billing_software/features/billing/domain/entity/bill_model.dart';
@@ -367,7 +368,7 @@ class _BillsPageState extends State<BillsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      bill.customerName ?? 'Walk-in Customer',
+                      capitalizeWords(bill.customerName ?? 'Walk-in Customer'),
                       style: AppTextStyles.tableRowPrimary,
                     ),
                     const SizedBox(height: 4),
@@ -582,7 +583,7 @@ class _BillsPageState extends State<BillsPage> {
           Expanded(
             flex: 2,
             child: Text(
-              bill.customerName ?? 'Walk-in',
+              capitalizeWords(bill.customerName ?? 'Walk-in'),
               style: AppTextStyles.tableRowPrimary,
             ),
           ),

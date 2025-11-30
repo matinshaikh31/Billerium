@@ -4,6 +4,7 @@ import 'package:billing_software/core/theme/app_text_styles.dart';
 import 'package:billing_software/core/utils/helpers.dart';
 import 'package:billing_software/core/widgets/responsive_widget.dart';
 import 'package:billing_software/core/widgets/pagination.dart';
+import 'package:billing_software/features/products/presentation/widget/product_import_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -92,6 +93,7 @@ class _ProductsPageState extends State<ProductsPage> {
   }
 
   // ===================== MOBILE HEADER =====================
+  // Add this for mobile header
   Widget _buildMobileHeader() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -119,27 +121,53 @@ class _ProductsPageState extends State<ProductsPage> {
             ],
           ),
           const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () => _showProductDialog(context),
-              icon: const Icon(Icons.add, size: 18, color: Colors.white),
-              label: Text(
-                'Add Product',
-                style: GoogleFonts.inter(
-                  color: AppColors.secondary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _showImportDialog(context),
+                  icon: const Icon(Icons.upload_file, size: 18),
+                  label: Text(
+                    'Import',
+                    style: GoogleFonts.inter(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: AppColors.primary),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                 ),
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: ElevatedButton.icon(
+                  onPressed: () => _showProductDialog(context),
+                  icon: const Icon(Icons.add, size: 18, color: Colors.white),
+                  label: Text(
+                    'Add Product',
+                    style: GoogleFonts.inter(
+                      color: AppColors.secondary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ],
       ),
@@ -150,7 +178,6 @@ class _ProductsPageState extends State<ProductsPage> {
   Widget _buildHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
-
       decoration: BoxDecoration(
         color: AppColors.secondary,
         border: Border(
@@ -177,6 +204,27 @@ class _ProductsPageState extends State<ProductsPage> {
               ],
             ),
           ),
+          // Import from Excel Button
+          OutlinedButton.icon(
+            onPressed: () => _showImportDialog(context),
+            icon: const Icon(Icons.upload_file, size: 20),
+            label: Text(
+              'Import Excel',
+              style: GoogleFonts.inter(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: AppColors.primary),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Add Product Button
           ElevatedButton.icon(
             onPressed: () => _showProductDialog(context),
             icon: const Icon(Icons.add, size: 20, color: Colors.white),
@@ -197,6 +245,14 @@ class _ProductsPageState extends State<ProductsPage> {
           ),
         ],
       ),
+    );
+  }
+
+  // Add Import Dialog
+  void _showImportDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => ProductImportDialog(),
     );
   }
 
@@ -596,13 +652,15 @@ class _ProductsPageState extends State<ProductsPage> {
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       child: Row(
         children: [
+          Expanded(child: Text('SKU', style: AppTextStyles.tabelHeader)),
           Expanded(
             flex: 2,
             child: Text('Product', style: AppTextStyles.tabelHeader),
           ),
           Expanded(child: Text('Category', style: AppTextStyles.tabelHeader)),
-          Expanded(child: Text('SKU', style: AppTextStyles.tabelHeader)),
+
           Expanded(child: Text('Price', style: AppTextStyles.tabelHeader)),
+          Expanded(child: Text('Qty', style: AppTextStyles.tabelHeader)),
           Expanded(child: Text('Discount', style: AppTextStyles.tabelHeader)),
           Expanded(
             child: Text('Final Price', style: AppTextStyles.tabelHeader),
@@ -623,6 +681,12 @@ class _ProductsPageState extends State<ProductsPage> {
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       child: Row(
         children: [
+          Expanded(
+            child: Text(
+              product.sku ?? 'N/A',
+              style: AppTextStyles.tableRowSecondary,
+            ),
+          ),
           Expanded(
             flex: 2,
             child: Text(
@@ -650,15 +714,16 @@ class _ProductsPageState extends State<ProductsPage> {
               },
             ),
           ),
+
           Expanded(
             child: Text(
-              product.sku ?? 'N/A',
-              style: AppTextStyles.tableRowSecondary,
+              '₹${product.price.toStringAsFixed(0)}',
+              style: AppTextStyles.tableRowNormal,
             ),
           ),
           Expanded(
             child: Text(
-              '₹${product.price.toStringAsFixed(0)}',
+              '₹${product.qty.toStringAsFixed(0)}',
               style: AppTextStyles.tableRowNormal,
             ),
           ),

@@ -16,6 +16,7 @@ import 'package:billing_software/features/categories/presentation/cubit/category
 import 'package:billing_software/features/products/data/firebase_product_repository.dart';
 import 'package:billing_software/features/products/presentation/cubit/product_cubit.dart';
 import 'package:billing_software/features/products/presentation/cubit/product_form_cubit.dart';
+import 'package:billing_software/features/products/presentation/cubit/product_import_cubit.dart';
 import 'package:billing_software/features/transactions/presentation/cubit/transaction_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -50,6 +51,11 @@ class BillingApp extends StatelessWidget {
               ),
               BlocProvider(
                 create: (context) => ProductFormCubit(
+                  productRepository: FirebaseProductRepository(),
+                ),
+              ),
+              BlocProvider(
+                create: (context) => ProductImportCubit(
                   productRepository: FirebaseProductRepository(),
                 ),
               ),

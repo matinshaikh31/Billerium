@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:billing_software/core/services/firebase.dart';
+
 String capitalizeWords(String str) {
   if (str.isEmpty) return str;
   return str
@@ -12,18 +14,41 @@ String capitalizeWords(String str) {
       .join(' ');
 }
 
-String generateBillNoWithTimestamp() {
-  const String chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  final Random random = Random();
-  final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+Future<String> generateBillNumber() async {
+  try {
+    // 1. Get total count of bills from Firebase
+    final billsSnapshot = await FBFireStore.bills.count().get();
+    final billCount = (billsSnapshot.count ?? 0) + 1;
 
-  // Take last 3 digits from timestamp and convert to alphanumeric
-  final String timePart = timestamp.substring(timestamp.length - 3);
+    // 2. Get current financial year (April to March)
+    final now = DateTime.now();
+    final int currentYear = now.year;
+    final int currentMonth = now.month;
 
-  // Generate 3 random characters
-  final String randomPart = List.generate(3, (index) {
-    return chars[random.nextInt(chars.length)];
-  }).join();
+    // Financial year starts in April
+    String financialYear;
+    if (currentMonth >= 4) {
+      // April to December: 2025-26
+      financialYear =
+          '$currentYear-${(currentYear + 1).toString().substring(2)}';
+    } else {
+      // January to March: 2024-25
+      financialYear =
+          '${currentYear - 1}-${currentYear.toString().substring(2)}';
+    }
 
-  return '$timePart$randomPart';
+    // 3. Generate bill number: HA/195/2025-26
+    final billNo = 'HA/$billCount/$financialYear';
+
+    return billNo;
+  } catch (e) {
+    // Fallback: use timestamp-based number
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final now = DateTime.now();
+    final financialYear = now.month >= 4
+        ? '${now.year}-${(now.year + 1).toString().substring(2)}'
+        : '${now.year - 1}-${now.year.toString().substring(2)}';
+
+    return 'HA/$timestamp/$financialYear';
+  }
 }
