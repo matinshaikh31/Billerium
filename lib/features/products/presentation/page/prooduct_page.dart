@@ -723,7 +723,7 @@ class _ProductsPageState extends State<ProductsPage> {
           ),
           Expanded(
             child: Text(
-              '₹${product.qty.toStringAsFixed(0)}',
+              '${product.qty.toStringAsFixed(0)} ml',
               style: AppTextStyles.tableRowNormal,
             ),
           ),

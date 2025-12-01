@@ -130,20 +130,20 @@ class ProductImportCubit extends Cubit<ProductImportState> {
             }
 
             // If no SKU or product not found by SKU, check by name + categoryId
-            if (existingProduct == null) {
-              final queryByName = await FBFireStore.products
-                  .where('name', isEqualTo: productName)
-                  .where('categoryId', isEqualTo: categoryId)
-                  .limit(1)
-                  .get();
+            // if (existingProduct == null) {
+            //   final queryByName = await FBFireStore.products
+            //       .where('name', isEqualTo: productName)
+            //       .where('categoryId', isEqualTo: categoryId)
+            //       .limit(1)
+            //       .get();
 
-              if (queryByName.docs.isNotEmpty) {
-                existingProduct = ProductModel.fromJson(
-                  queryByName.docs.first.data(),
-                  queryByName.docs.first.id,
-                );
-              }
-            }
+            //   if (queryByName.docs.isNotEmpty) {
+            //     existingProduct = ProductModel.fromJson(
+            //       queryByName.docs.first.data(),
+            //       queryByName.docs.first.id,
+            //     );
+            //   }
+            // }
 
             if (existingProduct != null) {
               // UPDATE existing product

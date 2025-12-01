@@ -517,375 +517,422 @@ class BillCubit extends Cubit<BillState> {
   ) {
     final dateFormat = DateFormat('dd MMM yyyy, hh:mm a');
 
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        // Header with Logo
-        pw.Container(
-          padding: const pw.EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          decoration: pw.BoxDecoration(
-            color: PdfColors.blue50,
-            borderRadius: pw.BorderRadius.circular(8),
-          ),
-          child: pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-            children: [
-              pw.Row(
-                children: [
-                  // Logo
-                  pw.Container(
-                    width: 100,
-                    height: 100,
-                    child: pw.Image(logoImage),
-                  ),
-                  pw.SizedBox(width: 15),
-                  pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      // pw.Text(
-                      //   'HA ENTERPRISES',
-                      //   style: pw.TextStyle(
-                      //     fontSize: 24,
-                      //     fontWeight: pw.FontWeight.bold,
-                      //     color: PdfColors.blue900,
-                      //   ),
-                      // ),
-                      pw.SizedBox(height: 5),
-                      pw.Text(
-                        'Alif Nagar Society, Tandalja Road',
-                        style: const pw.TextStyle(fontSize: 10),
-                      ),
-                      pw.Text(
-                        'Vadodara',
-                        style: const pw.TextStyle(fontSize: 10),
-                      ),
-                      pw.Text(
-                        'Phone: +91 9106554170',
-                        style: const pw.TextStyle(fontSize: 10),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.end,
-                children: [
-                  pw.Text(
-                    'INVOICE',
-                    style: pw.TextStyle(
-                      fontSize: 24,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
-                  ),
-                  pw.SizedBox(height: 15),
-                  pw.Text(
-                    'Bill No: ${bill.billNo}',
-                    style: pw.TextStyle(
-                      fontSize: 12,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
-                  ),
-                  pw.Text(
-                    'Date: ${dateFormat.format(bill.createdAt.toDate())}',
-                    style: const pw.TextStyle(fontSize: 10),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-
-        pw.SizedBox(height: 30),
-
-        // Customer Details
-        pw.Container(
-          padding: const pw.EdgeInsets.all(15),
-          decoration: pw.BoxDecoration(
-            border: pw.Border.all(color: PdfColors.grey300),
-            borderRadius: pw.BorderRadius.circular(8),
-          ),
-          child: pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Text(
-                'BILL TO',
-                style: pw.TextStyle(
-                  fontSize: 12,
-                  fontWeight: pw.FontWeight.bold,
-                  color: PdfColors.grey700,
-                ),
-              ),
-              pw.SizedBox(height: 8),
-              pw.Text(
-                capitalizeWords(bill.customerName ?? "Walk-in Customer") ??
-                    'Walk-in Customer',
-                style: pw.TextStyle(
-                  fontSize: 14,
-                  fontWeight: pw.FontWeight.bold,
-                ),
-              ),
-              if (bill.customerPhone != null) ...[
-                pw.SizedBox(height: 3),
-                pw.Text(
-                  'Phone: ${bill.customerPhone}',
-                  style: const pw.TextStyle(fontSize: 11),
-                ),
-              ],
-            ],
-          ),
-        ),
-
-        pw.SizedBox(height: 30),
-
-        // Items Table
-        pw.Table(
-          border: pw.TableBorder.all(color: PdfColors.grey300),
-          children: [
-            // Table Header
-            pw.TableRow(
-              decoration: const pw.BoxDecoration(color: PdfColors.grey200),
-              children: [
-                _buildTableCell('Item', isHeader: true),
-                _buildTableCell(
-                  'Price',
-                  isHeader: true,
-                  align: pw.TextAlign.right,
-                ),
-                _buildTableCell(
-                  'Qty',
-                  isHeader: true,
-                  align: pw.TextAlign.center,
-                ),
-                _buildTableCell(
-                  'Product Discount',
-                  isHeader: true,
-                  align: pw.TextAlign.right,
-                ),
-                _buildTableCell(
-                  'Total',
-                  isHeader: true,
-                  align: pw.TextAlign.right,
-                ),
-              ],
-            ),
-            // Table Rows
-            ...bill.items.map((item) {
-              return pw.TableRow(
-                children: [
-                  _buildTableCell(item.productName),
-                  _buildTableCell(
-                    'Rs${item.price.toStringAsFixed(2)}',
-                    align: pw.TextAlign.right,
-                  ),
-                  _buildTableCell(
-                    '${item.quantity}',
-                    align: pw.TextAlign.center,
-                  ),
-                  _buildTableCell(
-                    'Rs${item.discountAmount.toStringAsFixed(2)}',
-                    align: pw.TextAlign.right,
-                  ),
-                  _buildTableCell(
-                    'Rs${item.itemTotal.toStringAsFixed(2)}',
-                    align: pw.TextAlign.right,
-                  ),
-                ],
-              );
-            }).toList(),
-          ],
-        ),
-
-        pw.SizedBox(height: 20),
-
-        // Totals Section
-        pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.end,
-          children: [
-            pw.Container(
-              width: 250,
-              child: pw.Column(
-                children: [
-                  _buildTotalRow(
-                    'Subtotal:',
-                    'Rs${bill.subtotal.toStringAsFixed(2)}',
-                  ),
-                  if (bill.totalDiscount > 0)
-                    _buildTotalRow(
-                      'Discount:',
-                      '-Rs${bill.totalDiscount.toStringAsFixed(2)}',
-                    ),
-                  if (bill.totalTax > 0)
-                    _buildTotalRow(
-                      'Tax:',
-                      'Rs${bill.totalTax.toStringAsFixed(2)}',
-                    ),
-                  pw.Divider(thickness: 2),
-                  _buildTotalRow(
-                    'Grand Total:',
-                    'Rs${bill.finalAmount.toStringAsFixed(2)}',
-                    isBold: true,
-                    fontSize: 16,
-                  ),
-                  pw.SizedBox(height: 10),
-                  _buildTotalRow(
-                    'Amount Paid:',
-                    'Rs${bill.amountPaid.toStringAsFixed(2)}',
-                    color: PdfColors.green700,
-                  ),
-                  if (bill.pendingAmount > 0)
-                    _buildTotalRow(
-                      'Pending:',
-                      'Rs${bill.pendingAmount.toStringAsFixed(2)}',
-                      color: PdfColors.red700,
-                      isBold: true,
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-
-        pw.SizedBox(height: 30),
-
-        // Banking Details and Signature Section
-        pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            // Banking Details (Left)
-            pw.Container(
-              width: 280,
-              padding: const pw.EdgeInsets.all(15),
-              decoration: pw.BoxDecoration(
-                border: pw.Border.all(color: PdfColors.grey300),
-                borderRadius: pw.BorderRadius.circular(8),
-              ),
-              child: pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Text(
-                    'BANKING DETAILS',
-                    style: pw.TextStyle(
-                      fontSize: 12,
-                      fontWeight: pw.FontWeight.bold,
-                      color: PdfColors.grey700,
-                    ),
-                  ),
-                  pw.SizedBox(height: 10),
-                  _buildBankDetailRow('UDYAM No', 'UDYAM-GJ-24-0207943'),
-                  _buildBankDetailRow('PAN', 'CIJPS4573E'),
-                  _buildBankDetailRow('Bank Name', 'STATE BANK OF INDIA'),
-                  _buildBankDetailRow('Branch', 'TANDALJA'),
-                  _buildBankDetailRow('A/c No.', '20224295241'),
-                  _buildBankDetailRow('IFSC Code', 'SBIN0010964'),
-                ],
-              ),
-            ),
-            // Signature (Right)
-            pw.Container(
-              width: 200,
-              child: pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.center,
-                children: [
-                  pw.Text(
-                    'For H A Enterprises',
-                    style: pw.TextStyle(
-                      fontSize: 11,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
-                  ),
-                  pw.SizedBox(height: 10),
-                  pw.Container(
-                    width: 120,
-                    height: 60,
-                    child: pw.Image(signatureImage),
-                  ),
-                  pw.SizedBox(height: 5),
-                  pw.Text(
-                    'Authorised Signatory',
-                    style: pw.TextStyle(
-                      fontSize: 10,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-
-        pw.SizedBox(height: 20),
-
-        // Footer
-        pw.Divider(),
-        pw.SizedBox(height: 10),
-        pw.Center(
-          child: pw.Text(
-            'Thank you for your business!',
-            style: pw.TextStyle(
-              fontSize: 12,
-              fontStyle: pw.FontStyle.italic,
-              color: PdfColors.grey600,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ==================== HELPER METHODS ====================
-
-  // Build bank detail rows
-  pw.Widget _buildBankDetailRow(String label, String value) {
     return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(vertical: 3),
-      child: pw.Row(
+      padding: const pw.EdgeInsets.all(15),
+      child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
+          // Header with Logo - COMPACT
           pw.Container(
-            width: 80,
-            child: pw.Text(
-              '$label:',
-              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+            padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: pw.BoxDecoration(
+              color: PdfColors.blue50,
+              borderRadius: pw.BorderRadius.circular(6),
+            ),
+            child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Row(
+                  children: [
+                    pw.Container(
+                      width: 50,
+                      height: 50,
+                      child: pw.Image(logoImage, fit: pw.BoxFit.contain),
+                    ),
+                    pw.SizedBox(width: 8),
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text(
+                          'HA ENTERPRISES',
+                          style: pw.TextStyle(
+                            fontSize: 12,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.blue900,
+                          ),
+                        ),
+                        pw.SizedBox(height: 2),
+                        pw.Text(
+                          'Alif Nagar Society, Tandalja Road',
+                          style: const pw.TextStyle(fontSize: 7),
+                        ),
+                        pw.Text(
+                          'Vadodara',
+                          style: const pw.TextStyle(fontSize: 7),
+                        ),
+                        pw.Text(
+                          'Phone: +91 9106554170',
+                          style: const pw.TextStyle(fontSize: 7),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  children: [
+                    pw.Text(
+                      'INVOICE',
+                      style: pw.TextStyle(
+                        fontSize: 16,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                    pw.SizedBox(height: 4),
+                    pw.Text(
+                      'Bill No: ${bill.billNo}',
+                      style: pw.TextStyle(
+                        fontSize: 9,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                    pw.Text(
+                      'Date: ${dateFormat.format(bill.createdAt.toDate())}',
+                      style: const pw.TextStyle(fontSize: 7),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          pw.Expanded(
-            child: pw.Text(value, style: const pw.TextStyle(fontSize: 10)),
+
+          pw.SizedBox(height: 8),
+
+          // Customer Details - COMPACT
+          pw.Container(
+            padding: const pw.EdgeInsets.all(6),
+            decoration: pw.BoxDecoration(
+              border: pw.Border.all(color: PdfColors.grey300),
+              borderRadius: pw.BorderRadius.circular(4),
+            ),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                  'BILL TO',
+                  style: pw.TextStyle(
+                    fontSize: 8,
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.grey700,
+                  ),
+                ),
+                pw.SizedBox(height: 2),
+                pw.Text(
+                  capitalizeWords(bill.customerName ?? "Walk-in Customer") ??
+                      'Walk-in Customer',
+                  style: pw.TextStyle(
+                    fontSize: 10,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+                if (bill.customerPhone != null)
+                  pw.Text(
+                    'Phone: ${bill.customerPhone}',
+                    style: const pw.TextStyle(fontSize: 8),
+                  ),
+              ],
+            ),
+          ),
+
+          pw.SizedBox(height: 8),
+
+          // Items Table Header
+          pw.Container(
+            decoration: const pw.BoxDecoration(
+              color: PdfColors.grey200,
+              border: pw.Border(
+                top: pw.BorderSide(color: PdfColors.grey400),
+                bottom: pw.BorderSide(color: PdfColors.grey400),
+              ),
+            ),
+            padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+            child: pw.Row(
+              children: [
+                pw.Expanded(
+                  flex: 3,
+                  child: pw.Text(
+                    'Item',
+                    style: pw.TextStyle(
+                      fontSize: 8,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 1,
+                  child: pw.Text(
+                    'Price',
+                    textAlign: pw.TextAlign.right,
+                    style: pw.TextStyle(
+                      fontSize: 8,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 1,
+                  child: pw.Text(
+                    'Qty',
+                    textAlign: pw.TextAlign.center,
+                    style: pw.TextStyle(
+                      fontSize: 8,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 1,
+                  child: pw.Text(
+                    'Disc.',
+                    textAlign: pw.TextAlign.right,
+                    style: pw.TextStyle(
+                      fontSize: 8,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 1,
+                  child: pw.Text(
+                    'Total',
+                    textAlign: pw.TextAlign.right,
+                    style: pw.TextStyle(
+                      fontSize: 8,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Items List - COMPACT
+          ...bill.items.map((item) {
+            return pw.Container(
+              decoration: pw.BoxDecoration(
+                border: pw.Border(
+                  bottom: pw.BorderSide(color: PdfColors.grey300, width: 0.5),
+                ),
+              ),
+              padding: const pw.EdgeInsets.symmetric(
+                vertical: 3,
+                horizontal: 6,
+              ),
+              child: pw.Row(
+                children: [
+                  pw.Expanded(
+                    flex: 3,
+                    child: pw.Text(
+                      capitalizeWords(item.productName),
+                      style: const pw.TextStyle(fontSize: 7),
+                    ),
+                  ),
+                  pw.Expanded(
+                    flex: 1,
+                    child: pw.Text(
+                      'Rs${item.price.toStringAsFixed(2)}',
+                      textAlign: pw.TextAlign.right,
+                      style: const pw.TextStyle(fontSize: 7),
+                    ),
+                  ),
+                  pw.Expanded(
+                    flex: 1,
+                    child: pw.Text(
+                      '${item.quantity}',
+                      textAlign: pw.TextAlign.center,
+                      style: const pw.TextStyle(fontSize: 7),
+                    ),
+                  ),
+                  pw.Expanded(
+                    flex: 1,
+                    child: pw.Text(
+                      'Rs${item.discountAmount.toStringAsFixed(2)}',
+                      textAlign: pw.TextAlign.right,
+                      style: const pw.TextStyle(fontSize: 7),
+                    ),
+                  ),
+                  pw.Expanded(
+                    flex: 1,
+                    child: pw.Text(
+                      'Rs${item.itemTotal.toStringAsFixed(2)}',
+                      textAlign: pw.TextAlign.right,
+                      style: const pw.TextStyle(fontSize: 7),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+
+          pw.SizedBox(height: 8),
+
+          // Totals Section - COMPACT
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.end,
+            children: [
+              pw.Container(
+                width: 180,
+                padding: const pw.EdgeInsets.all(6),
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(color: PdfColors.grey300),
+                  borderRadius: pw.BorderRadius.circular(4),
+                ),
+                child: pw.Column(
+                  children: [
+                    _buildTotalRow(
+                      'Subtotal:',
+                      'Rs${bill.subtotal.toStringAsFixed(2)}',
+                    ),
+                    if (bill.totalDiscount > 0)
+                      _buildTotalRow(
+                        'Discount:',
+                        '-Rs${bill.totalDiscount.toStringAsFixed(2)}',
+                      ),
+                    if (bill.totalTax > 0)
+                      _buildTotalRow(
+                        'Tax:',
+                        'Rs${bill.totalTax.toStringAsFixed(2)}',
+                      ),
+                    pw.Divider(thickness: 0.5),
+                    _buildTotalRow(
+                      'Grand Total:',
+                      'Rs${bill.finalAmount.toStringAsFixed(2)}',
+                      isBold: true,
+                      fontSize: 10,
+                    ),
+                    pw.SizedBox(height: 4),
+                    _buildTotalRow(
+                      'Amount Paid:',
+                      'Rs${bill.amountPaid.toStringAsFixed(2)}',
+                      color: PdfColors.green700,
+                    ),
+                    if (bill.pendingAmount > 0)
+                      _buildTotalRow(
+                        'Pending:',
+                        'Rs${bill.pendingAmount.toStringAsFixed(2)}',
+                        color: PdfColors.red700,
+                        isBold: true,
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          pw.SizedBox(height: 10),
+
+          // Banking Details and Signature - COMPACT
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              // Banking Details
+              pw.Container(
+                width: 240,
+                padding: const pw.EdgeInsets.all(6),
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(color: PdfColors.grey300),
+                  borderRadius: pw.BorderRadius.circular(4),
+                ),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text(
+                      'BANKING DETAILS',
+                      style: pw.TextStyle(
+                        fontSize: 8,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColors.grey700,
+                      ),
+                    ),
+                    pw.SizedBox(height: 3),
+                    _buildBankDetailRow('UDYAM No', 'UDYAM-GJ-24-0207943'),
+                    _buildBankDetailRow('PAN', 'CIJPS4573E'),
+                    _buildBankDetailRow('Bank Name', 'STATE BANK OF INDIA'),
+                    _buildBankDetailRow('Branch', 'TANDALJA'),
+                    _buildBankDetailRow('A/c No.', '20224295241'),
+                    _buildBankDetailRow('IFSC Code', 'SBIN0010964'),
+                  ],
+                ),
+              ),
+              // Signature
+              pw.Container(
+                width: 140,
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.center,
+                  children: [
+                    pw.Text(
+                      'For H A Enterprises',
+                      style: pw.TextStyle(
+                        fontSize: 8,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                    pw.SizedBox(height: 15),
+                    pw.Text(
+                      'Authorised Signatory',
+                      style: pw.TextStyle(
+                        fontSize: 7,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          pw.SizedBox(height: 8),
+
+          // Footer
+          pw.Divider(thickness: 0.5),
+          pw.SizedBox(height: 3),
+          pw.Center(
+            child: pw.Text(
+              'Thank you for your business!',
+              style: pw.TextStyle(
+                fontSize: 8,
+                fontStyle: pw.FontStyle.italic,
+                color: PdfColors.grey600,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  // Build table cells
-  pw.Widget _buildTableCell(
-    String text, {
-    bool isHeader = false,
-    pw.TextAlign align = pw.TextAlign.left,
-  }) {
+  // Helper methods
+  pw.Widget _buildBankDetailRow(String label, String value) {
     return pw.Padding(
-      padding: const pw.EdgeInsets.all(8),
-      child: pw.Text(
-        text,
-        style: pw.TextStyle(
-          fontSize: isHeader ? 11 : 10,
-          fontWeight: isHeader ? pw.FontWeight.bold : pw.FontWeight.normal,
-        ),
-        textAlign: align,
+      padding: const pw.EdgeInsets.symmetric(vertical: 1.5),
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Container(
+            width: 65,
+            child: pw.Text(
+              '$label:',
+              style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold),
+            ),
+          ),
+          pw.Expanded(
+            child: pw.Text(value, style: const pw.TextStyle(fontSize: 7)),
+          ),
+        ],
       ),
     );
   }
 
-  // Build total rows
   pw.Widget _buildTotalRow(
     String label,
     String value, {
     bool isBold = false,
-    double fontSize = 12,
+    double fontSize = 8,
     PdfColor? color,
   }) {
     return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(vertical: 5),
+      padding: const pw.EdgeInsets.symmetric(vertical: 1.5),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
@@ -910,15 +957,92 @@ class BillCubit extends Cubit<BillState> {
     );
   }
 
+  // ==================== HELPER METHODS ====================
+
+  // Build bank detail rows
+  // pw.Widget _buildBankDetailRow(String label, String value) {
+  //   return pw.Padding(
+  //     padding: const pw.EdgeInsets.symmetric(vertical: 3),
+  //     child: pw.Row(
+  //       crossAxisAlignment: pw.CrossAxisAlignment.start,
+  //       children: [
+  //         pw.Container(
+  //           width: 80,
+  //           child: pw.Text(
+  //             '$label:',
+  //             style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+  //           ),
+  //         ),
+  //         pw.Expanded(
+  //           child: pw.Text(value, style: const pw.TextStyle(fontSize: 10)),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  // Build table cells
+  pw.Widget _buildTableCell(
+    String text, {
+    bool isHeader = false,
+    pw.TextAlign align = pw.TextAlign.left,
+  }) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.all(8),
+      child: pw.Text(
+        text,
+        style: pw.TextStyle(
+          fontSize: isHeader ? 11 : 10,
+          fontWeight: isHeader ? pw.FontWeight.bold : pw.FontWeight.normal,
+        ),
+        textAlign: align,
+      ),
+    );
+  }
+
+  // Build total rows
+  // pw.Widget _buildTotalRow(
+  //   String label,
+  //   String value, {
+  //   bool isBold = false,
+  //   double fontSize = 12,
+  //   PdfColor? color,
+  // }) {
+  //   return pw.Padding(
+  //     padding: const pw.EdgeInsets.symmetric(vertical: 5),
+  //     child: pw.Row(
+  //       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+  //       children: [
+  //         pw.Text(
+  //           label,
+  //           style: pw.TextStyle(
+  //             fontSize: fontSize,
+  //             fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
+  //             color: color,
+  //           ),
+  //         ),
+  //         pw.Text(
+  //           value,
+  //           style: pw.TextStyle(
+  //             fontSize: fontSize,
+  //             fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
+  //             color: color,
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
   // Load logo image from assets
   Future<pw.MemoryImage> _loadLogoImage() async {
-    final ByteData bytes = await rootBundle.load('bill_logo.png');
+    final ByteData bytes = await rootBundle.load('assets/bill_logo.png');
     return pw.MemoryImage(bytes.buffer.asUint8List());
   }
 
   // Load signature image from assets
   Future<pw.MemoryImage> _loadSignatureImage() async {
-    final ByteData bytes = await rootBundle.load('bill_sig.jpg');
+    final ByteData bytes = await rootBundle.load('assets/bill_sig.jpg');
     return pw.MemoryImage(bytes.buffer.asUint8List());
   }
 }
