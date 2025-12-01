@@ -13,7 +13,9 @@ class FirebaseAnalyticsRepository {
 
   Future<void> updateAnalyticsOnBillCreate(BillModel bill) async {
     try {
-      final monthKey = _monthKeyFromTimestamp(bill.createdAt);
+      // Use billDate if available, otherwise use createdAt
+      final effectiveDate = bill.billDate ?? bill.createdAt;
+      final monthKey = _monthKeyFromTimestamp(effectiveDate);
       final docRef = analyticsRef.doc(monthKey);
 
       final docSnap = await docRef.get();
@@ -134,6 +136,51 @@ class FirebaseAnalyticsRepository {
     } catch (e) {
       print("❌ Failed to get year months: $e");
       return [];
+    }
+  }
+
+  /// Reverse analytics when a bill is deleted
+  Future<void> reverseAnalyticsOnBillDelete(BillModel bill) async {
+    try {
+      // Use billDate if available, otherwise use createdAt
+      final effectiveDate = bill.billDate ?? bill.createdAt;
+      final monthKey = _monthKeyFromTimestamp(effectiveDate);
+      final docRef = analyticsRef.doc(monthKey);
+      final docSnap = await docRef.get();
+
+      if (docSnap.exists) {
+        final totalProductsSold = bill.items.fold(
+          0,
+          (sum, item) => sum + item.quantity,
+        );
+
+        await docRef.update({
+          'totalSales': FieldValue.increment(-bill.finalAmount),
+          'totalPaid': FieldValue.increment(-bill.amountPaid),
+          'totalPending': FieldValue.increment(-bill.pendingAmount),
+          'totalBills': FieldValue.increment(-1),
+          'totalProductsSold': FieldValue.increment(-totalProductsSold),
+          'updatedAt': Timestamp.now(),
+        });
+      }
+    } catch (e) {
+      print("❌ Failed to reverse analytics on bill delete: $e");
+    }
+  }
+
+  /// Update analytics when a bill is edited (reverse old values and add new values)
+  Future<void> updateAnalyticsOnBillEdit({
+    required BillModel oldBill,
+    required BillModel newBill,
+  }) async {
+    try {
+      // Reverse old bill analytics
+      await reverseAnalyticsOnBillDelete(oldBill);
+
+      // Add new bill analytics
+      await updateAnalyticsOnBillCreate(newBill);
+    } catch (e) {
+      print("❌ Failed to update analytics on bill edit: $e");
     }
   }
 }

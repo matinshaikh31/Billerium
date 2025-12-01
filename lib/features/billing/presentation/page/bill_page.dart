@@ -439,6 +439,12 @@ class _BillsPageState extends State<BillsPage> {
                     foregroundColor: AppColors.primary,
                   ),
                 ),
+              TextButton.icon(
+                onPressed: () => _showDeleteConfirmDialog(context, bill),
+                icon: const Icon(Icons.delete_outline, size: 16),
+                label: const Text('Delete'),
+                style: TextButton.styleFrom(foregroundColor: AppColors.error),
+              ),
             ],
           ),
         ],
@@ -546,26 +552,82 @@ class _BillsPageState extends State<BillsPage> {
   Widget _buildTableHeaders() {
     return Container(
       color: AppColors.headerBackground,
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
       child: Row(
         children: [
+          // Customer - flex 3
           Expanded(
-            flex: 2,
+            flex: 3,
             child: Text('Customer', style: AppTextStyles.tabelHeader),
           ),
-          Expanded(child: Text('Bill No', style: AppTextStyles.tabelHeader)),
-          Expanded(child: Text('Phone', style: AppTextStyles.tabelHeader)),
-          Expanded(child: Text('Date', style: AppTextStyles.tabelHeader)),
-          Expanded(child: Text('Items', style: AppTextStyles.tabelHeader)),
-          Expanded(
-            child: Text('Final Amount', style: AppTextStyles.tabelHeader),
+          // Bill No - fixed width
+          SizedBox(
+            width: 110,
+            child: Text('Bill No', style: AppTextStyles.tabelHeader),
           ),
-          Expanded(child: Text('Paid', style: AppTextStyles.tabelHeader)),
-          Expanded(child: Text('Pending', style: AppTextStyles.tabelHeader)),
-          Expanded(child: Text('Status', style: AppTextStyles.tabelHeader)),
+          // Phone - fixed width
+          SizedBox(
+            width: 120,
+            child: Text('Phone', style: AppTextStyles.tabelHeader),
+          ),
+          // Date - fixed width
+          SizedBox(
+            width: 110,
+            child: Text('Date', style: AppTextStyles.tabelHeader),
+          ),
+          // Items - small fixed
+          SizedBox(
+            width: 60,
+            child: Text(
+              'Items',
+              style: AppTextStyles.tabelHeader,
+              textAlign: TextAlign.center,
+            ),
+          ),
+          // Final Amount - right aligned
+          SizedBox(
+            width: 110,
+            child: Text(
+              'Amount',
+              style: AppTextStyles.tabelHeader,
+              textAlign: TextAlign.right,
+            ),
+          ),
+          // Paid - right aligned
           SizedBox(
             width: 100,
-            child: Text('Actions', style: AppTextStyles.tabelHeader),
+            child: Text(
+              'Paid',
+              style: AppTextStyles.tabelHeader,
+              textAlign: TextAlign.right,
+            ),
+          ),
+          // Pending - right aligned
+          SizedBox(
+            width: 100,
+            child: Text(
+              'Pending',
+              style: AppTextStyles.tabelHeader,
+              textAlign: TextAlign.right,
+            ),
+          ),
+          // Status - fixed width
+          SizedBox(
+            width: 90,
+            child: Text(
+              'Status',
+              style: AppTextStyles.tabelHeader,
+              textAlign: TextAlign.center,
+            ),
+          ),
+          // Actions - fixed width
+          SizedBox(
+            width: 180,
+            child: Text(
+              'Actions',
+              style: AppTextStyles.tabelHeader,
+              textAlign: TextAlign.center,
+            ),
           ),
         ],
       ),
@@ -576,96 +638,172 @@ class _BillsPageState extends State<BillsPage> {
   Widget _buildBillRow(BillModel bill) {
     final date = DateFormat('dd MMM yyyy').format(bill.createdAt.toDate());
 
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 2,
-            child: Text(
-              capitalizeWords(bill.customerName ?? 'Walk-in'),
-              style: AppTextStyles.tableRowPrimary,
-            ),
-          ),
-          Expanded(
-            child: Text(bill.billNo, style: AppTextStyles.tableRowSecondary),
-          ),
-          Expanded(
-            child: Text(
-              bill.customerPhone ?? '-',
-              style: AppTextStyles.tableRowSecondary,
-            ),
-          ),
-          Expanded(child: Text(date, style: AppTextStyles.tableRowSecondary)),
-          Expanded(
-            child: Text(
-              '${bill.items.length}',
-              style: AppTextStyles.tableRowSecondary,
-            ),
-          ),
-          Expanded(
-            child: Text(
-              '₹${bill.finalAmount.toStringAsFixed(0)}',
-              style: AppTextStyles.tableRowBoldValue,
-            ),
-          ),
-          Expanded(
-            child: Text(
-              '₹${bill.amountPaid.toStringAsFixed(0)}',
-              style: AppTextStyles.tableRowNormal.copyWith(
-                color: AppColors.success,
+    return InkWell(
+      onHover: (hovering) {},
+      hoverColor: AppColors.containerGreyColor.withValues(alpha: 0.3),
+      child: Container(
+        height: 56, // Fixed compact height
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Customer - flex 3 with ellipsis
+            Expanded(
+              flex: 3,
+              child: Text(
+                capitalizeWords(bill.customerName ?? 'Walk-in'),
+                style: AppTextStyles.tableRowPrimary,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-          ),
-          Expanded(
-            child: Text(
-              '₹${bill.pendingAmount.toStringAsFixed(0)}',
-              style: AppTextStyles.tableRowNormal.copyWith(
-                color: bill.pendingAmount > 0
-                    ? AppColors.error
-                    : AppColors.textSecondary,
+            // Bill No - fixed width
+            SizedBox(
+              width: 110,
+              child: Text(
+                bill.billNo,
+                style: AppTextStyles.tableRowSecondary,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-          ),
-          Expanded(child: _buildStatusBadge(bill.status)),
-          SizedBox(
-            width: 150, // Increased width for 3 icons
-            child: Row(
-              children: [
-                // View Details
-                IconButton(
-                  icon: Icon(
-                    Icons.visibility_outlined,
-                    size: 18,
-                    color: AppColors.textSecondary,
-                  ),
-                  onPressed: () => _showBillDetailsDialog(context, bill),
+            // Phone - fixed width
+            SizedBox(
+              width: 120,
+              child: Text(
+                bill.customerPhone ?? '-',
+                style: AppTextStyles.tableRowSecondary,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            // Date - fixed width
+            SizedBox(
+              width: 110,
+              child: Text(date, style: AppTextStyles.tableRowSecondary),
+            ),
+            // Items - centered
+            SizedBox(
+              width: 60,
+              child: Text(
+                '${bill.items.length}',
+                style: AppTextStyles.tableRowSecondary,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            // Final Amount - right aligned
+            SizedBox(
+              width: 110,
+              child: Text(
+                '₹${bill.finalAmount.toStringAsFixed(0)}',
+                style: AppTextStyles.tableRowBoldValue,
+                textAlign: TextAlign.right,
+              ),
+            ),
+            // Paid - right aligned
+            SizedBox(
+              width: 100,
+              child: Text(
+                '₹${bill.amountPaid.toStringAsFixed(0)}',
+                style: AppTextStyles.tableRowNormal.copyWith(
+                  color: AppColors.success,
                 ),
-
-                // Print/Share PDF
-                IconButton(
-                  icon: Icon(
-                    Icons.picture_as_pdf,
-                    size: 18,
-                    color: AppColors.success,
-                  ),
-                  onPressed: () => _showPdfOptionsDialog(context, bill),
+                textAlign: TextAlign.right,
+              ),
+            ),
+            // Pending - right aligned
+            SizedBox(
+              width: 100,
+              child: Text(
+                '₹${bill.pendingAmount.toStringAsFixed(0)}',
+                style: AppTextStyles.tableRowNormal.copyWith(
+                  color: bill.pendingAmount > 0
+                      ? AppColors.error
+                      : AppColors.textSecondary,
                 ),
-
-                // Add Payment
-                if (bill.status != 'Paid')
+                textAlign: TextAlign.right,
+              ),
+            ),
+            // Status - centered badge
+            SizedBox(
+              width: 90,
+              child: Center(child: _buildStatusBadge(bill.status)),
+            ),
+            // Actions - centered icons
+            SizedBox(
+              width: 180,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // View Details
                   IconButton(
                     icon: Icon(
-                      Icons.payment_rounded,
+                      Icons.visibility_outlined,
                       size: 18,
-                      color: AppColors.primary,
+                      color: AppColors.textSecondary,
                     ),
-                    onPressed: () => _showAddPaymentDialog(context, bill),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
+                    onPressed: () => _showBillDetailsDialog(context, bill),
+                    tooltip: 'View Details',
                   ),
-              ],
+                  const SizedBox(width: 4),
+                  // Print/Share PDF
+                  IconButton(
+                    icon: Icon(
+                      Icons.picture_as_pdf,
+                      size: 18,
+                      color: AppColors.success,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
+                    onPressed: () => _showPdfOptionsDialog(context, bill),
+                    tooltip: 'PDF',
+                  ),
+                  const SizedBox(width: 4),
+                  // Add Payment
+                  if (bill.status != 'Paid')
+                    IconButton(
+                      icon: Icon(
+                        Icons.payment_rounded,
+                        size: 18,
+                        color: AppColors.primary,
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
+                      onPressed: () => _showAddPaymentDialog(context, bill),
+                      tooltip: 'Add Payment',
+                    ),
+                  const SizedBox(width: 4),
+                  // Delete Bill
+                  IconButton(
+                    icon: Icon(
+                      Icons.delete_outline,
+                      size: 18,
+                      color: AppColors.error,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
+                    onPressed: () => _showDeleteConfirmDialog(context, bill),
+                    tooltip: 'Delete Bill',
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -689,26 +827,23 @@ class _BillsPageState extends State<BillsPage> {
         text = 'Partial';
     }
 
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color),
-          ),
-          child: Text(
-            text,
-            style: GoogleFonts.inter(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color, width: 1),
+      ),
+      child: Text(
+        text,
+        style: GoogleFonts.inter(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          height: 1.2,
         ),
-      ],
+        textAlign: TextAlign.center,
+      ),
     );
   }
 
@@ -1000,6 +1135,103 @@ class _BillsPageState extends State<BillsPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // ===================== DELETE CONFIRMATION DIALOG =====================
+  void _showDeleteConfirmDialog(BuildContext context, BillModel bill) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.secondary,
+        title: Text('Delete Bill', style: AppTextStyles.dialogHeading),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Are you sure you want to delete this bill?',
+              style: AppTextStyles.tableRowPrimary,
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: AppColors.error.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Bill No: ${bill.billNo}',
+                    style: AppTextStyles.tableRowSecondary,
+                  ),
+                  Text(
+                    'Customer: ${bill.customerName ?? "Walk-in"}',
+                    style: AppTextStyles.tableRowSecondary,
+                  ),
+                  Text(
+                    'Amount: ₹${bill.finalAmount.toStringAsFixed(2)}',
+                    style: AppTextStyles.tableRowSecondary,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '⚠️ This action will:',
+              style: AppTextStyles.tableRowPrimary.copyWith(
+                color: AppColors.error,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '• Restore stock quantities\n• Reverse analytics data\n• Delete associated transactions',
+              style: AppTextStyles.tableRowSecondary,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text('Cancel', style: AppTextStyles.tableRowSecondary),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              final success = await context.read<BillCubit>().deleteBill(
+                bill.id,
+              );
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      success
+                          ? 'Bill deleted successfully'
+                          : 'Failed to delete bill',
+                    ),
+                    backgroundColor: success
+                        ? AppColors.success
+                        : AppColors.error,
+                  ),
+                );
+              }
+            },
+            child: Text(
+              'Delete',
+              style: AppTextStyles.tableRowPrimary.copyWith(
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

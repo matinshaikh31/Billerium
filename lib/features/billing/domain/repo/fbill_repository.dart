@@ -9,6 +9,8 @@ import 'package:billing_software/features/billing/domain/entity/payment_model.da
 abstract class BillRepository {
   Future<String> createBill(BillModel bill);
   Future<void> updateBill(BillModel bill);
+  Future<void> deleteBill(String billId);
+  Future<BillModel?> getBillById(String billId);
   Future<void> addPayment(String billId, PaymentModel payment);
   Future<List<BillModel>> searchBills(String query);
 }

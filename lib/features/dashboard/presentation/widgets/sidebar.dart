@@ -16,9 +16,11 @@ class DesktopSidebar extends StatelessWidget {
     SidebarItem("Dashboard", Routes.dashboard, Icons.dashboard_outlined),
     SidebarItem("Categories", Routes.categories, Icons.category_outlined),
     SidebarItem("Products", Routes.products, Icons.inventory_2_outlined),
+    SidebarItem("Purchases", Routes.purchases, Icons.shopping_bag_outlined),
     SidebarItem("Create Bill", Routes.createBill, Icons.receipt_long_outlined),
     SidebarItem("Bills", Routes.bills, Icons.description_outlined),
     SidebarItem("Transactions", Routes.transcations, Icons.swap_horiz_outlined),
+    SidebarItem("Reports", Routes.reports, Icons.analytics_outlined),
   ];
 
   @override

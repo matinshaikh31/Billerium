@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:billing_software/core/utils/helpers.dart';
+import 'package:intl/intl.dart';
 
 class CreateBillPage extends StatefulWidget {
   const CreateBillPage({super.key});
@@ -558,6 +559,27 @@ class _CreateBillPageState extends State<CreateBillPage> {
       icon: Icons.person_outline,
       child: Column(
         children: [
+          // Bill Date Picker
+          InkWell(
+            onTap: () => _selectBillDate(context),
+            child: InputDecorator(
+              decoration: InputDecoration(
+                labelText: 'Bill Date *',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                suffixIcon: Icon(
+                  Icons.calendar_today,
+                  color: AppColors.primary,
+                ),
+              ),
+              child: Text(
+                DateFormat('dd MMM yyyy').format(state.billDate),
+                style: AppTextStyles.tableRowPrimary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           TextFormField(
             controller: context.read<CreateBillCubit>().customerNameController,
             decoration: InputDecoration(
@@ -976,6 +998,33 @@ class _CreateBillPageState extends State<CreateBillPage> {
         ],
       ),
     );
+  }
+
+  // ===================== DATE PICKER =====================
+  Future<void> _selectBillDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: context.read<CreateBillCubit>().state.billDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: AppColors.primary,
+              onPrimary: Colors.white,
+              surface: AppColors.secondary,
+              onSurface: AppColors.textPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && context.mounted) {
+      context.read<CreateBillCubit>().updateBillDate(picked);
+    }
   }
 }
 // import 'package:billing_software/core/theme/app_colors.dart';

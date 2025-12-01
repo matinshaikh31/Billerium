@@ -11,6 +11,9 @@ class CreateBillState {
   final double billDiscountPercent;
   final double billDiscountAmount;
 
+  // Bill date (for creating bills for past/future dates)
+  final DateTime billDate;
+
   CreateBillState({
     required this.cartItems,
     required this.amountReceived,
@@ -19,6 +22,7 @@ class CreateBillState {
     this.message,
     this.billDiscountPercent = 0,
     this.billDiscountAmount = 0,
+    required this.billDate,
   });
 
   factory CreateBillState.initial() {
@@ -30,6 +34,7 @@ class CreateBillState {
       message: null,
       billDiscountPercent: 0,
       billDiscountAmount: 0,
+      billDate: DateTime.now(),
     );
   }
 
@@ -71,6 +76,7 @@ class CreateBillState {
     String? message,
     double? billDiscountPercent,
     double? billDiscountAmount,
+    DateTime? billDate,
   }) {
     return CreateBillState(
       cartItems: cartItems ?? this.cartItems,
@@ -80,6 +86,7 @@ class CreateBillState {
       message: message,
       billDiscountPercent: billDiscountPercent ?? this.billDiscountPercent,
       billDiscountAmount: billDiscountAmount ?? this.billDiscountAmount,
+      billDate: billDate ?? this.billDate,
     );
   }
 }

@@ -432,6 +432,37 @@ class BillCubit extends Cubit<BillState> {
     await initializeBillsPagination();
   }
 
+  // ==================== DELETE BILL ====================
+  Future<bool> deleteBill(String billId) async {
+    try {
+      emit(state.copyWith(isLoading: true));
+
+      // Delete bill using repository (handles stock restoration and analytics reversal)
+      await billRepository.deleteBill(billId);
+
+      // Remove from current list and refresh
+      await removeBillFromList(billId);
+
+      emit(state.copyWith(isLoading: false, error: null));
+      return true;
+    } catch (e) {
+      emit(
+        state.copyWith(isLoading: false, error: 'Failed to delete bill: $e'),
+      );
+      return false;
+    }
+  }
+
+  // ==================== GET BILL BY ID ====================
+  Future<BillModel?> getBillById(String billId) async {
+    try {
+      return await billRepository.getBillById(billId);
+    } catch (e) {
+      emit(state.copyWith(error: 'Failed to get bill: $e'));
+      return null;
+    }
+  }
+
   // ==================== PDF GENERATION METHODS ====================
 
   // Generate and share invoice PDF

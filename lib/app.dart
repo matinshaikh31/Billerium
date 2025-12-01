@@ -6,7 +6,6 @@ import 'package:billing_software/features/analytics/presentation/cubit/analytics
 import 'package:billing_software/features/auth/data/auth_firebaserepo.dart';
 import 'package:billing_software/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:billing_software/features/billing/data/firebase_bill_repository.dart';
-import 'package:billing_software/features/billing/domain/repo/fbill_repository.dart';
 import 'package:billing_software/features/billing/presentation/cubit/bill_cubit.dart';
 import 'package:billing_software/features/billing/presentation/cubit/create_bill_cubit.dart';
 import 'package:billing_software/features/categories/data/repositories/firebase_category_repository.dart';
@@ -17,6 +16,11 @@ import 'package:billing_software/features/products/data/firebase_product_reposit
 import 'package:billing_software/features/products/presentation/cubit/product_cubit.dart';
 import 'package:billing_software/features/products/presentation/cubit/product_form_cubit.dart';
 import 'package:billing_software/features/products/presentation/cubit/product_import_cubit.dart';
+import 'package:billing_software/features/purchase/data/firebase_purchase_repository.dart';
+import 'package:billing_software/features/purchase/presentation/cubit/purchase_cubit.dart';
+import 'package:billing_software/features/purchase/presentation/cubit/purchase_form_cubit.dart';
+import 'package:billing_software/features/reports/data/firebase_report_repository.dart';
+import 'package:billing_software/features/reports/presentation/cubit/report_cubit.dart';
 import 'package:billing_software/features/transactions/presentation/cubit/transaction_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -76,6 +80,19 @@ class BillingApp extends StatelessWidget {
                   categoryRepo: FirebaseCategoryRepository(),
                   productRepo: FirebaseProductRepository(),
                 ),
+              ),
+              BlocProvider(
+                create: (context) =>
+                    PurchaseCubit(purchaseRepo: FirebasePurchaseRepository()),
+              ),
+              BlocProvider(
+                create: (context) => PurchaseFormCubit(
+                  purchaseRepo: FirebasePurchaseRepository(),
+                ),
+              ),
+              BlocProvider(
+                create: (context) =>
+                    ReportCubit(reportRepository: FirebaseReportRepository()),
               ),
             ],
             child: ResponsiveWid(

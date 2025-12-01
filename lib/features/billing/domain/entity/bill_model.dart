@@ -21,10 +21,12 @@ class BillModel extends Equatable {
   final List<PaymentModel> payments;
   final Timestamp createdAt;
   final Timestamp updatedAt;
+  final Timestamp?
+  billDate; // Nullable for backward compatibility with existing data
 
   const BillModel({
     required this.id,
-    required this.billNo, // ✅ Already required
+    required this.billNo,
     required this.items,
     this.customerName,
     this.customerPhone,
@@ -40,12 +42,13 @@ class BillModel extends Equatable {
     required this.payments,
     required this.createdAt,
     required this.updatedAt,
+    this.billDate,
   });
 
   factory BillModel.fromJson(Map<String, dynamic> json, String id) {
     return BillModel(
       id: id,
-      billNo: json['billNo'] as String, // ✅ ADD THIS LINE
+      billNo: json['billNo'] as String,
       items: (json['items'] as List)
           .map((item) => BillItemModel.fromJson(item))
           .toList(),
@@ -65,6 +68,8 @@ class BillModel extends Equatable {
           .toList(),
       createdAt: json['createdAt'] as Timestamp,
       updatedAt: json['updatedAt'] as Timestamp,
+      billDate:
+          json['billDate'] as Timestamp?, // Nullable for backward compatibility
     );
   }
 
@@ -76,7 +81,7 @@ class BillModel extends Equatable {
 
   Map<String, dynamic> toJson() {
     return {
-      'billNo': billNo, // ✅ ADD THIS LINE
+      'billNo': billNo,
       'items': items.map((item) => item.toJson()).toList(),
       'customerName': customerName,
       'customerPhone': customerPhone,
@@ -92,12 +97,13 @@ class BillModel extends Equatable {
       'payments': payments.map((p) => p.toJson()).toList(),
       'createdAt': createdAt,
       'updatedAt': updatedAt,
+      if (billDate != null) 'billDate': billDate,
     };
   }
 
   BillModel copyWith({
     String? id,
-    String? billNo, // ✅ ADD THIS LINE
+    String? billNo,
     List<BillItemModel>? items,
     String? customerName,
     String? customerPhone,
@@ -113,10 +119,11 @@ class BillModel extends Equatable {
     List<PaymentModel>? payments,
     Timestamp? createdAt,
     Timestamp? updatedAt,
+    Timestamp? billDate,
   }) {
     return BillModel(
       id: id ?? this.id,
-      billNo: billNo ?? this.billNo, // ✅ ADD THIS LINE
+      billNo: billNo ?? this.billNo,
       items: items ?? this.items,
       customerName: customerName ?? this.customerName,
       customerPhone: customerPhone ?? this.customerPhone,
@@ -132,13 +139,17 @@ class BillModel extends Equatable {
       payments: payments ?? this.payments,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      billDate: billDate ?? this.billDate,
     );
   }
+
+  /// Helper to get the effective bill date (billDate if set, otherwise createdAt)
+  Timestamp get effectiveBillDate => billDate ?? createdAt;
 
   @override
   List<Object?> get props => [
     id,
-    billNo, // ✅ ADD THIS LINE
+    billNo,
     items,
     customerName,
     customerPhone,
@@ -154,5 +165,6 @@ class BillModel extends Equatable {
     payments,
     createdAt,
     updatedAt,
+    billDate,
   ];
 }

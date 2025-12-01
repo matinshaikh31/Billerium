@@ -1,9 +1,10 @@
 import 'package:billing_software/features/analytics/data/firebase_analytics_repo.dart';
+import 'package:billing_software/features/analytics/domain/entity/monthly_purchase_model.dart';
 import 'package:billing_software/features/analytics/domain/entity/monthly_sales_model.dart';
 import 'package:billing_software/features/categories/domain/repositories/category_repository.dart';
 import 'package:billing_software/features/products/data/firebase_product_repository.dart';
+import 'package:billing_software/core/services/firebase.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 part 'analytics_state.dart';
@@ -42,11 +43,13 @@ class AnalyticsCubit extends Cubit<AnalyticsState> {
       final currentMonth =
           "${now.year}-${now.month.toString().padLeft(2, '0')}";
       final salesData = await _analyticsRepo.getMonthlyAnalytics(currentMonth);
+      final purchaseData = await _getMonthlyPurchaseData(currentMonth);
 
       emit(
         state.copyWith(
           isLoading: false,
           salesData: salesData ?? MonthlySalesModel.initial(currentMonth),
+          purchaseData: purchaseData,
           totalProducts: productCount,
           totalCategories: categoryCount,
           availableMonths: months,
@@ -62,6 +65,19 @@ class AnalyticsCubit extends Cubit<AnalyticsState> {
           errorMessage: "Failed to load analytics: $e",
         ),
       );
+    }
+  }
+
+  // Helper to fetch monthly purchase data
+  Future<MonthlyPurchaseModel?> _getMonthlyPurchaseData(String monthKey) async {
+    try {
+      final doc = await FBFireStore.monthlyPurchases.doc(monthKey).get();
+      if (!doc.exists || doc.data() == null) {
+        return MonthlyPurchaseModel.initial(monthKey);
+      }
+      return MonthlyPurchaseModel.fromJson(doc.data()!, monthKey);
+    } catch (e) {
+      return MonthlyPurchaseModel.initial(monthKey);
     }
   }
 
@@ -86,11 +102,13 @@ class AnalyticsCubit extends Cubit<AnalyticsState> {
       emit(state.copyWith(isLoading: true, errorMessage: null));
 
       final salesData = await _analyticsRepo.getMonthlyAnalytics(monthKey);
+      final purchaseData = await _getMonthlyPurchaseData(monthKey);
 
       emit(
         state.copyWith(
           isLoading: false,
           salesData: salesData ?? MonthlySalesModel.initial(monthKey),
+          purchaseData: purchaseData,
           selectedPeriod: monthKey,
           currentFilter: AnalyticsFilter.monthly,
         ),
@@ -120,6 +138,7 @@ class AnalyticsCubit extends Cubit<AnalyticsState> {
           state.copyWith(
             isLoading: false,
             salesData: MonthlySalesModel.initial(year),
+            purchaseData: MonthlyPurchaseModel.initial(year),
             selectedPeriod: year,
             currentFilter: AnalyticsFilter.yearly,
           ),
@@ -127,7 +146,7 @@ class AnalyticsCubit extends Cubit<AnalyticsState> {
         return;
       }
 
-      // Aggregate yearly data
+      // Aggregate yearly sales data
       double totalSales = 0;
       double totalPaid = 0;
       double totalPending = 0;
@@ -153,10 +172,31 @@ class AnalyticsCubit extends Cubit<AnalyticsState> {
         updatedAt: Timestamp.now(),
       );
 
+      // Aggregate yearly purchase data
+      double totalPurchaseAmount = 0;
+      int totalItemsPurchased = 0;
+      for (int i = 1; i <= 12; i++) {
+        final monthKey = "$year-${i.toString().padLeft(2, '0')}";
+        final purchaseData = await _getMonthlyPurchaseData(monthKey);
+        if (purchaseData != null) {
+          totalPurchaseAmount += purchaseData.totalPurchaseAmount;
+          totalItemsPurchased += purchaseData.totalItemsPurchased;
+        }
+      }
+
+      final yearPurchaseData = MonthlyPurchaseModel(
+        id: year,
+        totalPurchaseAmount: totalPurchaseAmount,
+        totalItemsPurchased: totalItemsPurchased,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      );
+
       emit(
         state.copyWith(
           isLoading: false,
           salesData: yearData,
+          purchaseData: yearPurchaseData,
           selectedPeriod: year,
           currentFilter: AnalyticsFilter.yearly,
         ),

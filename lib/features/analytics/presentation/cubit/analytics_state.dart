@@ -5,6 +5,7 @@ enum AnalyticsFilter { monthly, yearly }
 class AnalyticsState {
   final bool isLoading;
   final MonthlySalesModel? salesData;
+  final MonthlyPurchaseModel? purchaseData;
   final int totalProducts;
   final int totalCategories;
   final AnalyticsFilter currentFilter;
@@ -16,6 +17,7 @@ class AnalyticsState {
   const AnalyticsState({
     required this.isLoading,
     this.salesData,
+    this.purchaseData,
     required this.totalProducts,
     required this.totalCategories,
     required this.currentFilter,
@@ -33,6 +35,7 @@ class AnalyticsState {
     return AnalyticsState(
       isLoading: true,
       salesData: null,
+      purchaseData: null,
       totalProducts: 0,
       totalCategories: 0,
       currentFilter: AnalyticsFilter.monthly,
@@ -43,10 +46,24 @@ class AnalyticsState {
     );
   }
 
+  // Computed properties for profit calculation
+  double get totalProfit {
+    final sales = salesData?.totalSales ?? 0;
+    final purchases = purchaseData?.totalPurchaseAmount ?? 0;
+    return sales - purchases;
+  }
+
+  double get profitMargin {
+    final sales = salesData?.totalSales ?? 0;
+    if (sales == 0) return 0;
+    return (totalProfit / sales) * 100;
+  }
+
   // Copy with method
   AnalyticsState copyWith({
     bool? isLoading,
     MonthlySalesModel? salesData,
+    MonthlyPurchaseModel? purchaseData,
     int? totalProducts,
     int? totalCategories,
     AnalyticsFilter? currentFilter,
@@ -58,6 +75,7 @@ class AnalyticsState {
     return AnalyticsState(
       isLoading: isLoading ?? this.isLoading,
       salesData: salesData ?? this.salesData,
+      purchaseData: purchaseData ?? this.purchaseData,
       totalProducts: totalProducts ?? this.totalProducts,
       totalCategories: totalCategories ?? this.totalCategories,
       currentFilter: currentFilter ?? this.currentFilter,
@@ -67,17 +85,4 @@ class AnalyticsState {
       availableYears: availableYears ?? this.availableYears,
     );
   }
-
-  @override
-  List<Object?> get props => [
-    isLoading,
-    salesData,
-    totalProducts,
-    totalCategories,
-    currentFilter,
-    selectedPeriod,
-    errorMessage,
-    availableMonths,
-    availableYears,
-  ];
 }

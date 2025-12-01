@@ -6,10 +6,10 @@ import 'package:billing_software/features/billing/presentation/page/bill_page.da
 import 'package:billing_software/features/billing/presentation/page/create_bill_page.dart';
 import 'package:billing_software/features/categories/presentation/pages/categories_page.dart';
 import 'package:billing_software/features/dashboard/presentation/pages/dashboard.dart';
-import 'package:billing_software/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:billing_software/features/products/presentation/page/prooduct_page.dart';
+import 'package:billing_software/features/purchase/presentation/page/purchase_list_page.dart';
+import 'package:billing_software/features/reports/presentation/pages/reports_page.dart';
 import 'package:billing_software/features/transactions/presentation/page/transcation_page.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -76,6 +76,16 @@ final GoRouter appRoute = GoRouter(
           path: Routes.transcations,
           pageBuilder: (context, state) =>
               const NoTransitionPage(child: TransactionsPage()),
+        ),
+        GoRoute(
+          path: Routes.purchases,
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: PurchaseListPage()),
+        ),
+        GoRoute(
+          path: Routes.reports,
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: ReportsPage()),
         ),
       ],
     ),

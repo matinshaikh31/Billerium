@@ -355,6 +355,7 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
     bool isMobile,
   ) {
     final sales = state.salesData;
+    final purchases = state.purchaseData;
     if (sales == null) return const SizedBox();
 
     return Column(
@@ -400,6 +401,63 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
               icon: Icons.receipt_long,
               color: AppColors.taskBtn,
               backgroundColor: AppColors.taskBtn.withOpacity(0.1),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        // Purchase Analytics Section
+        Text(
+          'Purchase Overview',
+          style: GoogleFonts.inter(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            AnalyticsCard(
+              title: 'Total Purchases',
+              value: _formatCurrency(purchases?.totalPurchaseAmount ?? 0),
+              icon: Icons.shopping_bag_outlined,
+              color: AppColors.error,
+              backgroundColor: AppColors.error.withOpacity(0.1),
+            ),
+            AnalyticsCard(
+              title: 'Items Purchased',
+              value: (purchases?.totalItemsPurchased ?? 0).toString(),
+              icon: Icons.add_shopping_cart,
+              color: AppColors.warning,
+              backgroundColor: AppColors.warning.withOpacity(0.1),
+            ),
+            AnalyticsCard(
+              title: 'Gross Profit',
+              value: _formatCurrency(state.totalProfit),
+              icon: state.totalProfit >= 0
+                  ? Icons.arrow_upward
+                  : Icons.arrow_downward,
+              color: state.totalProfit >= 0
+                  ? AppColors.success
+                  : AppColors.error,
+              backgroundColor:
+                  (state.totalProfit >= 0 ? AppColors.success : AppColors.error)
+                      .withOpacity(0.1),
+            ),
+            AnalyticsCard(
+              title: 'Profit Margin',
+              value: '${state.profitMargin.toStringAsFixed(1)}%',
+              icon: Icons.percent,
+              color: state.profitMargin >= 0
+                  ? AppColors.success
+                  : AppColors.error,
+              backgroundColor:
+                  (state.profitMargin >= 0
+                          ? AppColors.success
+                          : AppColors.error)
+                      .withOpacity(0.1),
             ),
           ],
         ),

@@ -15,6 +15,10 @@ class FBFireStore {
   static final transactions = fb.collection('transactions');
   static final settings = fb.collection('settings').doc("sets");
   static final analytics = fb.collection("analytics");
+  static final purchases = fb.collection('purchases');
+  static final stockLedger = fb.collection('stockLedger');
+  static final profitTracking = fb.collection('profitTracking');
+  static final monthlyPurchases = fb.collection('monthlyPurchases');
 }
 
 class FBStorage {

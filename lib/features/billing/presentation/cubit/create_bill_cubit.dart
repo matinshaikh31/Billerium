@@ -150,6 +150,11 @@ class CreateBillCubit extends Cubit<CreateBillState> {
     billDiscountPercentController.clear();
   }
 
+  // Update bill date
+  void updateBillDate(DateTime date) {
+    emit(state.copyWith(billDate: date));
+  }
+
   // Create bill
   Future<void> createBill() async {
     emit(state.copyWith(isLoading: true, message: null));
@@ -180,6 +185,9 @@ class CreateBillCubit extends Cubit<CreateBillState> {
         );
       }
 
+      // Convert selected bill date to Timestamp
+      final billTimestamp = Timestamp.fromDate(state.billDate);
+
       // Create bill with all discount calculations
       final bill = BillModel(
         id: '',
@@ -197,8 +205,9 @@ class CreateBillCubit extends Cubit<CreateBillState> {
         pendingAmount: state.pendingAmount,
         status: billStatus,
         payments: payments,
-        createdAt: Timestamp.now(),
+        createdAt: Timestamp.now(), // Actual creation timestamp
         updatedAt: Timestamp.now(),
+        billDate: billTimestamp, // User-selected bill date for analytics
       );
 
       // Save bill

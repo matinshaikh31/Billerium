@@ -10,6 +10,8 @@ class ProductModel {
   final String? sku;
   final int stockQty;
   final int qty; // NEW FIELD
+  final double? lastPurchasePrice; // NEW FIELD for purchase tracking
+  final double? averagePurchasePrice; // NEW FIELD for purchase tracking
   final Timestamp createdAt;
   final Timestamp updatedAt;
 
@@ -22,6 +24,8 @@ class ProductModel {
     this.sku,
     required this.stockQty,
     required this.qty, // NEW FIELD
+    this.lastPurchasePrice, // NEW FIELD
+    this.averagePurchasePrice, // NEW FIELD
     required this.createdAt,
     required this.updatedAt,
   });
@@ -57,6 +61,12 @@ class ProductModel {
       sku: json['sku'] as String?,
       stockQty: json['stockQty'] as int,
       qty: (json['qty'] ?? 0) as int, // DEFAULT 0 IF NULL / MISSING
+      lastPurchasePrice: json['lastPurchasePrice'] != null
+          ? (json['lastPurchasePrice'] as num).toDouble()
+          : null,
+      averagePurchasePrice: json['averagePurchasePrice'] != null
+          ? (json['averagePurchasePrice'] as num).toDouble()
+          : null,
       createdAt: json['createdAt'] as Timestamp,
       updatedAt: json['updatedAt'] as Timestamp,
     );
@@ -77,6 +87,8 @@ class ProductModel {
       'sku': sku,
       'stockQty': stockQty,
       'qty': qty, // ADDED HERE
+      'lastPurchasePrice': lastPurchasePrice,
+      'averagePurchasePrice': averagePurchasePrice,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
     };

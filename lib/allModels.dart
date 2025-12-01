@@ -27,6 +27,8 @@ class ProductModel {
   final String? sku;
   final int stockQty;
   final int qty;
+  final double? lastPurchasePrice;
+  final double? averagePurchasePrice;
   final Timestamp createdAt;
   final Timestamp updatedAt;
 
@@ -39,6 +41,8 @@ class ProductModel {
     this.sku,
     required this.stockQty,
     required this.qty,
+    this.lastPurchasePrice,
+    this.averagePurchasePrice,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -185,6 +189,105 @@ class MonthlySalesModel {
     required this.totalPending,
     required this.totalBills,
     required this.totalProductsSold,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+}
+
+// Purchase Model
+class PurchaseModel {
+  final String id;
+  final String purchaseNo;
+  final String? supplierName;
+  final String? supplierPhone;
+  final List<PurchaseItemModel> items;
+  final double subtotal;
+  final double totalTax;
+  final double finalAmount;
+  final Timestamp createdAt;
+  final Timestamp updatedAt;
+
+  PurchaseModel({
+    required this.id,
+    required this.purchaseNo,
+    this.supplierName,
+    this.supplierPhone,
+    required this.items,
+    required this.subtotal,
+    required this.totalTax,
+    required this.finalAmount,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+}
+
+// Purchase Item Model
+class PurchaseItemModel {
+  final String productId;
+  final String productName;
+  final int quantity;
+  final double purchasePrice;
+  final double total;
+
+  PurchaseItemModel({
+    required this.productId,
+    required this.productName,
+    required this.quantity,
+    required this.purchasePrice,
+    required this.total,
+  });
+}
+
+// Stock Ledger Model
+class StockLedgerModel {
+  final String id;
+  final String productId;
+  final String type;
+  final int qtyChange;
+  final int finalStock;
+  final String referenceId;
+  final Timestamp timestamp;
+
+  StockLedgerModel({
+    required this.id,
+    required this.productId,
+    required this.type,
+    required this.qtyChange,
+    required this.finalStock,
+    required this.referenceId,
+    required this.timestamp,
+  });
+}
+
+// Profit Model
+class ProfitModel {
+  final String productId;
+  final double totalPurchaseCost;
+  final double totalSalesRevenue;
+  final double totalProfit;
+  final int unitsSold;
+
+  ProfitModel({
+    required this.productId,
+    required this.totalPurchaseCost,
+    required this.totalSalesRevenue,
+    required this.totalProfit,
+    required this.unitsSold,
+  });
+}
+
+// Monthly Purchase Model
+class MonthlyPurchaseModel {
+  final String id;
+  final double totalPurchaseAmount;
+  final int totalItemsPurchased;
+  final Timestamp createdAt;
+  final Timestamp updatedAt;
+
+  MonthlyPurchaseModel({
+    required this.id,
+    required this.totalPurchaseAmount,
+    required this.totalItemsPurchased,
     required this.createdAt,
     required this.updatedAt,
   });
