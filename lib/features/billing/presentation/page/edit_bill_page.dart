@@ -29,9 +29,10 @@ class _EditBillPageState extends State<EditBillPage> {
   @override
   void initState() {
     super.initState();
-    // Load the bill into the cubit
+    // Load the bill into the cubit with categories to enrich category data
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<EditBillCubit>().loadBill(widget.bill);
+      final categories = context.read<CategoryCubit>().state.categories;
+      context.read<EditBillCubit>().loadBill(widget.bill, categories);
     });
   }
 

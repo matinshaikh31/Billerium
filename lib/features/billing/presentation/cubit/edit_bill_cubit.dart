@@ -2,6 +2,7 @@ import 'package:billing_software/features/billing/domain/entity/bill_item_model.
 import 'package:billing_software/features/billing/domain/entity/bill_model.dart';
 import 'package:billing_software/features/billing/domain/entity/payment_model.dart';
 import 'package:billing_software/features/billing/domain/repo/fbill_repository.dart';
+import 'package:billing_software/features/categories/domain/antity/category_model.dart';
 import 'package:billing_software/features/products/domain/entity/product_model.dart';
 import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -22,7 +23,8 @@ class EditBillCubit extends Cubit<EditBillState> {
   final billDiscountAmountController = TextEditingController();
 
   /// Initialize the cubit with an existing bill for editing
-  void loadBill(BillModel bill) {
+  /// Also enriches bill items with category data from products if missing
+  Future<void> loadBill(BillModel bill, List<CategoryModel> categories) async {
     customerNameController.text = bill.customerName ?? '';
     customerPhoneController.text = bill.customerPhone ?? '';
     amountReceivedController.text = bill.amountPaid.toStringAsFixed(2);
@@ -34,10 +36,58 @@ class EditBillCubit extends Cubit<EditBillState> {
       billDiscountAmountController.text = bill.billDiscountAmount.toString();
     }
 
+    // Enrich items with category data if missing
+    List<BillItemModel> enrichedItems = [];
+    for (var item in bill.items) {
+      if (item.categoryId == null || item.categoryName == null) {
+        // Fetch product to get category info
+        try {
+          final productDoc = await FirebaseFirestore.instance
+              .collection('products')
+              .doc(item.productId)
+              .get();
+
+          if (productDoc.exists) {
+            final productData = productDoc.data()!;
+            final categoryId = productData['categoryId'] as String?;
+            String? categoryName;
+
+            if (categoryId != null) {
+              // Find category name from the passed categories list
+              final category = categories.firstWhere(
+                (cat) => cat.id == categoryId,
+                orElse: () => CategoryModel(
+                  id: '',
+                  name: 'Unknown',
+                  defaultDiscountPercent: 0,
+                  createdAt: Timestamp.now(),
+                  updatedAt: Timestamp.now(),
+                ),
+              );
+              categoryName = category.name;
+            }
+
+            enrichedItems.add(
+              item.copyWith(
+                categoryId: categoryId ?? item.categoryId,
+                categoryName: categoryName ?? item.categoryName,
+              ),
+            );
+          } else {
+            enrichedItems.add(item);
+          }
+        } catch (e) {
+          enrichedItems.add(item);
+        }
+      } else {
+        enrichedItems.add(item);
+      }
+    }
+
     emit(
       EditBillState(
         originalBill: bill,
-        cartItems: List.from(bill.items),
+        cartItems: enrichedItems,
         customerName: bill.customerName,
         customerPhone: bill.customerPhone,
         amountReceived: bill.amountPaid,
