@@ -242,10 +242,112 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage> {
               },
             ),
           ),
+
+          const SizedBox(height: 16),
+
+          // === Rebuild Analytics Button ===
+          // SizedBox(
+          //   width: double.infinity,
+          //   child: OutlinedButton.icon(
+          //     onPressed: state.isLoading
+          //         ? null
+          //         : () => _showRebuildConfirmDialog(context),
+          //     style: OutlinedButton.styleFrom(
+          //       padding: const EdgeInsets.symmetric(vertical: 12),
+          //       side: BorderSide(
+          //         color: state.isLoading
+          //             ? AppColors.borderGrey
+          //             : AppColors.primary,
+          //       ),
+          //       shape: RoundedRectangleBorder(
+          //         borderRadius: BorderRadius.circular(8),
+          //       ),
+          //     ),
+          //     icon: state.isLoading
+          //         ? const SizedBox(
+          //             width: 18,
+          //             height: 18,
+          //             child: CircularProgressIndicator(strokeWidth: 2),
+          //           )
+          //         : const Icon(Icons.refresh, size: 18),
+          //     label: Text(
+          //       state.isLoading
+          //           ? 'Rebuilding...'
+          //           : 'Rebuild Analytics from Bills',
+          //       style: GoogleFonts.inter(
+          //         fontWeight: FontWeight.w500,
+          //         fontSize: 13,
+          //         color: state.isLoading
+          //             ? AppColors.textSecondary
+          //             : AppColors.primary,
+          //       ),
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );
   }
+
+  // void _showRebuildConfirmDialog(BuildContext context) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (dialogContext) => AlertDialog(
+  //       backgroundColor: AppColors.secondary,
+  //       title: Text('Rebuild Analytics', style: AppTextStyles.dialogHeading),
+  //       content: Column(
+  //         mainAxisSize: MainAxisSize.min,
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           Text(
+  //             'This will recalculate all analytics data from your existing bills.',
+  //             style: AppTextStyles.tableRowPrimary,
+  //           ),
+  //           const SizedBox(height: 12),
+  //           Container(
+  //             padding: const EdgeInsets.all(12),
+  //             decoration: BoxDecoration(
+  //               color: AppColors.warning.withValues(alpha: 0.1),
+  //               borderRadius: BorderRadius.circular(8),
+  //               border: Border.all(
+  //                 color: AppColors.warning.withValues(alpha: 0.3),
+  //               ),
+  //             ),
+  //             child: Row(
+  //               children: [
+  //                 const Icon(Icons.info_outline, color: AppColors.warning),
+  //                 const SizedBox(width: 8),
+  //                 Expanded(
+  //                   child: Text(
+  //                     'Use this if your analytics data is missing or incorrect.',
+  //                     style: AppTextStyles.tableRowSecondary,
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () => Navigator.pop(dialogContext),
+  //           child: Text(
+  //             'Cancel',
+  //             style: TextStyle(color: AppColors.textSecondary),
+  //           ),
+  //         ),
+  //         ElevatedButton(
+  //           onPressed: () {
+  //             Navigator.pop(dialogContext);
+  //             context.read<AnalyticsCubit>().rebuildAnalyticsFromBills();
+  //           },
+  //           style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+  //           child: const Text('Rebuild', style: TextStyle(color: Colors.white)),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildFilterButton(
     BuildContext context,

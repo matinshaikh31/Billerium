@@ -1,4 +1,3 @@
-import 'package:billing_software/core/services/firebase.dart';
 import 'package:billing_software/core/theme/app_colors.dart';
 import 'package:billing_software/core/theme/app_text_styles.dart';
 import 'package:billing_software/core/utils/helpers.dart';
@@ -280,43 +279,52 @@ class _ProductsPageState extends State<ProductsPage> {
               context.read<ProductCubit>().searchProducts(value),
         ),
         const SizedBox(height: 12),
-        BlocBuilder<CategoryCubit, CategoryState>(
-          builder: (context, categoryState) {
-            return Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                border: Border.all(color: AppColors.borderGrey),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: context.read<ProductCubit>().state.selectedCategory,
-                  isExpanded: true,
-                  hint: Text(
-                    'All Categories',
-                    style: AppTextStyles.tableRowRegular,
+        BlocBuilder<ProductCubit, ProductState>(
+          buildWhen: (previous, current) =>
+              previous.selectedCategory != current.selectedCategory,
+          builder: (context, productState) {
+            return BlocBuilder<CategoryCubit, CategoryState>(
+              builder: (context, categoryState) {
+                return Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
                   ),
-                  items: [
-                    const DropdownMenuItem(
-                      value: 'All',
-                      child: Text('All Categories'),
-                    ),
-                    ...categoryState.categories.map((cat) {
-                      return DropdownMenuItem(
-                        value: cat.id,
-                        child: Text(
-                          cat.name,
-                          style: AppTextStyles.tableRowNormal,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.borderGrey),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: productState.selectedCategory,
+                      isExpanded: true,
+                      hint: Text(
+                        'All Categories',
+                        style: AppTextStyles.tableRowRegular,
+                      ),
+                      items: [
+                        const DropdownMenuItem(
+                          value: 'All',
+                          child: Text('All Categories'),
                         ),
-                      );
-                    }).toList(),
-                  ],
-                  onChanged: (value) => context
-                      .read<ProductCubit>()
-                      .filterByCategory(value ?? 'All'),
-                ),
-              ),
+                        ...categoryState.categories.map((cat) {
+                          return DropdownMenuItem(
+                            value: cat.id,
+                            child: Text(
+                              cat.name,
+                              style: AppTextStyles.tableRowNormal,
+                            ),
+                          );
+                        }),
+                      ],
+                      onChanged: (value) => context
+                          .read<ProductCubit>()
+                          .filterByCategory(value ?? 'All'),
+                    ),
+                  ),
+                );
+              },
             );
           },
         ),
@@ -443,7 +451,7 @@ class _ProductsPageState extends State<ProductsPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      product.sku ?? 'N/A',
+                      product.sku?.toUpperCase() ?? 'N/A',
                       style: AppTextStyles.tableRowNormal,
                     ),
                   ],
@@ -603,41 +611,47 @@ class _ProductsPageState extends State<ProductsPage> {
           ),
         ),
         const SizedBox(width: 16),
-        BlocBuilder<CategoryCubit, CategoryState>(
-          builder: (context, categoryState) {
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                border: Border.all(color: AppColors.borderGrey),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: context.read<ProductCubit>().state.selectedCategory,
-                  hint: Text(
-                    'All Categories',
-                    style: AppTextStyles.tableRowRegular,
+        BlocBuilder<ProductCubit, ProductState>(
+          buildWhen: (previous, current) =>
+              previous.selectedCategory != current.selectedCategory,
+          builder: (context, productState) {
+            return BlocBuilder<CategoryCubit, CategoryState>(
+              builder: (context, categoryState) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.borderGrey),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  items: [
-                    const DropdownMenuItem(
-                      value: 'All',
-                      child: Text('All Categories'),
-                    ),
-                    ...categoryState.categories.map((cat) {
-                      return DropdownMenuItem(
-                        value: cat.id,
-                        child: Text(
-                          cat.name,
-                          style: AppTextStyles.tableRowNormal,
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: productState.selectedCategory,
+                      hint: Text(
+                        'All Categories',
+                        style: AppTextStyles.tableRowRegular,
+                      ),
+                      items: [
+                        const DropdownMenuItem(
+                          value: 'All',
+                          child: Text('All Categories'),
                         ),
-                      );
-                    }).toList(),
-                  ],
-                  onChanged: (value) => context
-                      .read<ProductCubit>()
-                      .filterByCategory(value ?? 'All'),
-                ),
-              ),
+                        ...categoryState.categories.map((cat) {
+                          return DropdownMenuItem(
+                            value: cat.id,
+                            child: Text(
+                              cat.name,
+                              style: AppTextStyles.tableRowNormal,
+                            ),
+                          );
+                        }),
+                      ],
+                      onChanged: (value) => context
+                          .read<ProductCubit>()
+                          .filterByCategory(value ?? 'All'),
+                    ),
+                  ),
+                );
+              },
             );
           },
         ),
@@ -683,7 +697,8 @@ class _ProductsPageState extends State<ProductsPage> {
         children: [
           Expanded(
             child: Text(
-              product.sku ?? 'N/A',
+              product.sku?.toUpperCase() ?? 'N/A',
+
               style: AppTextStyles.tableRowSecondary,
             ),
           ),

@@ -13,6 +13,10 @@ abstract class BillRepository {
   Future<BillModel?> getBillById(String billId);
   Future<void> addPayment(String billId, PaymentModel payment);
   Future<List<BillModel>> searchBills(String query);
+
+  /// Update a bill with full analytics, stock, and profit tracking changes
+  /// This compares old and new bill to properly adjust stock and analytics
+  Future<void> updateBillWithAnalytics(BillModel oldBill, BillModel newBill);
 }
 
 // ============================================

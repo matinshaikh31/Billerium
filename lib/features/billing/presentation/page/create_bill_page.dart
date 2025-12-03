@@ -253,8 +253,12 @@ class _CreateBillPageState extends State<CreateBillPage> {
               return '${option.name} ($categoryName)';
             },
             onSelected: (selection) {
-              context.read<CreateBillCubit>().addProductToCart(selection, 1);
               final categoryName = selection.getCategoryName(categories);
+              context.read<CreateBillCubit>().addProductToCart(
+                selection,
+                1,
+                categoryName: categoryName,
+              );
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
@@ -456,9 +460,19 @@ class _CreateBillPageState extends State<CreateBillPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  capitalizeWords(item.productName),
+                  capitalizeWords(item.displayName),
                   style: AppTextStyles.tableRowPrimary,
                 ),
+                if (item.categoryName != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    item.categoryName!,
+                    style: AppTextStyles.tableRowSecondary.copyWith(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 4),
                 if (hasDiscount) ...[
                   Row(

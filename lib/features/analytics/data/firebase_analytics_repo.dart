@@ -183,4 +183,75 @@ class FirebaseAnalyticsRepository {
       print("❌ Failed to update analytics on bill edit: $e");
     }
   }
+
+  /// Rebuild all analytics from existing bills
+  /// This clears all analytics data and recalculates from bills
+  Future<void> rebuildAnalyticsFromBills() async {
+    try {
+      // Step 1: Delete all existing analytics documents
+      final existingDocs = await analyticsRef.get();
+      for (final doc in existingDocs.docs) {
+        await doc.reference.delete();
+      }
+      print("✅ Cleared existing analytics data");
+
+      // Step 2: Fetch all bills
+      final billsSnapshot = await FBFireStore.bills.get();
+      final bills = billsSnapshot.docs.map((doc) {
+        return BillModel.fromJson(doc.data(), doc.id);
+      }).toList();
+
+      print("📊 Found ${bills.length} bills to process");
+
+      // Step 3: Group bills by month
+      final Map<String, List<BillModel>> billsByMonth = {};
+      for (final bill in bills) {
+        final effectiveDate = bill.billDate ?? bill.createdAt;
+        final monthKey = _monthKeyFromTimestamp(effectiveDate);
+        billsByMonth.putIfAbsent(monthKey, () => []);
+        billsByMonth[monthKey]!.add(bill);
+      }
+
+      // Step 4: Calculate analytics for each month
+      for (final entry in billsByMonth.entries) {
+        final monthKey = entry.key;
+        final monthBills = entry.value;
+
+        double totalSales = 0;
+        double totalPaid = 0;
+        double totalPending = 0;
+        int totalBillsCount = monthBills.length;
+        int totalProductsSold = 0;
+
+        for (final bill in monthBills) {
+          totalSales += bill.finalAmount;
+          totalPaid += bill.amountPaid;
+          totalPending += bill.pendingAmount;
+          totalProductsSold += bill.items.fold(
+            0,
+            (sum, item) => sum + item.quantity,
+          );
+        }
+
+        final monthlyData = MonthlySalesModel(
+          id: monthKey,
+          totalSales: totalSales,
+          totalPaid: totalPaid,
+          totalPending: totalPending,
+          totalBills: totalBillsCount,
+          totalProductsSold: totalProductsSold,
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        );
+
+        await analyticsRef.doc(monthKey).set(monthlyData.toJson());
+        print("✅ Created analytics for $monthKey: $totalBillsCount bills");
+      }
+
+      print("🎉 Analytics rebuild complete!");
+    } catch (e) {
+      print("❌ Failed to rebuild analytics: $e");
+      rethrow;
+    }
+  }
 }

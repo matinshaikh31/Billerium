@@ -2,8 +2,10 @@ import 'package:billing_software/core/routes/routes.dart';
 import 'package:billing_software/features/analytics/presentation/pages/analytics_dashboard_page.dart';
 import 'package:billing_software/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:billing_software/features/auth/presentation/pages/login_page.dart';
+import 'package:billing_software/features/billing/domain/entity/bill_model.dart';
 import 'package:billing_software/features/billing/presentation/page/bill_page.dart';
 import 'package:billing_software/features/billing/presentation/page/create_bill_page.dart';
+import 'package:billing_software/features/billing/presentation/page/edit_bill_page.dart';
 import 'package:billing_software/features/categories/presentation/pages/categories_page.dart';
 import 'package:billing_software/features/dashboard/presentation/pages/dashboard.dart';
 import 'package:billing_software/features/products/presentation/page/prooduct_page.dart';
@@ -71,6 +73,13 @@ final GoRouter appRoute = GoRouter(
           path: Routes.bills,
           pageBuilder: (context, state) =>
               const NoTransitionPage(child: BillsPage()),
+        ),
+        GoRoute(
+          path: Routes.editBill,
+          pageBuilder: (context, state) {
+            final bill = state.extra as BillModel;
+            return NoTransitionPage(child: EditBillPage(bill: bill));
+          },
         ),
         GoRoute(
           path: Routes.transcations,

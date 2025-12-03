@@ -80,19 +80,20 @@ class ProductCubit extends Cubit<ProductState> {
 
   // Build base query with filters
   Query _buildBaseQuery(bool? isNext) {
-    Query query;
+    Query query = FBFireStore.products;
 
-    if (isNext == null) {
-      query = FBFireStore.products.orderBy('createdAt', descending: true);
-    } else if (isNext) {
-      query = FBFireStore.products.orderBy('createdAt', descending: true);
-    } else {
-      query = FBFireStore.products.orderBy('createdAt', descending: false);
-    }
-
-    // Apply category filter
+    // Apply category filter FIRST (before orderBy)
     if (state.selectedCategory != 'All') {
       query = query.where('categoryId', isEqualTo: state.selectedCategory);
+    }
+
+    // Then apply ordering
+    if (isNext == null) {
+      query = query.orderBy('createdAt', descending: true);
+    } else if (isNext) {
+      query = query.orderBy('createdAt', descending: true);
+    } else {
+      query = query.orderBy('createdAt', descending: false);
     }
 
     return query;

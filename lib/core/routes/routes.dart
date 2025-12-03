@@ -11,6 +11,7 @@ class Routes {
   static const categories = "/categories";
   static const products = "/products";
   static const createBill = "/createBill";
+  static const editBill = "/editBill";
   static const bills = "/bills";
   static const stocks = "/stocks";
   static const transcations = "/transcations";

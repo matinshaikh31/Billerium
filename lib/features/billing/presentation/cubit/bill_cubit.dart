@@ -680,9 +680,19 @@ class BillCubit extends Cubit<BillState> {
             child: pw.Row(
               children: [
                 pw.Expanded(
-                  flex: 3,
+                  flex: 2,
                   child: pw.Text(
                     'Item',
+                    style: pw.TextStyle(
+                      fontSize: 8,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 2,
+                  child: pw.Text(
+                    'Category',
                     style: pw.TextStyle(
                       fontSize: 8,
                       fontWeight: pw.FontWeight.bold,
@@ -752,10 +762,20 @@ class BillCubit extends Cubit<BillState> {
               child: pw.Row(
                 children: [
                   pw.Expanded(
-                    flex: 3,
+                    flex: 2,
                     child: pw.Text(
                       capitalizeWords(item.productName),
                       style: const pw.TextStyle(fontSize: 7),
+                    ),
+                  ),
+                  pw.Expanded(
+                    flex: 2,
+                    child: pw.Text(
+                      item.categoryName ?? '-',
+                      style: pw.TextStyle(
+                        fontSize: 7,
+                        color: PdfColors.grey700,
+                      ),
                     ),
                   ),
                   pw.Expanded(
@@ -793,7 +813,7 @@ class BillCubit extends Cubit<BillState> {
                 ],
               ),
             );
-          }).toList(),
+          }),
 
           pw.SizedBox(height: 8),
 

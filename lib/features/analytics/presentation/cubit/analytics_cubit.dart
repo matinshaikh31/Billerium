@@ -237,4 +237,24 @@ class AnalyticsCubit extends Cubit<AnalyticsState> {
       // Silently fail for counts refresh
     }
   }
+
+  /// Rebuild all analytics from existing bills
+  /// Call this when analytics data is corrupted or deleted
+  Future<void> rebuildAnalyticsFromBills() async {
+    try {
+      emit(state.copyWith(isLoading: true, errorMessage: null));
+
+      await _analyticsRepo.rebuildAnalyticsFromBills();
+
+      // Reload the analytics after rebuild
+      await initialize();
+    } catch (e) {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          errorMessage: "Failed to rebuild analytics: $e",
+        ),
+      );
+    }
+  }
 }

@@ -29,8 +29,12 @@ class CreateBillCubit extends Cubit<CreateBillState> {
   final billDiscountPercentController = TextEditingController();
   final billDiscountAmountController = TextEditingController();
 
-  // Add product to cart WITH product-level discount
-  void addProductToCart(ProductModel product, int quantity) {
+  // Add product to cart WITH product-level discount and category info
+  void addProductToCart(
+    ProductModel product,
+    int quantity, {
+    String? categoryName,
+  }) {
     // Calculate price after product discount
     final discountPercent = product.discountPercent ?? 0;
     final priceAfterDiscount = product.finalPrice;
@@ -40,6 +44,8 @@ class CreateBillCubit extends Cubit<CreateBillState> {
     final item = BillItemModel(
       productId: product.id,
       productName: product.name,
+      categoryId: product.categoryId,
+      categoryName: categoryName,
       price: product.price, // Original price
       quantity: quantity,
       discountPercent: discountPercent,
@@ -65,6 +71,8 @@ class CreateBillCubit extends Cubit<CreateBillState> {
       updatedCart[existingIndex] = BillItemModel(
         productId: existingItem.productId,
         productName: existingItem.productName,
+        categoryId: existingItem.categoryId,
+        categoryName: existingItem.categoryName,
         price: product.price,
         quantity: newQuantity,
         discountPercent: discountPercent,
@@ -97,6 +105,8 @@ class CreateBillCubit extends Cubit<CreateBillState> {
         return BillItemModel(
           productId: item.productId,
           productName: item.productName,
+          categoryId: item.categoryId,
+          categoryName: item.categoryName,
           price: item.price,
           quantity: newQuantity,
           discountPercent: item.discountPercent,

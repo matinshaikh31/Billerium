@@ -411,4 +411,142 @@ class FirebaseBillRepository extends BillRepository {
       throw Exception('Failed to search bills: ${e.toString()}');
     }
   }
+
+  @override
+  Future<void> updateBillWithAnalytics(
+    BillModel oldBill,
+    BillModel newBill,
+  ) async {
+    try {
+      // Step 1: Calculate stock changes for each item
+      await _handleStockChangesForEdit(
+        oldBill.items,
+        newBill.items,
+        newBill.id,
+      );
+
+      // Step 2: Reverse old analytics and apply new
+      await analyticsRepo.updateAnalyticsOnBillEdit(
+        oldBill: oldBill,
+        newBill: newBill,
+      );
+
+      // Step 3: Update the bill document
+      await billsCollectionRef.doc(newBill.id).update(newBill.toJson());
+
+      // Step 4: Handle transaction updates if payment info changed
+      if (oldBill.amountPaid != newBill.amountPaid) {
+        await _updateTransactionsForBillEdit(oldBill, newBill);
+      }
+    } catch (e) {
+      throw Exception('Failed to update bill with analytics: ${e.toString()}');
+    }
+  }
+
+  Future<void> _handleStockChangesForEdit(
+    List<BillItemModel> oldItems,
+    List<BillItemModel> newItems,
+    String billId,
+  ) async {
+    final batch = FirebaseFirestore.instance.batch();
+
+    // Create maps for easy lookup
+    final oldItemsMap = {for (var item in oldItems) item.productId: item};
+    final newItemsMap = {for (var item in newItems) item.productId: item};
+
+    // Find all unique product IDs
+    final allProductIds = {...oldItemsMap.keys, ...newItemsMap.keys};
+
+    for (final productId in allProductIds) {
+      final oldItem = oldItemsMap[productId];
+      final newItem = newItemsMap[productId];
+
+      final productRef = FBFireStore.products.doc(productId);
+      final productSnap = await productRef.get();
+
+      if (!productSnap.exists) continue;
+
+      final currentStock = productSnap.data()!['stockQty'] ?? 0;
+      int stockChange = 0;
+
+      if (oldItem != null && newItem != null) {
+        // Item exists in both - calculate difference
+        stockChange = oldItem.quantity - newItem.quantity;
+      } else if (oldItem != null && newItem == null) {
+        // Item removed from bill - restore stock
+        stockChange = oldItem.quantity;
+      } else if (oldItem == null && newItem != null) {
+        // New item added - deduct stock
+        stockChange = -newItem.quantity;
+      }
+
+      if (stockChange != 0) {
+        final newStock = (currentStock + stockChange).clamp(0, double.infinity);
+        batch.update(productRef, {'stockQty': newStock});
+
+        // Create stock ledger entry
+        await _createStockLedgerEntry(
+          productId: productId,
+          qtyChange: stockChange,
+          finalStock: newStock.toInt(),
+          referenceId: billId,
+          type: stockChange > 0 ? 'sale_edit_restore' : 'sale_edit_deduct',
+        );
+
+        // Update profit tracking
+        if (oldItem != null && newItem != null) {
+          // Reverse old profit and add new
+          await _reverseProfitTracking(
+            productId: productId,
+            salesRevenue: oldItem.itemTotal,
+            quantity: oldItem.quantity,
+          );
+          await _updateProfitTracking(
+            productId: productId,
+            salesRevenue: newItem.itemTotal,
+            quantity: newItem.quantity,
+            productData: productSnap.data()!,
+          );
+        } else if (oldItem != null) {
+          // Item removed - reverse profit
+          await _reverseProfitTracking(
+            productId: productId,
+            salesRevenue: oldItem.itemTotal,
+            quantity: oldItem.quantity,
+          );
+        } else if (newItem != null) {
+          // New item - add profit
+          await _updateProfitTracking(
+            productId: productId,
+            salesRevenue: newItem.itemTotal,
+            quantity: newItem.quantity,
+            productData: productSnap.data()!,
+          );
+        }
+      }
+    }
+
+    await batch.commit();
+  }
+
+  Future<void> _updateTransactionsForBillEdit(
+    BillModel oldBill,
+    BillModel newBill,
+  ) async {
+    // Delete old transactions and create new ones based on payments
+    await _deleteTransactionsForBill(oldBill.id);
+
+    // Create transactions for each payment in new bill
+    for (final payment in newBill.payments) {
+      await _createTransaction(
+        billId: newBill.id,
+        billNo: newBill.billNo,
+        customerName: newBill.customerName ?? 'Walk-in Customer',
+        customerPhone: newBill.customerPhone,
+        amount: payment.amount,
+        mode: payment.mode,
+        timestamp: payment.paidAt,
+      );
+    }
+  }
 }

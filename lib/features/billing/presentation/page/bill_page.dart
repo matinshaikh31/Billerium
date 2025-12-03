@@ -1,3 +1,4 @@
+import 'package:billing_software/core/routes/routes.dart';
 import 'package:billing_software/core/theme/app_colors.dart';
 import 'package:billing_software/core/theme/app_text_styles.dart';
 import 'package:billing_software/core/utils/helpers.dart';
@@ -8,6 +9,7 @@ import 'package:billing_software/features/billing/presentation/cubit/bill_cubit.
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
@@ -424,26 +426,66 @@ class _BillsPageState extends State<BillsPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              TextButton.icon(
-                onPressed: () => _showBillDetailsDialog(context, bill),
-                icon: const Icon(Icons.visibility_outlined, size: 16),
-                label: const Text('View'),
-                style: TextButton.styleFrom(foregroundColor: AppColors.primary),
-              ),
-              if (bill.status != 'Paid')
-                TextButton.icon(
-                  onPressed: () => _showAddPaymentDialog(context, bill),
-                  icon: const Icon(Icons.payment_rounded, size: 16),
-                  label: const Text('Pay'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                  ),
+              PopupMenuButton<String>(
+                icon: Icon(Icons.more_horiz, color: AppColors.textSecondary),
+                padding: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              TextButton.icon(
-                onPressed: () => _showDeleteConfirmDialog(context, bill),
-                icon: const Icon(Icons.delete_outline, size: 16),
-                label: const Text('Delete'),
-                style: TextButton.styleFrom(foregroundColor: AppColors.error),
+                color: AppColors.secondary,
+                onSelected: (value) {
+                  switch (value) {
+                    case 'view':
+                      _showBillDetailsDialog(context, bill);
+                      break;
+                    case 'pdf':
+                      _showPdfOptionsDialog(context, bill);
+                      break;
+                    case 'edit':
+                      _navigateToEditBill(context, bill);
+                      break;
+                    case 'pay':
+                      _showAddPaymentDialog(context, bill);
+                      break;
+                    case 'delete':
+                      _showDeleteConfirmDialog(context, bill);
+                      break;
+                  }
+                },
+                itemBuilder: (context) => [
+                  _buildPopupMenuItem(
+                    'view',
+                    'View Details',
+                    Icons.visibility_outlined,
+                    AppColors.textSecondary,
+                  ),
+                  _buildPopupMenuItem(
+                    'pdf',
+                    'PDF Options',
+                    Icons.picture_as_pdf,
+                    AppColors.success,
+                  ),
+                  _buildPopupMenuItem(
+                    'edit',
+                    'Edit Bill',
+                    Icons.edit_outlined,
+                    AppColors.accent,
+                  ),
+                  if (bill.status != 'Paid')
+                    _buildPopupMenuItem(
+                      'pay',
+                      'Add Payment',
+                      Icons.payment_rounded,
+                      AppColors.primary,
+                    ),
+                  const PopupMenuDivider(),
+                  _buildPopupMenuItem(
+                    'delete',
+                    'Delete Bill',
+                    Icons.delete_outline,
+                    AppColors.error,
+                  ),
+                ],
               ),
             ],
           ),
@@ -622,7 +664,7 @@ class _BillsPageState extends State<BillsPage> {
           ),
           // Actions - fixed width
           SizedBox(
-            width: 180,
+            width: 60,
             child: Text(
               'Actions',
               style: AppTextStyles.tabelHeader,
@@ -729,81 +771,103 @@ class _BillsPageState extends State<BillsPage> {
               width: 90,
               child: Center(child: _buildStatusBadge(bill.status)),
             ),
-            // Actions - centered icons
+            // Actions - PopupMenu
             SizedBox(
-              width: 180,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // View Details
-                  IconButton(
-                    icon: Icon(
+              width: 60,
+              child: Center(
+                child: PopupMenuButton<String>(
+                  icon: Icon(Icons.more_horiz, color: AppColors.textSecondary),
+                  padding: EdgeInsets.zero,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  color: AppColors.secondary,
+                  onSelected: (value) {
+                    switch (value) {
+                      case 'view':
+                        _showBillDetailsDialog(context, bill);
+                        break;
+                      case 'pdf':
+                        _showPdfOptionsDialog(context, bill);
+                        break;
+                      case 'edit':
+                        _navigateToEditBill(context, bill);
+                        break;
+                      case 'pay':
+                        _showAddPaymentDialog(context, bill);
+                        break;
+                      case 'delete':
+                        _showDeleteConfirmDialog(context, bill);
+                        break;
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    _buildPopupMenuItem(
+                      'view',
+                      'View Details',
                       Icons.visibility_outlined,
-                      size: 18,
-                      color: AppColors.textSecondary,
+                      AppColors.textSecondary,
                     ),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 32,
-                      minHeight: 32,
-                    ),
-                    onPressed: () => _showBillDetailsDialog(context, bill),
-                    tooltip: 'View Details',
-                  ),
-                  const SizedBox(width: 4),
-                  // Print/Share PDF
-                  IconButton(
-                    icon: Icon(
+                    _buildPopupMenuItem(
+                      'pdf',
+                      'PDF Options',
                       Icons.picture_as_pdf,
-                      size: 18,
-                      color: AppColors.success,
+                      AppColors.success,
                     ),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 32,
-                      minHeight: 32,
+                    _buildPopupMenuItem(
+                      'edit',
+                      'Edit Bill',
+                      Icons.edit_outlined,
+                      AppColors.accent,
                     ),
-                    onPressed: () => _showPdfOptionsDialog(context, bill),
-                    tooltip: 'PDF',
-                  ),
-                  const SizedBox(width: 4),
-                  // Add Payment
-                  if (bill.status != 'Paid')
-                    IconButton(
-                      icon: Icon(
+                    if (bill.status != 'Paid')
+                      _buildPopupMenuItem(
+                        'pay',
+                        'Add Payment',
                         Icons.payment_rounded,
-                        size: 18,
-                        color: AppColors.primary,
+                        AppColors.primary,
                       ),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(
-                        minWidth: 32,
-                        minHeight: 32,
-                      ),
-                      onPressed: () => _showAddPaymentDialog(context, bill),
-                      tooltip: 'Add Payment',
-                    ),
-                  const SizedBox(width: 4),
-                  // Delete Bill
-                  IconButton(
-                    icon: Icon(
+                    const PopupMenuDivider(),
+                    _buildPopupMenuItem(
+                      'delete',
+                      'Delete Bill',
                       Icons.delete_outline,
-                      size: 18,
-                      color: AppColors.error,
+                      AppColors.error,
                     ),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 32,
-                      minHeight: 32,
-                    ),
-                    onPressed: () => _showDeleteConfirmDialog(context, bill),
-                    tooltip: 'Delete Bill',
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // ===================== POPUP MENU ITEM =====================
+  PopupMenuItem<String> _buildPopupMenuItem(
+    String value,
+    String label,
+    IconData icon,
+    Color color,
+  ) {
+    return PopupMenuItem<String>(
+      value: value,
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(width: 12),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: color == AppColors.textSecondary
+                  ? AppColors.textPrimary
+                  : color,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -952,9 +1016,20 @@ class _BillsPageState extends State<BillsPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
-                          child: Text(
-                            '${item.productName} x ${item.quantity}',
-                            style: AppTextStyles.tableRowSecondary,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${capitalizeWords(item.productName)} x ${item.quantity}',
+                                style: AppTextStyles.tableRowPrimary,
+                              ),
+                              if (item.categoryName != null)
+                                Text(
+                                  item.categoryName!,
+                                  style: AppTextStyles.tableRowSecondary
+                                      .copyWith(fontSize: 11),
+                                ),
+                            ],
                           ),
                         ),
                         Text(
@@ -1112,29 +1187,51 @@ class _BillsPageState extends State<BillsPage> {
   void _showPdfOptionsDialog(BuildContext context, BillModel bill) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Invoice Options'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.print),
-              title: const Text('Print Invoice'),
-              onTap: () {
-                // Navigator.pop(context);
-                context.read<BillCubit>().printInvoice(bill);
-              },
+      builder: (dialogContext) => BlocBuilder<BillCubit, BillState>(
+        builder: (context, state) {
+          return AlertDialog(
+            title: const Text('Invoice Options'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: state.isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.print),
+                  title: const Text('Print Invoice'),
+                  enabled: !state.isLoading,
+                  onTap: state.isLoading
+                      ? null
+                      : () {
+                          context.read<BillCubit>().printInvoice(bill);
+                        },
+                ),
+                ListTile(
+                  leading: state.isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.share),
+                  title: const Text('Share Invoice'),
+                  enabled: !state.isLoading,
+                  onTap: state.isLoading
+                      ? null
+                      : () {
+                          context.read<BillCubit>().generateAndShareInvoice(
+                            bill,
+                          );
+                        },
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.share),
-              title: const Text('Share Invoice'),
-              onTap: () {
-                // Navigator.pop(context);
-                context.read<BillCubit>().generateAndShareInvoice(bill);
-              },
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -1234,5 +1331,20 @@ class _BillsPageState extends State<BillsPage> {
         ],
       ),
     );
+  }
+
+  // ===================== NAVIGATE TO EDIT BILL =====================
+  void _navigateToEditBill(BuildContext context, BillModel bill) async {
+    final result = await context.push(Routes.editBill, extra: bill);
+    if (result == true && context.mounted) {
+      // Refresh the bills list after successful edit
+      context.read<BillCubit>().initializeBillsPagination();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Bill updated successfully'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    }
   }
 }

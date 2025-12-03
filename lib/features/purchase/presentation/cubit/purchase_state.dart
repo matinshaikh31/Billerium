@@ -18,10 +18,10 @@ class PurchaseState extends Equatable {
 
   // Filters
   final String searchQuery;
-  final String
-  dateFilter; // 'All', 'Today', 'This Week', 'This Month', 'Custom'
-  final DateTime? startDate;
-  final DateTime? endDate;
+  final String?
+  dateRangeFilter; // null, 'LastWeek', 'LastMonth', 'Last3Months', 'Custom'
+  final Timestamp? startDate;
+  final Timestamp? endDate;
 
   const PurchaseState({
     this.purchases = const [],
@@ -35,7 +35,7 @@ class PurchaseState extends Equatable {
     this.lastFetchedDoc,
     this.firstFetchedDoc,
     this.searchQuery = '',
-    this.dateFilter = 'All',
+    this.dateRangeFilter,
     this.startDate,
     this.endDate,
   });
@@ -52,9 +52,9 @@ class PurchaseState extends Equatable {
     DocumentSnapshot? lastFetchedDoc,
     DocumentSnapshot? firstFetchedDoc,
     String? searchQuery,
-    String? dateFilter,
-    DateTime? startDate,
-    DateTime? endDate,
+    String? dateRangeFilter,
+    Timestamp? startDate,
+    Timestamp? endDate,
   }) {
     return PurchaseState(
       purchases: purchases ?? this.purchases,
@@ -68,7 +68,7 @@ class PurchaseState extends Equatable {
       lastFetchedDoc: lastFetchedDoc,
       firstFetchedDoc: firstFetchedDoc,
       searchQuery: searchQuery ?? this.searchQuery,
-      dateFilter: dateFilter ?? this.dateFilter,
+      dateRangeFilter: dateRangeFilter ?? this.dateRangeFilter,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
     );
@@ -87,7 +87,7 @@ class PurchaseState extends Equatable {
     lastFetchedDoc,
     firstFetchedDoc,
     searchQuery,
-    dateFilter,
+    dateRangeFilter,
     startDate,
     endDate,
   ];
