@@ -74,6 +74,7 @@ class ProductCubit extends Cubit<ProductState> {
         );
       }
     } catch (e) {
+      print(e.toString());
       emit(state.copyWith(isLoading: false, error: e.toString()));
     }
   }
@@ -82,9 +83,11 @@ class ProductCubit extends Cubit<ProductState> {
   Query _buildBaseQuery(bool? isNext) {
     Query query = FBFireStore.products;
 
+    print("_____${state.selectedCategory}");
     // Apply category filter FIRST (before orderBy)
     if (state.selectedCategory != 'All') {
       query = query.where('categoryId', isEqualTo: state.selectedCategory);
+      print("query: $query");
     }
 
     // Then apply ordering
