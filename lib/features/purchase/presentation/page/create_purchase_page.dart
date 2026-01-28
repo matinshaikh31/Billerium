@@ -19,6 +19,7 @@ class CreatePurchasePage extends StatefulWidget {
 class _CreatePurchasePageState extends State<CreatePurchasePage> {
   final _supplierNameController = TextEditingController();
   final _supplierPhoneController = TextEditingController();
+  final _otherExpenseController = TextEditingController();
 
   @override
   void initState() {
@@ -31,6 +32,7 @@ class _CreatePurchasePageState extends State<CreatePurchasePage> {
   void dispose() {
     _supplierNameController.dispose();
     _supplierPhoneController.dispose();
+    _otherExpenseController.dispose();
     super.dispose();
   }
 
@@ -349,6 +351,8 @@ class _CreatePurchasePageState extends State<CreatePurchasePage> {
               _buildTotalRow('Subtotal', state.subtotal),
               const SizedBox(height: 12),
               _buildTotalRow('Tax', state.totalTax),
+              const SizedBox(height: 12),
+              _buildOtherExpenseField(isMobile),
               const Divider(height: 24),
               _buildTotalRow('Total Amount', state.finalAmount, isTotal: true),
             ],
@@ -376,6 +380,59 @@ class _CreatePurchasePageState extends State<CreatePurchasePage> {
             fontSize: isTotal ? 20 : 16,
             fontWeight: FontWeight.bold,
             color: isTotal ? Colors.green[700] : AppColors.textPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOtherExpenseField(bool isMobile) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          'Other Expenses',
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        SizedBox(
+          width: 150,
+          child: TextField(
+            controller: _otherExpenseController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+            decoration: InputDecoration(
+              prefixText: '₹',
+              hintText: '0.00',
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: AppColors.blueGreyBorder),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: AppColors.blueGreyBorder),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: AppColors.primary, width: 2),
+              ),
+            ),
+            onChanged: (value) {
+              final expense = double.tryParse(value) ?? 0;
+              context.read<PurchaseFormCubit>().setOtherExpense(expense);
+            },
           ),
         ),
       ],

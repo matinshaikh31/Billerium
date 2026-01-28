@@ -446,7 +446,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
         children: [
           Expanded(
             flex: 2,
-            child: Text('Transaction ID', style: AppTextStyles.tabelHeader),
+            child: Text('Bill No', style: AppTextStyles.tabelHeader),
           ),
           Expanded(
             flex: 2,
@@ -477,7 +477,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
           Expanded(
             flex: 2,
             child: Text(
-              transaction.id.substring(0, 12) + '...',
+              transaction.billNo.substring(0, 12) + '...',
               style: AppTextStyles.tableRowSecondary,
             ),
           ),

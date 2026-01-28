@@ -456,15 +456,15 @@ class _PurchaseListPageState extends State<PurchaseListPage> {
                       _showPurchaseDetailsDialog(context, purchase),
                   tooltip: 'View Details',
                 ),
-                IconButton(
-                  icon: Icon(
-                    Icons.delete_outline,
-                    size: 18,
-                    color: AppColors.warning,
-                  ),
-                  onPressed: () => _showDeleteDialog(context, purchase),
-                  tooltip: 'Delete',
-                ),
+                // IconButton(
+                //   icon: Icon(
+                //     Icons.delete_outline,
+                //     size: 18,
+                //     color: AppColors.warning,
+                //   ),
+                //   onPressed: () => _showDeleteDialog(context, purchase),
+                //   tooltip: 'Delete',
+                // ),
               ],
             ),
           ),
@@ -733,6 +733,11 @@ class _PurchaseListPageState extends State<PurchaseListPage> {
                 'Tax',
                 '₹${purchase.totalTax.toStringAsFixed(2)}',
               ),
+              if (purchase.otherExpense > 0)
+                _buildDetailRow(
+                  'Other Expenses',
+                  '₹${purchase.otherExpense.toStringAsFixed(2)}',
+                ),
               _buildDetailRow(
                 'Total Amount',
                 '₹${purchase.finalAmount.toStringAsFixed(2)}',

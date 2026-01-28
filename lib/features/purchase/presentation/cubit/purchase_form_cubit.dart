@@ -9,7 +9,7 @@ class PurchaseFormCubit extends Cubit<PurchaseFormState> {
   final PurchaseRepo purchaseRepo;
 
   PurchaseFormCubit({required this.purchaseRepo})
-      : super(const PurchaseFormState());
+    : super(const PurchaseFormState());
 
   void setSupplierName(String name) {
     emit(state.copyWith(supplierName: name));
@@ -17,6 +17,11 @@ class PurchaseFormCubit extends Cubit<PurchaseFormState> {
 
   void setSupplierPhone(String phone) {
     emit(state.copyWith(supplierPhone: phone));
+  }
+
+  void setOtherExpense(double expense) {
+    final updatedItems = state.items;
+    _recalculateTotals(updatedItems, otherExpense: expense);
   }
 
   void addItem(PurchaseItemModel item) {
@@ -36,17 +41,24 @@ class PurchaseFormCubit extends Cubit<PurchaseFormState> {
     _recalculateTotals(updatedItems);
   }
 
-  void _recalculateTotals(List<PurchaseItemModel> items) {
-    final subtotal = items.fold<double>(0, (sum, item) => sum + item.total);
+  void _recalculateTotals(
+    List<PurchaseItemModel> items, {
+    double? otherExpense,
+  }) {
+    final subtotal = items.fold<double>(0, (total, item) => total + item.total);
     final totalTax = subtotal * 0.0; // Adjust tax rate as needed
-    final finalAmount = subtotal + totalTax;
+    final expense = otherExpense ?? state.otherExpense;
+    final finalAmount = subtotal + totalTax + expense;
 
-    emit(state.copyWith(
-      items: items,
-      subtotal: subtotal,
-      totalTax: totalTax,
-      finalAmount: finalAmount,
-    ));
+    emit(
+      state.copyWith(
+        items: items,
+        subtotal: subtotal,
+        totalTax: totalTax,
+        otherExpense: expense,
+        finalAmount: finalAmount,
+      ),
+    );
   }
 
   Future<void> submitPurchase() async {
@@ -69,6 +81,7 @@ class PurchaseFormCubit extends Cubit<PurchaseFormState> {
         items: state.items,
         subtotal: state.subtotal,
         totalTax: state.totalTax,
+        otherExpense: state.otherExpense,
         finalAmount: state.finalAmount,
         createdAt: now,
         updatedAt: now,
@@ -78,10 +91,12 @@ class PurchaseFormCubit extends Cubit<PurchaseFormState> {
 
       emit(const PurchaseFormState()); // Reset form
     } catch (e) {
-      emit(state.copyWith(
-        isLoading: false,
-        error: 'Failed to create purchase: ${e.toString()}',
-      ));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: 'Failed to create purchase: ${e.toString()}',
+        ),
+      );
     }
   }
 
@@ -89,4 +104,3 @@ class PurchaseFormCubit extends Cubit<PurchaseFormState> {
     emit(const PurchaseFormState());
   }
 }
-

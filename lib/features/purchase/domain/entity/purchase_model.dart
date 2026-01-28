@@ -10,6 +10,7 @@ class PurchaseModel extends Equatable {
   final List<PurchaseItemModel> items;
   final double subtotal;
   final double totalTax;
+  final double otherExpense;
   final double finalAmount;
   final Timestamp createdAt;
   final Timestamp updatedAt;
@@ -22,6 +23,7 @@ class PurchaseModel extends Equatable {
     required this.items,
     required this.subtotal,
     required this.totalTax,
+    this.otherExpense = 0,
     required this.finalAmount,
     required this.createdAt,
     required this.updatedAt,
@@ -38,6 +40,7 @@ class PurchaseModel extends Equatable {
           .toList(),
       subtotal: (json['subtotal'] as num).toDouble(),
       totalTax: (json['totalTax'] as num).toDouble(),
+      otherExpense: (json['otherExpense'] as num?)?.toDouble() ?? 0,
       finalAmount: (json['finalAmount'] as num).toDouble(),
       createdAt: json['createdAt'] as Timestamp,
       updatedAt: json['updatedAt'] as Timestamp,
@@ -58,6 +61,7 @@ class PurchaseModel extends Equatable {
       'items': items.map((item) => item.toJson()).toList(),
       'subtotal': subtotal,
       'totalTax': totalTax,
+      'otherExpense': otherExpense,
       'finalAmount': finalAmount,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
@@ -72,6 +76,7 @@ class PurchaseModel extends Equatable {
     List<PurchaseItemModel>? items,
     double? subtotal,
     double? totalTax,
+    double? otherExpense,
     double? finalAmount,
     Timestamp? createdAt,
     Timestamp? updatedAt,
@@ -84,6 +89,7 @@ class PurchaseModel extends Equatable {
       items: items ?? this.items,
       subtotal: subtotal ?? this.subtotal,
       totalTax: totalTax ?? this.totalTax,
+      otherExpense: otherExpense ?? this.otherExpense,
       finalAmount: finalAmount ?? this.finalAmount,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -92,16 +98,16 @@ class PurchaseModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        purchaseNo,
-        supplierName,
-        supplierPhone,
-        items,
-        subtotal,
-        totalTax,
-        finalAmount,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    purchaseNo,
+    supplierName,
+    supplierPhone,
+    items,
+    subtotal,
+    totalTax,
+    otherExpense,
+    finalAmount,
+    createdAt,
+    updatedAt,
+  ];
 }
-
