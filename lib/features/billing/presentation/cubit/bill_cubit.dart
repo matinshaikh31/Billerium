@@ -522,7 +522,7 @@ class BillCubit extends Cubit<BillState> {
 
       pdf.addPage(
         pw.MultiPage(
-          pageFormat: PdfPageFormat.a4,
+          pageFormat: PdfPageFormat.a3,
           build: (pw.Context context) {
             return [_buildInvoiceContent(bill, logoImage, signatureImage)];
           },
@@ -547,6 +547,41 @@ class BillCubit extends Cubit<BillState> {
     pw.MemoryImage signatureImage,
   ) {
     final dateFormat = DateFormat('dd MMM yyyy, hh:mm a');
+    final double subtotalBeforeDiscount = bill.items.fold(
+      0.0,
+      (sum, item) => sum + item.itemTotal + item.discountAmount,
+    );
+
+    final int totalQty = bill.items.fold(0, (sum, item) => sum + item.quantity);
+
+    final double totalPriceBeforeDiscount = bill.items.fold(
+      0.0,
+      (sum, item) => sum + item.itemTotal + item.discountAmount,
+    );
+
+    final double totalDiscount = bill.items.fold(
+      0.0,
+      (sum, item) => sum + item.discountAmount,
+    );
+
+    final double finalTotal = bill.items.fold(
+      0.0,
+      (sum, item) => sum + item.itemTotal,
+    );
+
+    // 🔹 Derived column totals
+    final double totalUnitPrice = bill.items.fold(
+      0.0,
+      (sum, item) =>
+          sum +
+          ((item.itemTotal + item.discountAmount) / item.quantity) *
+              item.quantity,
+    );
+
+    final double totalUnitDiscount = bill.items.fold(
+      0.0,
+      (sum, item) => sum + item.discountAmount,
+    );
 
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -689,55 +724,91 @@ class BillCubit extends Cubit<BillState> {
               ),
               pw.Expanded(
                 flex: 2,
-                child: pw.Text(
-                  'Category',
-                  style: pw.TextStyle(
-                    fontSize: 8,
-                    fontWeight: pw.FontWeight.bold,
+                child: pw.Center(
+                  child: pw.Text(
+                    'Category',
+                    style: pw.TextStyle(
+                      fontSize: 8,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
               pw.Expanded(
                 flex: 1,
-                child: pw.Text(
-                  'Price',
-                  textAlign: pw.TextAlign.right,
-                  style: pw.TextStyle(
-                    fontSize: 8,
-                    fontWeight: pw.FontWeight.bold,
+                child: pw.Center(
+                  child: pw.Text(
+                    'Price(1 pec.)',
+                    textAlign: pw.TextAlign.right,
+                    style: pw.TextStyle(
+                      fontSize: 8,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
               pw.Expanded(
                 flex: 1,
-                child: pw.Text(
-                  'Qty',
-                  textAlign: pw.TextAlign.center,
-                  style: pw.TextStyle(
-                    fontSize: 8,
-                    fontWeight: pw.FontWeight.bold,
+                child: pw.Center(
+                  child: pw.Text(
+                    'Disc(1 pec.)',
+                    textAlign: pw.TextAlign.right,
+                    style: pw.TextStyle(
+                      fontSize: 8,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
               pw.Expanded(
                 flex: 1,
-                child: pw.Text(
-                  'Disc.',
-                  textAlign: pw.TextAlign.right,
-                  style: pw.TextStyle(
-                    fontSize: 8,
-                    fontWeight: pw.FontWeight.bold,
+                child: pw.Center(
+                  child: pw.Text(
+                    'Qty',
+                    textAlign: pw.TextAlign.center,
+                    style: pw.TextStyle(
+                      fontSize: 8,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
               pw.Expanded(
                 flex: 1,
-                child: pw.Text(
-                  'Total',
-                  textAlign: pw.TextAlign.right,
-                  style: pw.TextStyle(
-                    fontSize: 8,
-                    fontWeight: pw.FontWeight.bold,
+                child: pw.Center(
+                  child: pw.Text(
+                    'Total Price',
+                    textAlign: pw.TextAlign.right,
+                    style: pw.TextStyle(
+                      fontSize: 8,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              pw.Expanded(
+                flex: 1,
+                child: pw.Center(
+                  child: pw.Text(
+                    'Total Disc',
+                    textAlign: pw.TextAlign.right,
+                    style: pw.TextStyle(
+                      fontSize: 8,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              pw.Expanded(
+                flex: 1,
+                child: pw.Center(
+                  child: pw.Text(
+                    'Total',
+                    textAlign: pw.TextAlign.right,
+                    style: pw.TextStyle(
+                      fontSize: 8,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
@@ -747,6 +818,8 @@ class BillCubit extends Cubit<BillState> {
 
         // Items List - COMPACT
         ...bill.items.map((item) {
+          final originalUnitPrice =
+              item.price + (item.discountAmount / item.quantity);
           return pw.Container(
             decoration: pw.BoxDecoration(
               border: pw.Border(
@@ -765,47 +838,197 @@ class BillCubit extends Cubit<BillState> {
                 ),
                 pw.Expanded(
                   flex: 2,
-                  child: pw.Text(
-                    item.categoryName ?? '-',
-                    style: pw.TextStyle(fontSize: 7, color: PdfColors.grey700),
+                  child: pw.Container(
+                    // color: PdfColors.red,
+                    child: pw.Center(
+                      child: pw.Text(
+                        item.categoryName ?? '-',
+                        style: pw.TextStyle(
+                          fontSize: 7,
+                          color: PdfColors.grey700,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
                 pw.Expanded(
                   flex: 1,
-                  child: pw.Text(
-                    'Rs.${item.price.toStringAsFixed(2)}',
-                    textAlign: pw.TextAlign.right,
-                    style: const pw.TextStyle(fontSize: 7),
+                  child: pw.Center(
+                    child: pw.Text(
+                      'Rs.${item.price.toStringAsFixed(2)}',
+
+                      textAlign: pw.TextAlign.right,
+                      style: const pw.TextStyle(fontSize: 7),
+                    ),
                   ),
                 ),
                 pw.Expanded(
                   flex: 1,
-                  child: pw.Text(
-                    '${item.quantity}',
-                    textAlign: pw.TextAlign.center,
-                    style: const pw.TextStyle(fontSize: 7),
+                  child: pw.Center(
+                    child: pw.Text(
+                      'Rs.${(item.discountAmount / item.quantity).toStringAsFixed(2)}',
+                      textAlign: pw.TextAlign.right,
+                      style: const pw.TextStyle(fontSize: 7),
+                    ),
                   ),
                 ),
                 pw.Expanded(
                   flex: 1,
-                  child: pw.Text(
-                    'Rs.${item.discountAmount.toStringAsFixed(2)}',
-                    textAlign: pw.TextAlign.right,
-                    style: const pw.TextStyle(fontSize: 7),
+                  child: pw.Center(
+                    child: pw.Text(
+                      '${item.quantity}',
+                      textAlign: pw.TextAlign.center,
+                      style: const pw.TextStyle(fontSize: 7),
+                    ),
                   ),
                 ),
                 pw.Expanded(
                   flex: 1,
-                  child: pw.Text(
-                    'Rs.${item.itemTotal.toStringAsFixed(2)}',
-                    textAlign: pw.TextAlign.right,
-                    style: const pw.TextStyle(fontSize: 7),
+                  child: pw.Center(
+                    child: pw.Text(
+                      'Rs.${(item.price * item.quantity).toStringAsFixed(2)}',
+                      textAlign: pw.TextAlign.right,
+                      style: const pw.TextStyle(fontSize: 7),
+                    ),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 1,
+                  child: pw.Center(
+                    child: pw.Text(
+                      'Rs.${item.discountAmount.toStringAsFixed(2)}',
+                      textAlign: pw.TextAlign.right,
+                      style: const pw.TextStyle(fontSize: 7),
+                    ),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 1,
+                  child: pw.Center(
+                    child: pw.Text(
+                      'Rs.${item.itemTotal.toStringAsFixed(2)}',
+                      textAlign: pw.TextAlign.right,
+                      style: const pw.TextStyle(fontSize: 7),
+                    ),
                   ),
                 ),
               ],
             ),
           );
         }),
+
+        pw.SizedBox(height: 8),
+        pw.Container(
+          decoration: pw.BoxDecoration(
+            // color: PdfColors.blue700,
+            border: pw.Border(
+              top: pw.BorderSide(color: PdfColors.black, width: 1),
+              bottom: pw.BorderSide(color: PdfColors.black, width: 1),
+            ),
+          ),
+          padding: const pw.EdgeInsets.symmetric(vertical: 5, horizontal: 6),
+          child: pw.Row(
+            children: [
+              // Item column
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'TOTAL',
+                  style: pw.TextStyle(
+                    fontSize: 8,
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.black,
+                  ),
+                ),
+              ),
+
+              // Category column
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  '',
+                  style: pw.TextStyle(fontSize: 8, color: PdfColors.black),
+                ),
+              ),
+
+              // Price (not needed for total)
+              pw.Expanded(
+                flex: 1,
+                child: pw.Text('', textAlign: pw.TextAlign.right),
+              ),
+
+              // Disc (not needed for total)
+              pw.Expanded(
+                flex: 1,
+                child: pw.Text('', textAlign: pw.TextAlign.right),
+              ),
+
+              // Qty TOTAL
+              pw.Expanded(
+                flex: 1,
+                child: pw.Center(
+                  child: pw.Text(
+                    totalQty.toString(),
+                    textAlign: pw.TextAlign.center,
+                    style: pw.TextStyle(
+                      fontSize: 8,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.black,
+                    ),
+                  ),
+                ),
+              ),
+
+              // Total Price (BEFORE DISCOUNT)
+              pw.Expanded(
+                flex: 1,
+                child: pw.Center(
+                  child: pw.Text(
+                    'Rs.${totalPriceBeforeDiscount.toStringAsFixed(2)}',
+                    textAlign: pw.TextAlign.right,
+                    style: pw.TextStyle(
+                      fontSize: 8,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.black,
+                    ),
+                  ),
+                ),
+              ),
+
+              // Total Discount
+              pw.Expanded(
+                flex: 1,
+                child: pw.Center(
+                  child: pw.Text(
+                    'Rs.${totalDiscount.toStringAsFixed(2)}',
+                    textAlign: pw.TextAlign.right,
+                    style: pw.TextStyle(
+                      fontSize: 8,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.black,
+                    ),
+                  ),
+                ),
+              ),
+
+              // Final Total
+              pw.Expanded(
+                flex: 1,
+                child: pw.Center(
+                  child: pw.Text(
+                    'Rs.${finalTotal.toStringAsFixed(2)}',
+                    textAlign: pw.TextAlign.right,
+                    style: pw.TextStyle(
+                      fontSize: 8,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.black,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
 
         pw.SizedBox(height: 8),
 
@@ -824,8 +1047,9 @@ class BillCubit extends Cubit<BillState> {
                 children: [
                   _buildTotalRow(
                     'Subtotal:',
-                    'Rs.${bill.subtotal.toStringAsFixed(2)}',
+                    'Rs.${subtotalBeforeDiscount.toStringAsFixed(2)}',
                   ),
+
                   if (bill.totalDiscount > 0)
                     _buildTotalRow(
                       'Discount:',
