@@ -5,6 +5,7 @@ class EditBillState {
   final List<BillItemModel> cartItems;
   final String? customerName;
   final String? customerPhone;
+  final String? customerGstNumber;
   final double amountReceived;
   final String paymentMode;
   final bool isLoading;
@@ -23,6 +24,7 @@ class EditBillState {
     required this.cartItems,
     this.customerName,
     this.customerPhone,
+    this.customerGstNumber,
     required this.amountReceived,
     required this.paymentMode,
     required this.isLoading,
@@ -85,6 +87,7 @@ class EditBillState {
     List<BillItemModel>? cartItems,
     String? customerName,
     String? customerPhone,
+    String? customerGstNumber,
     double? amountReceived,
     String? paymentMode,
     bool? isLoading,
@@ -99,6 +102,7 @@ class EditBillState {
       cartItems: cartItems ?? this.cartItems,
       customerName: customerName ?? this.customerName,
       customerPhone: customerPhone ?? this.customerPhone,
+      customerGstNumber: customerGstNumber ?? this.customerGstNumber,
       amountReceived: amountReceived ?? this.amountReceived,
       paymentMode: paymentMode ?? this.paymentMode,
       isLoading: isLoading ?? this.isLoading,
@@ -110,4 +114,3 @@ class EditBillState {
     );
   }
 }
-

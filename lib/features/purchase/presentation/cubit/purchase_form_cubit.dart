@@ -19,6 +19,10 @@ class PurchaseFormCubit extends Cubit<PurchaseFormState> {
     emit(state.copyWith(supplierPhone: phone));
   }
 
+  void setSupplierGstNumber(String gstNumber) {
+    emit(state.copyWith(supplierGstNumber: gstNumber));
+  }
+
   void setOtherExpense(double expense) {
     final updatedItems = state.items;
     _recalculateTotals(updatedItems, otherExpense: expense);
@@ -78,6 +82,7 @@ class PurchaseFormCubit extends Cubit<PurchaseFormState> {
         purchaseNo: purchaseNo,
         supplierName: state.supplierName,
         supplierPhone: state.supplierPhone,
+        supplierGstNumber: state.supplierGstNumber,
         items: state.items,
         subtotal: state.subtotal,
         totalTax: state.totalTax,

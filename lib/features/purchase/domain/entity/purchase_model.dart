@@ -7,6 +7,7 @@ class PurchaseModel extends Equatable {
   final String purchaseNo;
   final String? supplierName;
   final String? supplierPhone;
+  final String? supplierGstNumber;
   final List<PurchaseItemModel> items;
   final double subtotal;
   final double totalTax;
@@ -20,6 +21,7 @@ class PurchaseModel extends Equatable {
     required this.purchaseNo,
     this.supplierName,
     this.supplierPhone,
+    this.supplierGstNumber,
     required this.items,
     required this.subtotal,
     required this.totalTax,
@@ -35,6 +37,7 @@ class PurchaseModel extends Equatable {
       purchaseNo: json['purchaseNo'] as String,
       supplierName: json['supplierName'] as String?,
       supplierPhone: json['supplierPhone'] as String?,
+      supplierGstNumber: json['supplierGstNumber'] as String?,
       items: (json['items'] as List)
           .map((item) => PurchaseItemModel.fromJson(item))
           .toList(),
@@ -58,6 +61,7 @@ class PurchaseModel extends Equatable {
       'purchaseNo': purchaseNo,
       'supplierName': supplierName,
       'supplierPhone': supplierPhone,
+      'supplierGstNumber': supplierGstNumber,
       'items': items.map((item) => item.toJson()).toList(),
       'subtotal': subtotal,
       'totalTax': totalTax,
@@ -73,6 +77,7 @@ class PurchaseModel extends Equatable {
     String? purchaseNo,
     String? supplierName,
     String? supplierPhone,
+    String? supplierGstNumber,
     List<PurchaseItemModel>? items,
     double? subtotal,
     double? totalTax,
@@ -86,6 +91,7 @@ class PurchaseModel extends Equatable {
       purchaseNo: purchaseNo ?? this.purchaseNo,
       supplierName: supplierName ?? this.supplierName,
       supplierPhone: supplierPhone ?? this.supplierPhone,
+      supplierGstNumber: supplierGstNumber ?? this.supplierGstNumber,
       items: items ?? this.items,
       subtotal: subtotal ?? this.subtotal,
       totalTax: totalTax ?? this.totalTax,
@@ -102,6 +108,7 @@ class PurchaseModel extends Equatable {
     purchaseNo,
     supplierName,
     supplierPhone,
+    supplierGstNumber,
     items,
     subtotal,
     totalTax,

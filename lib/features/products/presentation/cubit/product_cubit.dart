@@ -223,7 +223,7 @@ class ProductCubit extends Cubit<ProductState> {
     }
   }
 
-  // Search products
+  // Search products directly from database
   void searchProducts(String query) {
     if (debounce?.isActive ?? false) debounce?.cancel();
 
@@ -240,22 +240,28 @@ class ProductCubit extends Cubit<ProductState> {
       try {
         emit(state.copyWith(isLoading: true));
 
-        Query searchQuery;
+        final searchLower = query.toLowerCase();
 
-        final hasActiveFilter = state.selectedCategory != 'All';
+        // Create the end range for prefix search
+        // For "abc", we want to match "abc", "abcd", "abc123" but not "ab" or "abz"
+        final endRange =
+            searchLower.substring(0, searchLower.length - 1) +
+            String.fromCharCode(
+              searchLower.codeUnitAt(searchLower.length - 1) + 1,
+            );
 
-        if (hasActiveFilter) {
-          searchQuery = _buildBaseQuery(null);
-        } else {
-          searchQuery = FBFireStore.products.orderBy(
-            'createdAt',
-            descending: true,
-          );
-        }
+        List<ProductModel> results = [];
 
-        final snapshot = await searchQuery.limit(20).get();
+        // Search by product name (prefix match, case-sensitive in DB)
+        // We'll search for both lowercase and capitalized versions
+        Query nameQuery = FBFireStore.products
+            .where('name', isGreaterThanOrEqualTo: searchLower)
+            .where('name', isLessThan: endRange)
+            .orderBy('name')
+            .limit(50);
 
-        final allProducts = snapshot.docs
+        final nameSnapshot = await nameQuery.get();
+        final nameResults = nameSnapshot.docs
             .map(
               (doc) => ProductModel.fromDocSnap(
                 doc as QueryDocumentSnapshot<Map<String, dynamic>>,
@@ -263,17 +269,86 @@ class ProductCubit extends Cubit<ProductState> {
             )
             .toList();
 
-        final searchLower = query.toLowerCase();
-        final results = allProducts
-            .where((product) {
-              return product.name.toLowerCase().contains(searchLower) ||
-                  (product.sku?.toLowerCase().contains(searchLower) ?? false);
-            })
-            .take(20)
+        results.addAll(nameResults);
+
+        // Also search with capitalized first letter
+        final searchCapitalized =
+            searchLower[0].toUpperCase() + searchLower.substring(1);
+        final endRangeCapitalized =
+            searchCapitalized.substring(0, searchCapitalized.length - 1) +
+            String.fromCharCode(
+              searchCapitalized.codeUnitAt(searchCapitalized.length - 1) + 1,
+            );
+
+        Query nameQueryCap = FBFireStore.products
+            .where('name', isGreaterThanOrEqualTo: searchCapitalized)
+            .where('name', isLessThan: endRangeCapitalized)
+            .orderBy('name')
+            .limit(50);
+
+        final nameSnapshotCap = await nameQueryCap.get();
+        final nameResultsCap = nameSnapshotCap.docs
+            .map(
+              (doc) => ProductModel.fromDocSnap(
+                doc as QueryDocumentSnapshot<Map<String, dynamic>>,
+              ),
+            )
             .toList();
+
+        // Add capitalized results, avoiding duplicates
+        for (var product in nameResultsCap) {
+          if (!results.any((p) => p.id == product.id)) {
+            results.add(product);
+          }
+        }
+
+        // Search by SKU if provided
+        if (query.length >= 2) {
+          final searchUpper = query.toUpperCase();
+          final endRangeSku =
+              searchUpper.substring(0, searchUpper.length - 1) +
+              String.fromCharCode(
+                searchUpper.codeUnitAt(searchUpper.length - 1) + 1,
+              );
+
+          Query skuQuery = FBFireStore.products
+              .where('sku', isGreaterThanOrEqualTo: searchUpper)
+              .where('sku', isLessThan: endRangeSku)
+              .orderBy('sku')
+              .limit(50);
+
+          final skuSnapshot = await skuQuery.get();
+          final skuResults = skuSnapshot.docs
+              .map(
+                (doc) => ProductModel.fromDocSnap(
+                  doc as QueryDocumentSnapshot<Map<String, dynamic>>,
+                ),
+              )
+              .toList();
+
+          // Add SKU results, avoiding duplicates
+          for (var product in skuResults) {
+            if (!results.any((p) => p.id == product.id)) {
+              results.add(product);
+            }
+          }
+        }
+
+        // Apply category filter if active (filter results in memory)
+        if (state.selectedCategory != 'All') {
+          results = results
+              .where((p) => p.categoryId == state.selectedCategory)
+              .toList();
+        }
+
+        // Limit total results to 20
+        if (results.length > 20) {
+          results = results.take(20).toList();
+        }
 
         emit(state.copyWith(searchedProducts: results, isLoading: false));
       } catch (e) {
+        debugPrint('Error searching products: $e');
         emit(state.copyWith(isLoading: false, error: 'Search failed: $e'));
       }
     });

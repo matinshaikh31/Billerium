@@ -665,6 +665,9 @@ class _PurchaseListPageState extends State<PurchaseListPage> {
               _buildDetailRow('Purchase No', purchase.purchaseNo),
               _buildDetailRow('Supplier', purchase.supplierName ?? 'N/A'),
               _buildDetailRow('Phone', purchase.supplierPhone ?? 'N/A'),
+              if (purchase.supplierGstNumber != null &&
+                  purchase.supplierGstNumber!.isNotEmpty)
+                _buildDetailRow('GST Number', purchase.supplierGstNumber!),
               _buildDetailRow(
                 'Date',
                 dateFormat.format(purchase.createdAt.toDate()),

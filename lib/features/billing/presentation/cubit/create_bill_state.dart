@@ -2,6 +2,7 @@ part of 'create_bill_cubit.dart';
 
 class CreateBillState {
   final List<BillItemModel> cartItems;
+  final String? customerGstNumber;
   final double amountReceived;
   final String paymentMode;
   final bool isLoading;
@@ -16,6 +17,7 @@ class CreateBillState {
 
   CreateBillState({
     required this.cartItems,
+    this.customerGstNumber,
     required this.amountReceived,
     required this.paymentMode,
     required this.isLoading,
@@ -70,6 +72,7 @@ class CreateBillState {
 
   CreateBillState copyWith({
     List<BillItemModel>? cartItems,
+    String? customerGstNumber,
     double? amountReceived,
     String? paymentMode,
     bool? isLoading,
@@ -80,6 +83,7 @@ class CreateBillState {
   }) {
     return CreateBillState(
       cartItems: cartItems ?? this.cartItems,
+      customerGstNumber: customerGstNumber ?? this.customerGstNumber,
       amountReceived: amountReceived ?? this.amountReceived,
       paymentMode: paymentMode ?? this.paymentMode,
       isLoading: isLoading ?? this.isLoading,

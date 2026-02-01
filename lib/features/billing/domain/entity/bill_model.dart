@@ -9,6 +9,7 @@ class BillModel extends Equatable {
   final List<BillItemModel> items;
   final String? customerName;
   final String? customerPhone;
+  final String? customerGstNumber;
   final double subtotal;
   final double totalDiscount;
   final double totalTax;
@@ -30,6 +31,7 @@ class BillModel extends Equatable {
     required this.items,
     this.customerName,
     this.customerPhone,
+    this.customerGstNumber,
     required this.subtotal,
     required this.totalDiscount,
     required this.totalTax,
@@ -54,6 +56,7 @@ class BillModel extends Equatable {
           .toList(),
       customerName: json['customerName'] as String?,
       customerPhone: json['customerPhone'] as String?,
+      customerGstNumber: json['customerGstNumber'] as String?,
       subtotal: (json['subtotal'] as num).toDouble(),
       totalDiscount: (json['totalDiscount'] as num).toDouble(),
       totalTax: (json['totalTax'] as num).toDouble(),
@@ -85,6 +88,7 @@ class BillModel extends Equatable {
       'items': items.map((item) => item.toJson()).toList(),
       'customerName': customerName,
       'customerPhone': customerPhone,
+      'customerGstNumber': customerGstNumber,
       'subtotal': subtotal,
       'totalDiscount': totalDiscount,
       'totalTax': totalTax,
@@ -107,6 +111,7 @@ class BillModel extends Equatable {
     List<BillItemModel>? items,
     String? customerName,
     String? customerPhone,
+    String? customerGstNumber,
     double? subtotal,
     double? totalDiscount,
     double? totalTax,
@@ -127,6 +132,7 @@ class BillModel extends Equatable {
       items: items ?? this.items,
       customerName: customerName ?? this.customerName,
       customerPhone: customerPhone ?? this.customerPhone,
+      customerGstNumber: customerGstNumber ?? this.customerGstNumber,
       subtotal: subtotal ?? this.subtotal,
       totalDiscount: totalDiscount ?? this.totalDiscount,
       totalTax: totalTax ?? this.totalTax,
@@ -153,6 +159,7 @@ class BillModel extends Equatable {
     items,
     customerName,
     customerPhone,
+    customerGstNumber,
     subtotal,
     totalDiscount,
     totalTax,

@@ -598,6 +598,20 @@ class _EditBillPageState extends State<EditBillPage> {
             keyboardType: TextInputType.phone,
             onChanged: cubit.updateCustomerPhone,
           ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: cubit.customerGstController,
+            decoration: InputDecoration(
+              labelText: 'Customer GST Number',
+              hintText: 'e.g., 22AAAAA0000A1Z5',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              filled: true,
+              // fillColor: AppColors.primary,
+            ),
+            onChanged: cubit.updateCustomerGstNumber,
+          ),
         ],
       ),
     );

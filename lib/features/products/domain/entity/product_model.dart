@@ -81,6 +81,7 @@ class ProductModel {
   Map<String, dynamic> toJson() {
     return {
       'name': name,
+      'nameLowercase': name.toLowerCase(), // For case-insensitive search
       'categoryId': categoryId,
       'price': price,
       'discountPercent': discountPercent,

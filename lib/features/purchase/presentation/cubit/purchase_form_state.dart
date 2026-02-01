@@ -5,6 +5,7 @@ class PurchaseFormState extends Equatable {
   final List<PurchaseItemModel> items;
   final String? supplierName;
   final String? supplierPhone;
+  final String? supplierGstNumber;
   final double subtotal;
   final double totalTax;
   final double otherExpense;
@@ -16,6 +17,7 @@ class PurchaseFormState extends Equatable {
     this.items = const [],
     this.supplierName,
     this.supplierPhone,
+    this.supplierGstNumber,
     this.subtotal = 0,
     this.totalTax = 0,
     this.otherExpense = 0,
@@ -28,6 +30,7 @@ class PurchaseFormState extends Equatable {
     List<PurchaseItemModel>? items,
     String? supplierName,
     String? supplierPhone,
+    String? supplierGstNumber,
     double? subtotal,
     double? totalTax,
     double? otherExpense,
@@ -39,6 +42,7 @@ class PurchaseFormState extends Equatable {
       items: items ?? this.items,
       supplierName: supplierName ?? this.supplierName,
       supplierPhone: supplierPhone ?? this.supplierPhone,
+      supplierGstNumber: supplierGstNumber ?? this.supplierGstNumber,
       subtotal: subtotal ?? this.subtotal,
       totalTax: totalTax ?? this.totalTax,
       otherExpense: otherExpense ?? this.otherExpense,
@@ -53,6 +57,7 @@ class PurchaseFormState extends Equatable {
     items,
     supplierName,
     supplierPhone,
+    supplierGstNumber,
     subtotal,
     totalTax,
     otherExpense,

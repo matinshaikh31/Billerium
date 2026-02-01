@@ -18,6 +18,7 @@ class EditBillCubit extends Cubit<EditBillState> {
 
   final customerNameController = TextEditingController();
   final customerPhoneController = TextEditingController();
+  final customerGstController = TextEditingController();
   final amountReceivedController = TextEditingController();
   final billDiscountPercentController = TextEditingController();
   final billDiscountAmountController = TextEditingController();
@@ -27,6 +28,7 @@ class EditBillCubit extends Cubit<EditBillState> {
   Future<void> loadBill(BillModel bill, List<CategoryModel> categories) async {
     customerNameController.text = bill.customerName ?? '';
     customerPhoneController.text = bill.customerPhone ?? '';
+    customerGstController.text = bill.customerGstNumber ?? '';
     amountReceivedController.text = bill.amountPaid.toStringAsFixed(2);
 
     if (bill.billDiscountPercent > 0) {
@@ -90,6 +92,7 @@ class EditBillCubit extends Cubit<EditBillState> {
         cartItems: enrichedItems,
         customerName: bill.customerName,
         customerPhone: bill.customerPhone,
+        customerGstNumber: bill.customerGstNumber,
         amountReceived: bill.amountPaid,
         paymentMode: bill.payments.isNotEmpty
             ? bill.payments.last.mode
@@ -229,6 +232,10 @@ class EditBillCubit extends Cubit<EditBillState> {
     emit(state.copyWith(customerPhone: phone));
   }
 
+  void updateCustomerGstNumber(String gstNumber) {
+    emit(state.copyWith(customerGstNumber: gstNumber));
+  }
+
   /// Save the edited bill
   Future<bool> saveBill() async {
     if (state.originalBill == null) {
@@ -280,6 +287,7 @@ class EditBillCubit extends Cubit<EditBillState> {
         customerPhone: customerPhoneController.text.trim().isEmpty
             ? null
             : customerPhoneController.text.trim(),
+        customerGstNumber: state.customerGstNumber,
         subtotal: state.subtotal,
         totalDiscount: state.totalDiscount,
         totalTax: 0,
@@ -324,6 +332,7 @@ class EditBillCubit extends Cubit<EditBillState> {
   void reset() {
     customerNameController.clear();
     customerPhoneController.clear();
+    customerGstController.clear();
     amountReceivedController.clear();
     billDiscountPercentController.clear();
     billDiscountAmountController.clear();
@@ -334,6 +343,7 @@ class EditBillCubit extends Cubit<EditBillState> {
   Future<void> close() {
     customerNameController.dispose();
     customerPhoneController.dispose();
+    customerGstController.dispose();
     amountReceivedController.dispose();
     billDiscountPercentController.dispose();
     billDiscountAmountController.dispose();

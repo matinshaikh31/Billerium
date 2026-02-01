@@ -5,9 +5,9 @@ class BillItemModel {
   final String? categoryName; // Nullable for backward compatibility
   final double price;
   final int quantity;
-  final double discountPercent;
+  final double discountPercent; 
   final double discountAmount;
-  final double itemTotal;
+  final double itemTotal; // Total after discount
 
   const BillItemModel({
     required this.productId,

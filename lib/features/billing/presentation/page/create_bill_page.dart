@@ -134,22 +134,63 @@ class _CreateBillPageState extends State<CreateBillPage> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               child: _buildProductSearch(context),
             ),
-            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: Row(
+                children: [
+                  Expanded(flex: 2, child: _buildCartItems(context, state)),
+                ],
+              ),
+            ),
+
+            // Padding(
+            //   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            //   child: Row(
+            //     crossAxisAlignment: CrossAxisAlignment.start,
+            //     children: [
+            //       Expanded(child: _buildCustomerDetails(context, state)),
+            //       const SizedBox(width: 20),
+            //       Expanded(child: _buildBillDiscount(context, state)),
+            //     ],
+            //   ),
+            // ),
+            // Padding(
+            //   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            //   child: Row(
+            //     crossAxisAlignment: CrossAxisAlignment.start,
+            //     children: [
+            //       Expanded(child: _buildBillDiscount(context, state)),
+            //       const SizedBox(width: 20),
+            //       Expanded(child: _buildPaymentDetails(context, state)),
+            //     ],
+            //   ),
+            // ),
+            // const SizedBox(height: 24),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(flex: 2, child: _buildCartItems(context, state)),
-                  const SizedBox(width: 24),
+                  // Expanded(flex: 2, child: _buildCartItems(context, state)),
+                  // const SizedBox(width: 24),
                   Expanded(
                     child: Column(
                       children: [
                         _buildCustomerDetails(context, state),
                         const SizedBox(height: 20),
-                        _buildBillDiscount(context, state),
-                        const SizedBox(height: 20),
-                        _buildPaymentDetails(context, state),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: _buildBillDiscount(context, state)),
+                            const SizedBox(width: 20),
+                            Expanded(
+                              child: _buildPaymentDetails(context, state),
+                            ),
+                          ],
+                        ),
+                        // _buildBillDiscount(context, state),
+                        // const SizedBox(height: 20),
+                        // _buildPaymentDetails(context, state),
                         const SizedBox(height: 20),
                         _buildSummary(context, state),
                       ],
@@ -624,6 +665,20 @@ class _CreateBillPageState extends State<CreateBillPage> {
                 return 'Phone number is required';
               }
               return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: context.read<CreateBillCubit>().customerGstController,
+            decoration: InputDecoration(
+              labelText: 'Customer GST Number',
+              hintText: 'e.g., 22AAAAA0000A1Z5',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onChanged: (value) {
+              context.read<CreateBillCubit>().updateCustomerGstNumber(value);
             },
           ),
         ],

@@ -19,6 +19,7 @@ class CreatePurchasePage extends StatefulWidget {
 class _CreatePurchasePageState extends State<CreatePurchasePage> {
   final _supplierNameController = TextEditingController();
   final _supplierPhoneController = TextEditingController();
+  final _supplierGstController = TextEditingController();
   final _otherExpenseController = TextEditingController();
 
   @override
@@ -32,6 +33,7 @@ class _CreatePurchasePageState extends State<CreatePurchasePage> {
   void dispose() {
     _supplierNameController.dispose();
     _supplierPhoneController.dispose();
+    _supplierGstController.dispose();
     _otherExpenseController.dispose();
     super.dispose();
   }
@@ -161,7 +163,16 @@ class _CreatePurchasePageState extends State<CreatePurchasePage> {
                 context.read<PurchaseFormCubit>().setSupplierPhone(value);
               },
             ),
-          ] else
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _supplierGstController,
+              label: "Supplier GST Number",
+              hint: "e.g., 22AAAAA0000A1Z5",
+              onChanged: (value) {
+                context.read<PurchaseFormCubit>().setSupplierGstNumber(value);
+              },
+            ),
+          ] else ...[
             Row(
               children: [
                 Expanded(
@@ -188,6 +199,16 @@ class _CreatePurchasePageState extends State<CreatePurchasePage> {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _supplierGstController,
+              label: "Supplier GST Number",
+              hint: "e.g., 22AAAAA0000A1Z5",
+              onChanged: (value) {
+                context.read<PurchaseFormCubit>().setSupplierGstNumber(value);
+              },
+            ),
+          ],
         ],
       ),
     );

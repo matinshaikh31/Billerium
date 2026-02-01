@@ -628,6 +628,10 @@ class BillCubit extends Cubit<BillState> {
                         'Phone: +91 9106554170',
                         style: const pw.TextStyle(fontSize: 7),
                       ),
+                      pw.Text(
+                        'GST No: 24BHBPS9737F1Z3',
+                        style: const pw.TextStyle(fontSize: 7),
+                      ),
                     ],
                   ),
                 ],
@@ -1086,7 +1090,7 @@ class BillCubit extends Cubit<BillState> {
           ],
         ),
 
-        pw.SizedBox(height: 10),
+        /*         pw.SizedBox(height: 10),
 
         // Banking Details and Signature - UPDATED WITH REGISTRATION INFO
         pw.Row(
@@ -1154,7 +1158,7 @@ class BillCubit extends Cubit<BillState> {
           ],
         ),
 
-        pw.SizedBox(height: 8),
+        pw.SizedBox(height: 8), */
 
         // Footer
         pw.Divider(thickness: 0.5),
