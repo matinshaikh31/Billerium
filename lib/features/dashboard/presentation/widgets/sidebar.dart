@@ -84,7 +84,9 @@ class DesktopSidebar extends StatelessWidget {
                 _FooterButton(
                   icon: Icons.settings_outlined,
                   label: "Settings",
-                  onTap: () {},
+                  onTap: () {
+                    context.go(Routes.settings);
+                  },
                 ),
                 const SizedBox(height: 8),
                 _FooterButton(
@@ -351,20 +353,26 @@ class MobileSidebar extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  ListTile(
-                    leading: Icon(
-                      Icons.settings_outlined,
-                      color: AppColors.textSecondary,
-                      size: 20,
-                    ),
-                    title: Text(
-                      "Settings",
-                      style: GoogleFonts.inter(
+                  InkWell(
+                    onTap: () {
+                      print("object");
+                      context.go(Routes.settings);
+                    },
+                    child: ListTile(
+                      leading: Icon(
+                        Icons.settings_outlined,
                         color: AppColors.textSecondary,
-                        fontSize: 14,
+                        size: 20,
                       ),
+                      title: Text(
+                        "Settings",
+                        style: GoogleFonts.inter(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                        ),
+                      ),
+                      onTap: () => Navigator.pop(context),
                     ),
-                    onTap: () => Navigator.pop(context),
                   ),
                   ListTile(
                     leading: Icon(

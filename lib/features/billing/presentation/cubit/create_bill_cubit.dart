@@ -5,6 +5,7 @@ import 'package:billing_software/features/billing/domain/entity/bill_model.dart'
 import 'package:billing_software/features/billing/domain/entity/payment_model.dart';
 import 'package:billing_software/features/products/domain/entity/product_model.dart';
 import 'package:billing_software/features/products/domain/repositories/product_repository.dart';
+import 'package:billing_software/features/settings/domain/entity/setting_model.dart';
 import 'package:billing_software/core/services/firebase.dart';
 import 'package:billing_software/features/transactions/domain/models/transaction_model.dart';
 import 'package:bloc/bloc.dart';
@@ -22,6 +23,12 @@ class CreateBillCubit extends Cubit<CreateBillState> {
     required this.billRepository,
     required this.productRepository,
   }) : super(CreateBillState.initial());
+
+  // Set tax rates from settings
+  void setTaxRates(SettingModel settings) {
+    print('Setting tax rates: ${settings.CGST} ${settings.SGST}');
+    emit(state.copyWith(cgstRate: settings.CGST, sgstRate: settings.SGST));
+  }
 
   final customerNameController = TextEditingController();
   final customerPhoneController = TextEditingController();
@@ -204,7 +211,7 @@ class CreateBillCubit extends Cubit<CreateBillState> {
       // Convert selected bill date to Timestamp
       final billTimestamp = Timestamp.fromDate(state.billDate);
 
-      // Create bill with all discount calculations
+      // Create bill with all discount and tax calculations
       final bill = BillModel(
         id: '',
         billNo: billNo,
@@ -212,9 +219,12 @@ class CreateBillCubit extends Cubit<CreateBillState> {
         customerName: customerNameController.text.trim().toLowerCase(),
         customerPhone: customerPhoneController.text,
         customerGstNumber: state.customerGstNumber,
+        totalBeforeDiscount: state.totalBeforeDiscount,
         subtotal: state.subtotal,
         totalDiscount: state.totalDiscount,
-        totalTax: 0,
+        cgst: state.cgst,
+        sgst: state.sgst,
+        totalTax: state.totalTax,
         billDiscountPercent: state.billDiscountPercent,
         billDiscountAmount: state.calculatedBillDiscount,
         finalAmount: state.grandTotal,

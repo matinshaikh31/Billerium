@@ -22,6 +22,8 @@ import 'package:billing_software/features/purchase/presentation/cubit/purchase_c
 import 'package:billing_software/features/purchase/presentation/cubit/purchase_form_cubit.dart';
 import 'package:billing_software/features/reports/data/firebase_report_repository.dart';
 import 'package:billing_software/features/reports/presentation/cubit/report_cubit.dart';
+import 'package:billing_software/features/settings/data/setting_firebase_repo.dart';
+import 'package:billing_software/features/settings/presentation/cubit/setting_cubit.dart';
 import 'package:billing_software/features/transactions/presentation/cubit/transaction_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -39,6 +41,11 @@ class BillingApp extends StatelessWidget {
         builder: (context, state) {
           return MultiBlocProvider(
             providers: [
+              BlocProvider(
+                create: (context) =>
+                    SettingCubit(settingRepository: FirebaseSettingRepository())
+                      ..fetchSettings(), // Fetch settings on app start
+              ),
               BlocProvider(
                 create: (context) => CategoryCubit(
                   categoryRepository: FirebaseCategoryRepository(),
@@ -65,10 +72,18 @@ class BillingApp extends StatelessWidget {
                 ),
               ),
               BlocProvider(
-                create: (context) => CreateBillCubit(
-                  billRepository: FirebaseBillRepository(),
-                  productRepository: FirebaseProductRepository(),
-                ),
+                create: (context) {
+                  final cubit = CreateBillCubit(
+                    billRepository: FirebaseBillRepository(),
+                    productRepository: FirebaseProductRepository(),
+                  );
+                  // Set tax rates from settings
+                  final settings = context.read<SettingCubit>().state.settings;
+                  if (settings != null) {
+                    cubit.setTaxRates(settings);
+                  }
+                  return cubit;
+                },
               ),
               BlocProvider(
                 create: (context) =>
@@ -87,17 +102,34 @@ class BillingApp extends StatelessWidget {
                     PurchaseCubit(purchaseRepo: FirebasePurchaseRepository()),
               ),
               BlocProvider(
-                create: (context) => PurchaseFormCubit(
-                  purchaseRepo: FirebasePurchaseRepository(),
-                ),
+                create: (context) {
+                  final cubit = PurchaseFormCubit(
+                    purchaseRepo: FirebasePurchaseRepository(),
+                  );
+                  // Set tax rates from settings
+                  final settings = context.read<SettingCubit>().state.settings;
+                  if (settings != null) {
+                    cubit.setTaxRates(settings);
+                  }
+                  return cubit;
+                },
               ),
               BlocProvider(
                 create: (context) =>
                     ReportCubit(reportRepository: FirebaseReportRepository()),
               ),
               BlocProvider(
-                create: (context) =>
-                    EditBillCubit(billRepository: FirebaseBillRepository()),
+                create: (context) {
+                  final cubit = EditBillCubit(
+                    billRepository: FirebaseBillRepository(),
+                  );
+                  // Set tax rates from settings
+                  final settings = context.read<SettingCubit>().state.settings;
+                  if (settings != null) {
+                    cubit.setTaxRates(settings);
+                  }
+                  return cubit;
+                },
               ),
             ],
             child: ResponsiveWid(

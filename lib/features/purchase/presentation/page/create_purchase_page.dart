@@ -1,12 +1,16 @@
+import 'package:billing_software/core/routes/routes.dart';
 import 'package:billing_software/core/theme/app_colors.dart';
+import 'package:billing_software/core/utils/helpers.dart';
 import 'package:billing_software/features/purchase/domain/entity/purchase_item_model.dart';
 import 'package:billing_software/features/purchase/presentation/cubit/purchase_form_cubit.dart';
 import 'package:billing_software/features/purchase/presentation/cubit/purchase_form_state.dart';
 import 'package:billing_software/features/purchase/presentation/widget/add_purchase_item_dialog.dart';
 import 'package:billing_software/features/products/presentation/cubit/product_cubit.dart';
+import 'package:billing_software/features/settings/presentation/cubit/setting_cubit.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class CreatePurchasePage extends StatefulWidget {
@@ -46,17 +50,31 @@ class _CreatePurchasePageState extends State<CreatePurchasePage> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: BlocListener<PurchaseFormCubit, PurchaseFormState>(
-        listener: (context, state) {
-          if (state.error != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.error!),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        },
+      body: MultiBlocListener(
+        listeners: [
+          BlocListener<PurchaseFormCubit, PurchaseFormState>(
+            listener: (context, state) {
+              if (state.error != null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.error!),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+          ),
+          BlocListener<SettingCubit, SettingState>(
+            listener: (context, settingState) {
+              // Update tax rates when settings are loaded or changed
+              if (settingState.settings != null) {
+                context.read<PurchaseFormCubit>().setTaxRates(
+                  settingState.settings!,
+                );
+              }
+            },
+          ),
+        ],
         child: Column(
           children: [
             _buildHeader(context, isDesktop),
@@ -115,7 +133,7 @@ class _CreatePurchasePageState extends State<CreatePurchasePage> {
             ),
           ),
           IconButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => context.go(Routes.purchases),
             icon: const Icon(CupertinoIcons.xmark_circle_fill),
             color: AppColors.textSecondary.withOpacity(0.5),
           ),
@@ -317,7 +335,7 @@ class _CreatePurchasePageState extends State<CreatePurchasePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.productName,
+                  capitalize(item.productName),
                   style: GoogleFonts.inter(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
@@ -369,13 +387,17 @@ class _CreatePurchasePageState extends State<CreatePurchasePage> {
           ),
           child: Column(
             children: [
-              _buildTotalRow('Subtotal', state.subtotal),
+              _buildTotalRow('Total Before Tax', state.totalBeforeTax),
               const SizedBox(height: 12),
-              _buildTotalRow('Tax', state.totalTax),
+              _buildTotalRow('CGST', state.cgst),
+              const SizedBox(height: 12),
+              _buildTotalRow('SGST', state.sgst),
+              const SizedBox(height: 12),
+              _buildTotalRow('Total Tax', state.totalTax),
               const SizedBox(height: 12),
               _buildOtherExpenseField(isMobile),
               const Divider(height: 24),
-              _buildTotalRow('Total Amount', state.finalAmount, isTotal: true),
+              _buildTotalRow('Final Amount', state.finalAmount, isTotal: true),
             ],
           ),
         );

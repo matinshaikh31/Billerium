@@ -4,6 +4,7 @@ import 'package:billing_software/features/billing/domain/entity/payment_model.da
 import 'package:billing_software/features/billing/domain/repo/fbill_repository.dart';
 import 'package:billing_software/features/categories/domain/antity/category_model.dart';
 import 'package:billing_software/features/products/domain/entity/product_model.dart';
+import 'package:billing_software/features/settings/domain/entity/setting_model.dart';
 import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,11 @@ class EditBillCubit extends Cubit<EditBillState> {
 
   EditBillCubit({required this.billRepository})
     : super(EditBillState.initial());
+
+  // Set tax rates from settings
+  void setTaxRates(SettingModel settings) {
+    emit(state.copyWith(cgstRate: settings.CGST, sgstRate: settings.SGST));
+  }
 
   final customerNameController = TextEditingController();
   final customerPhoneController = TextEditingController();
@@ -276,7 +282,7 @@ class EditBillCubit extends Cubit<EditBillState> {
 
       final billTimestamp = Timestamp.fromDate(state.billDate);
 
-      // Create updated bill
+      // Create updated bill with tax calculations
       final updatedBill = BillModel(
         id: state.originalBill!.id,
         billNo: state.originalBill!.billNo,
@@ -288,9 +294,12 @@ class EditBillCubit extends Cubit<EditBillState> {
             ? null
             : customerPhoneController.text.trim(),
         customerGstNumber: state.customerGstNumber,
+        totalBeforeDiscount: state.totalBeforeDiscount,
         subtotal: state.subtotal,
         totalDiscount: state.totalDiscount,
-        totalTax: 0,
+        cgst: state.cgst,
+        sgst: state.sgst,
+        totalTax: state.totalTax,
         billDiscountPercent: state.billDiscountPercent,
         billDiscountAmount: state.calculatedBillDiscount,
         finalAmount: state.grandTotal,

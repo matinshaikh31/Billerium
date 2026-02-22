@@ -6,10 +6,12 @@ class PurchaseFormState extends Equatable {
   final String? supplierName;
   final String? supplierPhone;
   final String? supplierGstNumber;
-  final double subtotal;
-  final double totalTax;
+  final double totalBeforeTax; // Renamed from subtotal
+  final double cgst;
+  final double sgst;
+  final double totalTax; // CGST + SGST
   final double otherExpense;
-  final double finalAmount;
+  final double finalAmount; // totalBeforeTax + totalTax + otherExpense
   final bool isLoading;
   final String? error;
 
@@ -18,7 +20,9 @@ class PurchaseFormState extends Equatable {
     this.supplierName,
     this.supplierPhone,
     this.supplierGstNumber,
-    this.subtotal = 0,
+    this.totalBeforeTax = 0,
+    this.cgst = 0,
+    this.sgst = 0,
     this.totalTax = 0,
     this.otherExpense = 0,
     this.finalAmount = 0,
@@ -31,7 +35,9 @@ class PurchaseFormState extends Equatable {
     String? supplierName,
     String? supplierPhone,
     String? supplierGstNumber,
-    double? subtotal,
+    double? totalBeforeTax,
+    double? cgst,
+    double? sgst,
     double? totalTax,
     double? otherExpense,
     double? finalAmount,
@@ -43,7 +49,9 @@ class PurchaseFormState extends Equatable {
       supplierName: supplierName ?? this.supplierName,
       supplierPhone: supplierPhone ?? this.supplierPhone,
       supplierGstNumber: supplierGstNumber ?? this.supplierGstNumber,
-      subtotal: subtotal ?? this.subtotal,
+      totalBeforeTax: totalBeforeTax ?? this.totalBeforeTax,
+      cgst: cgst ?? this.cgst,
+      sgst: sgst ?? this.sgst,
       totalTax: totalTax ?? this.totalTax,
       otherExpense: otherExpense ?? this.otherExpense,
       finalAmount: finalAmount ?? this.finalAmount,
@@ -58,7 +66,9 @@ class PurchaseFormState extends Equatable {
     supplierName,
     supplierPhone,
     supplierGstNumber,
-    subtotal,
+    totalBeforeTax,
+    cgst,
+    sgst,
     totalTax,
     otherExpense,
     finalAmount,

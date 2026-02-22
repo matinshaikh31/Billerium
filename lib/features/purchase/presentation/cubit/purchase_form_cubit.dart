@@ -2,14 +2,27 @@ import 'package:billing_software/features/purchase/domain/entity/purchase_item_m
 import 'package:billing_software/features/purchase/domain/entity/purchase_model.dart';
 import 'package:billing_software/features/purchase/domain/repo/purchase_repo.dart';
 import 'package:billing_software/features/purchase/presentation/cubit/purchase_form_state.dart';
+import 'package:billing_software/features/settings/domain/entity/setting_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class PurchaseFormCubit extends Cubit<PurchaseFormState> {
   final PurchaseRepo purchaseRepo;
 
+  // Tax rates from settings (default 9% each)
+  int cgstRate = 9;
+  int sgstRate = 9;
+
   PurchaseFormCubit({required this.purchaseRepo})
     : super(const PurchaseFormState());
+
+  // Set tax rates from settings
+  void setTaxRates(SettingModel settings) {
+    cgstRate = settings.CGST;
+    sgstRate = settings.SGST;
+    // Recalculate with new tax rates
+    _recalculateTotals(state.items, otherExpense: state.otherExpense);
+  }
 
   void setSupplierName(String name) {
     emit(state.copyWith(supplierName: name));
@@ -49,15 +62,25 @@ class PurchaseFormCubit extends Cubit<PurchaseFormState> {
     List<PurchaseItemModel> items, {
     double? otherExpense,
   }) {
-    final subtotal = items.fold<double>(0, (total, item) => total + item.total);
-    final totalTax = subtotal * 0.0; // Adjust tax rate as needed
+    final totalBeforeTax = items.fold<double>(
+      0,
+      (total, item) => total + item.total,
+    );
+
+    // Calculate CGST and SGST based on rates from settings
+    final cgstAmount = totalBeforeTax * (cgstRate / 100);
+    final sgstAmount = totalBeforeTax * (sgstRate / 100);
+    final totalTax = cgstAmount + sgstAmount;
+
     final expense = otherExpense ?? state.otherExpense;
-    final finalAmount = subtotal + totalTax + expense;
+    final finalAmount = totalBeforeTax + totalTax + expense;
 
     emit(
       state.copyWith(
         items: items,
-        subtotal: subtotal,
+        totalBeforeTax: totalBeforeTax,
+        cgst: cgstAmount,
+        sgst: sgstAmount,
         totalTax: totalTax,
         otherExpense: expense,
         finalAmount: finalAmount,
@@ -84,7 +107,9 @@ class PurchaseFormCubit extends Cubit<PurchaseFormState> {
         supplierPhone: state.supplierPhone,
         supplierGstNumber: state.supplierGstNumber,
         items: state.items,
-        subtotal: state.subtotal,
+        totalBeforeTax: state.totalBeforeTax,
+        cgst: state.cgst,
+        sgst: state.sgst,
         totalTax: state.totalTax,
         otherExpense: state.otherExpense,
         finalAmount: state.finalAmount,

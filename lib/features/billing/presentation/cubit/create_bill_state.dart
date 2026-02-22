@@ -12,6 +12,10 @@ class CreateBillState {
   final double billDiscountPercent;
   final double billDiscountAmount;
 
+  // Tax rates from settings
+  final int cgstRate;
+  final int sgstRate;
+
   // Bill date (for creating bills for past/future dates)
   final DateTime billDate;
 
@@ -24,6 +28,8 @@ class CreateBillState {
     this.message,
     this.billDiscountPercent = 0,
     this.billDiscountAmount = 0,
+    this.cgstRate = 9,
+    this.sgstRate = 9,
     required this.billDate,
   });
 
@@ -40,14 +46,23 @@ class CreateBillState {
     );
   }
 
+  // Calculate total before ALL discounts (product + bill) and before tax
+  // This is just price * quantity for all items
+  double get totalBeforeDiscount {
+    return cartItems.fold(
+      0.0,
+      (total, item) => total + (item.price * item.quantity),
+    );
+  }
+
   // Calculate subtotal (sum of all item totals AFTER their individual discounts)
   double get subtotal {
-    return cartItems.fold(0.0, (sum, item) => sum + item.itemTotal);
+    return cartItems.fold(0.0, (total, item) => total + item.itemTotal);
   }
 
   // Calculate total discount from items (product-level discounts)
   double get totalDiscount {
-    return cartItems.fold(0.0, (sum, item) => sum + item.discountAmount);
+    return cartItems.fold(0.0, (total, item) => total + item.discountAmount);
   }
 
   // Calculate bill discount amount based on percent or fixed value
@@ -58,9 +73,29 @@ class CreateBillState {
     return billDiscountAmount;
   }
 
-  // Grand total = subtotal - bill discount
+  // Calculate CGST (applied on amount after all discounts)
+  double get cgst {
+    final amountAfterAllDiscounts =
+        totalBeforeDiscount - totalDiscount - calculatedBillDiscount;
+    return amountAfterAllDiscounts * (cgstRate / 100);
+  }
+
+  // Calculate SGST (applied on amount after all discounts)
+  double get sgst {
+    final amountAfterAllDiscounts =
+        totalBeforeDiscount - totalDiscount - calculatedBillDiscount;
+    return amountAfterAllDiscounts * (sgstRate / 100);
+  }
+
+  // Calculate total tax (CGST + SGST)
+  double get totalTax {
+    return cgst + sgst;
+  }
+
+  // Grand total = totalBeforeDiscount - totalDiscount - billDiscount + tax
   double get grandTotal {
-    final total = subtotal - calculatedBillDiscount;
+    final total =
+        totalBeforeDiscount - totalDiscount - calculatedBillDiscount + totalTax;
     return total < 0 ? 0 : total;
   }
 
@@ -79,6 +114,8 @@ class CreateBillState {
     String? message,
     double? billDiscountPercent,
     double? billDiscountAmount,
+    int? cgstRate,
+    int? sgstRate,
     DateTime? billDate,
   }) {
     return CreateBillState(
@@ -90,6 +127,8 @@ class CreateBillState {
       message: message,
       billDiscountPercent: billDiscountPercent ?? this.billDiscountPercent,
       billDiscountAmount: billDiscountAmount ?? this.billDiscountAmount,
+      cgstRate: cgstRate ?? this.cgstRate,
+      sgstRate: sgstRate ?? this.sgstRate,
       billDate: billDate ?? this.billDate,
     );
   }

@@ -19,6 +19,7 @@ class FBFireStore {
   static final stockLedger = fb.collection('stockLedger');
   static final profitTracking = fb.collection('profitTracking');
   static final monthlyPurchases = fb.collection('monthlyPurchases');
+  static final setting = fb.collection('settings').doc("sets");
 }
 
 class FBStorage {

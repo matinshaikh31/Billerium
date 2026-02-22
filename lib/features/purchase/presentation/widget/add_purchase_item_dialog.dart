@@ -1,5 +1,6 @@
 import 'package:billing_software/core/services/firebase.dart';
 import 'package:billing_software/core/theme/app_colors.dart';
+import 'package:billing_software/core/utils/helpers.dart';
 import 'package:billing_software/features/purchase/domain/entity/purchase_item_model.dart';
 import 'package:billing_software/features/purchase/presentation/cubit/purchase_form_cubit.dart';
 import 'package:billing_software/features/products/domain/entity/product_model.dart';
@@ -215,7 +216,7 @@ class _AddPurchaseItemDialogState extends State<AddPurchaseItemDialog> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                product.name,
+                                capitalize(product.name),
                                 style: GoogleFonts.inter(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -325,7 +326,7 @@ class _AddPurchaseItemDialogState extends State<AddPurchaseItemDialog> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Selected: ${_selectedProduct!.name}',
+                    'Selected: ${capitalize(_selectedProduct!.name)}',
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,

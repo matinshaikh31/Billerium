@@ -522,7 +522,7 @@ class BillCubit extends Cubit<BillState> {
 
       pdf.addPage(
         pw.MultiPage(
-          pageFormat: PdfPageFormat.a3,
+          pageFormat: PdfPageFormat.a4,
           build: (pw.Context context) {
             return [_buildInvoiceContent(bill, logoImage, signatureImage)];
           },
@@ -1056,8 +1056,13 @@ class BillCubit extends Cubit<BillState> {
 
                   if (bill.totalDiscount > 0)
                     _buildTotalRow(
-                      'Discount:',
+                      'Product Discount:',
                       '-Rs.${bill.totalDiscount.toStringAsFixed(2)}',
+                    ),
+                  if (bill.billDiscountAmount > 0)
+                    _buildTotalRow(
+                      'Bill Discount:',
+                      '-Rs.${bill.billDiscountAmount.toStringAsFixed(2)}',
                     ),
                   if (bill.totalTax > 0)
                     _buildTotalRow(

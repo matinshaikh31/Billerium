@@ -9,10 +9,12 @@ class PurchaseModel extends Equatable {
   final String? supplierPhone;
   final String? supplierGstNumber;
   final List<PurchaseItemModel> items;
-  final double subtotal;
-  final double totalTax;
+  final double totalBeforeTax; // Renamed from subtotal for clarity
+  final double cgst;
+  final double sgst;
+  final double totalTax; // CGST + SGST
   final double otherExpense;
-  final double finalAmount;
+  final double finalAmount; // totalBeforeTax + totalTax + otherExpense
   final Timestamp createdAt;
   final Timestamp updatedAt;
 
@@ -23,7 +25,9 @@ class PurchaseModel extends Equatable {
     this.supplierPhone,
     this.supplierGstNumber,
     required this.items,
-    required this.subtotal,
+    required this.totalBeforeTax,
+    this.cgst = 0,
+    this.sgst = 0,
     required this.totalTax,
     this.otherExpense = 0,
     required this.finalAmount,
@@ -32,6 +36,12 @@ class PurchaseModel extends Equatable {
   });
 
   factory PurchaseModel.fromJson(Map<String, dynamic> json, String id) {
+    // Support both old 'subtotal' and new 'totalBeforeTax' for backward compatibility
+    final totalBeforeTax =
+        (json['totalBeforeTax'] as num?)?.toDouble() ??
+        (json['subtotal'] as num?)?.toDouble() ??
+        0;
+
     return PurchaseModel(
       id: id,
       purchaseNo: json['purchaseNo'] as String,
@@ -41,8 +51,10 @@ class PurchaseModel extends Equatable {
       items: (json['items'] as List)
           .map((item) => PurchaseItemModel.fromJson(item))
           .toList(),
-      subtotal: (json['subtotal'] as num).toDouble(),
-      totalTax: (json['totalTax'] as num).toDouble(),
+      totalBeforeTax: totalBeforeTax,
+      cgst: (json['cgst'] as num?)?.toDouble() ?? 0,
+      sgst: (json['sgst'] as num?)?.toDouble() ?? 0,
+      totalTax: (json['totalTax'] as num?)?.toDouble() ?? 0,
       otherExpense: (json['otherExpense'] as num?)?.toDouble() ?? 0,
       finalAmount: (json['finalAmount'] as num).toDouble(),
       createdAt: json['createdAt'] as Timestamp,
@@ -63,7 +75,9 @@ class PurchaseModel extends Equatable {
       'supplierPhone': supplierPhone,
       'supplierGstNumber': supplierGstNumber,
       'items': items.map((item) => item.toJson()).toList(),
-      'subtotal': subtotal,
+      'totalBeforeTax': totalBeforeTax,
+      'cgst': cgst,
+      'sgst': sgst,
       'totalTax': totalTax,
       'otherExpense': otherExpense,
       'finalAmount': finalAmount,
@@ -79,7 +93,9 @@ class PurchaseModel extends Equatable {
     String? supplierPhone,
     String? supplierGstNumber,
     List<PurchaseItemModel>? items,
-    double? subtotal,
+    double? totalBeforeTax,
+    double? cgst,
+    double? sgst,
     double? totalTax,
     double? otherExpense,
     double? finalAmount,
@@ -93,7 +109,9 @@ class PurchaseModel extends Equatable {
       supplierPhone: supplierPhone ?? this.supplierPhone,
       supplierGstNumber: supplierGstNumber ?? this.supplierGstNumber,
       items: items ?? this.items,
-      subtotal: subtotal ?? this.subtotal,
+      totalBeforeTax: totalBeforeTax ?? this.totalBeforeTax,
+      cgst: cgst ?? this.cgst,
+      sgst: sgst ?? this.sgst,
       totalTax: totalTax ?? this.totalTax,
       otherExpense: otherExpense ?? this.otherExpense,
       finalAmount: finalAmount ?? this.finalAmount,
@@ -110,7 +128,9 @@ class PurchaseModel extends Equatable {
     supplierPhone,
     supplierGstNumber,
     items,
-    subtotal,
+    totalBeforeTax,
+    cgst,
+    sgst,
     totalTax,
     otherExpense,
     finalAmount,

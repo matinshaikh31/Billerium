@@ -1,3 +1,4 @@
+import 'package:billing_software/core/routes/routes.dart';
 import 'package:billing_software/core/theme/app_colors.dart';
 import 'package:billing_software/core/theme/app_text_styles.dart';
 import 'package:billing_software/core/widgets/responsive_widget.dart';
@@ -9,6 +10,7 @@ import 'package:billing_software/features/purchase/presentation/page/create_purc
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
@@ -617,10 +619,12 @@ class _PurchaseListPageState extends State<PurchaseListPage> {
 
   // ===================== SHOW CREATE PURCHASE DIALOG =====================
   void _showCreatePurchaseDialog(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const CreatePurchasePage()),
-    );
+    print("object");
+    context.go(Routes.purchases + Routes.createPurchase);
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(builder: (context) => const CreatePurchasePage()),
+    // );
   }
 
   // ===================== SHOW PURCHASE DETAILS DIALOG =====================
@@ -729,11 +733,13 @@ class _PurchaseListPageState extends State<PurchaseListPage> {
               const SizedBox(height: 16),
               const Divider(),
               _buildDetailRow(
-                'Subtotal',
-                '₹${purchase.subtotal.toStringAsFixed(2)}',
+                'Total Before Tax',
+                '₹${purchase.totalBeforeTax.toStringAsFixed(2)}',
               ),
+              _buildDetailRow('CGST', '₹${purchase.cgst.toStringAsFixed(2)}'),
+              _buildDetailRow('SGST', '₹${purchase.sgst.toStringAsFixed(2)}'),
               _buildDetailRow(
-                'Tax',
+                'Total Tax',
                 '₹${purchase.totalTax.toStringAsFixed(2)}',
               ),
               if (purchase.otherExpense > 0)
@@ -742,7 +748,7 @@ class _PurchaseListPageState extends State<PurchaseListPage> {
                   '₹${purchase.otherExpense.toStringAsFixed(2)}',
                 ),
               _buildDetailRow(
-                'Total Amount',
+                'Final Amount',
                 '₹${purchase.finalAmount.toStringAsFixed(2)}',
                 isBold: true,
               ),

@@ -120,6 +120,7 @@ class _BillsPageState extends State<BillsPage> {
             child: ElevatedButton.icon(
               onPressed: () {
                 // Navigate to create bill page
+                context.go(Routes.createBill);
               },
               icon: const Icon(Icons.add, size: 18, color: Colors.white),
               label: Text(
@@ -178,6 +179,7 @@ class _BillsPageState extends State<BillsPage> {
           ElevatedButton.icon(
             onPressed: () {
               // Navigate to create bill page
+              context.go(Routes.createBill);
             },
             icon: const Icon(Icons.add, size: 20, color: Colors.white),
             label: Text(

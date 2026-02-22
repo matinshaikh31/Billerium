@@ -10,12 +10,17 @@ class BillModel extends Equatable {
   final String? customerName;
   final String? customerPhone;
   final String? customerGstNumber;
-  final double subtotal;
+  final double?
+  totalBeforeDiscount; // Nullable for backward compatibility - total before product discounts
+  final double
+  subtotal; // Total after product discounts but before bill discount
   final double totalDiscount;
-  final double totalTax;
+  final double? cgst; // Nullable for backward compatibility
+  final double? sgst; // Nullable for backward compatibility
+  final double totalTax; // CGST + SGST
   final double billDiscountPercent;
   final double billDiscountAmount;
-  final double finalAmount;
+  final double finalAmount; // subtotal - billDiscount + totalTax
   final double amountPaid;
   final double pendingAmount;
   final String status; // Paid, PartiallyPaid, Unpaid
@@ -32,12 +37,15 @@ class BillModel extends Equatable {
     this.customerName,
     this.customerPhone,
     this.customerGstNumber,
+    this.totalBeforeDiscount,
     required this.subtotal,
     required this.totalDiscount,
+    this.cgst,
+    this.sgst,
     required this.totalTax,
     required this.billDiscountPercent,
     required this.billDiscountAmount,
-    required this.finalAmount,
+    required this.finalAmount, // totalBeforeDiscount - totalDiscount - billDiscount + totalTax
     required this.amountPaid,
     required this.pendingAmount,
     required this.status,
@@ -57,8 +65,11 @@ class BillModel extends Equatable {
       customerName: json['customerName'] as String?,
       customerPhone: json['customerPhone'] as String?,
       customerGstNumber: json['customerGstNumber'] as String?,
+      totalBeforeDiscount: (json['totalBeforeDiscount'] as num?)?.toDouble(),
       subtotal: (json['subtotal'] as num).toDouble(),
       totalDiscount: (json['totalDiscount'] as num).toDouble(),
+      cgst: (json['cgst'] as num?)?.toDouble(),
+      sgst: (json['sgst'] as num?)?.toDouble(),
       totalTax: (json['totalTax'] as num).toDouble(),
       billDiscountPercent: (json['billDiscountPercent'] as num).toDouble(),
       billDiscountAmount: (json['billDiscountAmount'] as num).toDouble(),
@@ -89,8 +100,12 @@ class BillModel extends Equatable {
       'customerName': customerName,
       'customerPhone': customerPhone,
       'customerGstNumber': customerGstNumber,
+      if (totalBeforeDiscount != null)
+        'totalBeforeDiscount': totalBeforeDiscount,
       'subtotal': subtotal,
       'totalDiscount': totalDiscount,
+      if (cgst != null) 'cgst': cgst,
+      if (sgst != null) 'sgst': sgst,
       'totalTax': totalTax,
       'billDiscountPercent': billDiscountPercent,
       'billDiscountAmount': billDiscountAmount,
@@ -112,8 +127,11 @@ class BillModel extends Equatable {
     String? customerName,
     String? customerPhone,
     String? customerGstNumber,
+    double? totalBeforeDiscount,
     double? subtotal,
     double? totalDiscount,
+    double? cgst,
+    double? sgst,
     double? totalTax,
     double? billDiscountPercent,
     double? billDiscountAmount,
@@ -133,8 +151,11 @@ class BillModel extends Equatable {
       customerName: customerName ?? this.customerName,
       customerPhone: customerPhone ?? this.customerPhone,
       customerGstNumber: customerGstNumber ?? this.customerGstNumber,
+      totalBeforeDiscount: totalBeforeDiscount ?? this.totalBeforeDiscount,
       subtotal: subtotal ?? this.subtotal,
       totalDiscount: totalDiscount ?? this.totalDiscount,
+      cgst: cgst ?? this.cgst,
+      sgst: sgst ?? this.sgst,
       totalTax: totalTax ?? this.totalTax,
       billDiscountPercent: billDiscountPercent ?? this.billDiscountPercent,
       billDiscountAmount: billDiscountAmount ?? this.billDiscountAmount,
@@ -160,8 +181,11 @@ class BillModel extends Equatable {
     customerName,
     customerPhone,
     customerGstNumber,
+    totalBeforeDiscount,
     subtotal,
     totalDiscount,
+    cgst,
+    sgst,
     totalTax,
     billDiscountPercent,
     billDiscountAmount,

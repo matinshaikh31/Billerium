@@ -5,6 +5,7 @@ import 'package:billing_software/features/billing/domain/entity/bill_item_model.
 import 'package:billing_software/features/billing/presentation/cubit/create_bill_cubit.dart';
 import 'package:billing_software/features/categories/presentation/cubit/category_cubit.dart';
 import 'package:billing_software/features/products/domain/entity/product_model.dart';
+import 'package:billing_software/features/settings/presentation/cubit/setting_cubit.dart';
 import 'package:billing_software/core/services/firebase.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -25,19 +26,33 @@ class _CreateBillPageState extends State<CreateBillPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<CreateBillCubit, CreateBillState>(
-      listener: (context, state) {
-        if (state.message != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message!),
-              backgroundColor: state.message!.contains('success')
-                  ? AppColors.success
-                  : AppColors.error,
-            ),
-          );
-        }
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<CreateBillCubit, CreateBillState>(
+          listener: (context, state) {
+            if (state.message != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message!),
+                  backgroundColor: state.message!.contains('success')
+                      ? AppColors.success
+                      : AppColors.error,
+                ),
+              );
+            }
+          },
+        ),
+        BlocListener<SettingCubit, SettingState>(
+          listener: (context, settingState) {
+            // Update tax rates when settings are loaded or changed
+            if (settingState.settings != null) {
+              context.read<CreateBillCubit>().setTaxRates(
+                settingState.settings!,
+              );
+            }
+          },
+        ),
+      ],
       child: BlocBuilder<CreateBillCubit, CreateBillState>(
         builder: (context, state) {
           return ResponsiveCustomBuilder(
@@ -850,10 +865,13 @@ class _CreateBillPageState extends State<CreateBillPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSummaryRow('Subtotal', '₹${state.subtotal.toStringAsFixed(2)}'),
+          _buildSummaryRow(
+            'Total Before Discount',
+            '₹${state.totalBeforeDiscount.toStringAsFixed(2)}',
+          ),
           if (state.totalDiscount > 0)
             _buildSummaryRow(
-              'Product Discounts',
+              'Product Discount',
               '- ₹${state.totalDiscount.toStringAsFixed(2)}',
               isDiscount: true,
             ),
@@ -863,9 +881,30 @@ class _CreateBillPageState extends State<CreateBillPage> {
               '- ₹${state.calculatedBillDiscount.toStringAsFixed(2)}',
               isDiscount: true,
             ),
-          const Divider(height: 32, color: AppColors.divider),
+          const Divider(height: 20, thickness: 1, color: AppColors.divider),
           _buildSummaryRow(
-            'Grand Total',
+            'Amount After Discount',
+            '₹${(state.totalBeforeDiscount - state.totalDiscount - state.calculatedBillDiscount).toStringAsFixed(2)}',
+          ),
+          const SizedBox(height: 8),
+          _buildSummaryRow(
+            'CGST (${state.cgstRate}%)',
+            '₹${state.cgst.toStringAsFixed(2)}',
+            isTax: true,
+          ),
+          _buildSummaryRow(
+            'SGST (${state.sgstRate}%)',
+            '₹${state.sgst.toStringAsFixed(2)}',
+            isTax: true,
+          ),
+          _buildSummaryRow(
+            'Total Tax',
+            '₹${state.totalTax.toStringAsFixed(2)}',
+            isTax: true,
+          ),
+          const Divider(height: 32, thickness: 2, color: AppColors.divider),
+          _buildSummaryRow(
+            'Final Amount',
             '₹${state.grandTotal.toStringAsFixed(2)}',
             isTotal: true,
           ),
@@ -887,10 +926,13 @@ class _CreateBillPageState extends State<CreateBillPage> {
       ),
       child: Column(
         children: [
-          _buildSummaryRow('Subtotal', '₹${state.subtotal.toStringAsFixed(2)}'),
+          _buildSummaryRow(
+            'Total Before Discount',
+            '₹${state.totalBeforeDiscount.toStringAsFixed(2)}',
+          ),
           if (state.totalDiscount > 0)
             _buildSummaryRow(
-              'Product Discounts',
+              'Product Discount',
               '- ₹${state.totalDiscount.toStringAsFixed(2)}',
               isDiscount: true,
             ),
@@ -900,11 +942,32 @@ class _CreateBillPageState extends State<CreateBillPage> {
               '- ₹${state.calculatedBillDiscount.toStringAsFixed(2)}',
               isDiscount: true,
             ),
-          const Divider(height: 20, color: AppColors.divider),
+          const Divider(height: 16, thickness: 1, color: AppColors.divider),
+          _buildSummaryRow(
+            'Amount After Discount',
+            '₹${(state.totalBeforeDiscount - state.totalDiscount - state.calculatedBillDiscount).toStringAsFixed(2)}',
+          ),
+          const SizedBox(height: 4),
+          _buildSummaryRow(
+            'CGST (${state.cgstRate}%)',
+            '₹${state.cgst.toStringAsFixed(2)}',
+            isTax: true,
+          ),
+          _buildSummaryRow(
+            'SGST (${state.sgstRate}%)',
+            '₹${state.sgst.toStringAsFixed(2)}',
+            isTax: true,
+          ),
+          _buildSummaryRow(
+            'Total Tax',
+            '₹${state.totalTax.toStringAsFixed(2)}',
+            isTax: true,
+          ),
+          const Divider(height: 20, thickness: 2, color: AppColors.divider),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Grand Total', style: AppTextStyles.tableRowBoldValue),
+              Text('Final Amount', style: AppTextStyles.tableRowBoldValue),
               Text(
                 '₹${state.grandTotal.toStringAsFixed(2)}',
                 style: AppTextStyles.tableRowBoldValue.copyWith(fontSize: 20),
@@ -1041,6 +1104,7 @@ class _CreateBillPageState extends State<CreateBillPage> {
     String value, {
     bool isTotal = false,
     bool isDiscount = false,
+    bool isTax = false,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -1060,6 +1124,11 @@ class _CreateBillPageState extends State<CreateBillPage> {
                 : isDiscount
                 ? AppTextStyles.tableRowRegular.copyWith(
                     color: AppColors.success,
+                    fontWeight: FontWeight.w600,
+                  )
+                : isTax
+                ? AppTextStyles.tableRowRegular.copyWith(
+                    color: AppColors.info,
                     fontWeight: FontWeight.w600,
                   )
                 : AppTextStyles.tableRowRegular,

@@ -17,4 +17,6 @@ class Routes {
   static const transcations = "/transcations";
   static const purchases = "/purchases";
   static const reports = "/reports";
+  static const settings = "/settings";
+  static const createPurchase = "/createPurchase";
 }

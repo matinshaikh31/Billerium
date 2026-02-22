@@ -83,7 +83,7 @@ class ProductCubit extends Cubit<ProductState> {
   Query _buildBaseQuery(bool? isNext) {
     Query query = FBFireStore.products;
 
-    print("_____${state.selectedCategory}");
+    // print("_____${state.selectedCategory}");
     // Apply category filter FIRST (before orderBy)
     if (state.selectedCategory != 'All') {
       query = query.where('categoryId', isEqualTo: state.selectedCategory);
