@@ -473,6 +473,7 @@ class BillCubit extends Cubit<BillState> {
       // Load images
       final logoImage = await _loadLogoImage();
       final signatureImage = await _loadSignatureImage();
+      final qrImage = await _loadQrImage();
 
       // Create PDF document
       final pdf = pw.Document();
@@ -482,7 +483,9 @@ class BillCubit extends Cubit<BillState> {
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           build: (pw.Context context) {
-            return [_buildInvoiceContent(bill, logoImage, signatureImage)];
+            return [
+              _buildInvoiceContent(bill, logoImage, signatureImage, qrImage),
+            ];
           },
         ),
       );
@@ -517,6 +520,7 @@ class BillCubit extends Cubit<BillState> {
       // Load images
       final logoImage = await _loadLogoImage();
       final signatureImage = await _loadSignatureImage();
+      final qrImage = await _loadQrImage();
 
       final pdf = pw.Document();
 
@@ -524,7 +528,9 @@ class BillCubit extends Cubit<BillState> {
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           build: (pw.Context context) {
-            return [_buildInvoiceContent(bill, logoImage, signatureImage)];
+            return [
+              _buildInvoiceContent(bill, logoImage, signatureImage, qrImage),
+            ];
           },
         ),
       );
@@ -545,6 +551,7 @@ class BillCubit extends Cubit<BillState> {
     BillModel bill,
     pw.MemoryImage logoImage,
     pw.MemoryImage signatureImage,
+    pw.MemoryImage qrImage,
   ) {
     final dateFormat = DateFormat('dd MMM yyyy, hh:mm a');
     final double subtotalBeforeDiscount = bill.items.fold(
@@ -1095,16 +1102,17 @@ class BillCubit extends Cubit<BillState> {
           ],
         ),
 
-        /*         pw.SizedBox(height: 10),
+        pw.SizedBox(height: 10),
 
         // Banking Details and Signature - UPDATED WITH REGISTRATION INFO
+        // Banking Details + Signature + QR
         pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           crossAxisAlignment: pw.CrossAxisAlignment.start,
+          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
-            // Banking Details - NOW INCLUDES REGISTRATION INFO
+            /// 🔹 LEFT SIDE — COMPANY & BANK DETAILS
             pw.Container(
-              width: 260,
+              width: 250,
               padding: const pw.EdgeInsets.all(6),
               decoration: pw.BoxDecoration(
                 border: pw.Border.all(color: PdfColors.grey300),
@@ -1121,24 +1129,31 @@ class BillCubit extends Cubit<BillState> {
                       color: PdfColors.grey700,
                     ),
                   ),
-                  pw.SizedBox(height: 3),
-                  // Registration Details - NEWLY ADDED
+                  pw.SizedBox(height: 4),
+
                   _buildBankDetailRow('Registration No', '24BHBPS9737F1Z3'),
-                  _buildBankDetailRow('Legal Name', 'SAEEDABANU SHAIKH'),
+                  _buildBankDetailRow('Legal Name', 'H A ENTERPRISE'),
                   pw.Divider(height: 6, thickness: 0.5),
-                  // Banking Details
-                  _buildBankDetailRow('UDYAM No', 'UDYAM-GJ-24-0207943'),
+
+                  // _buildBankDetailRow('UDYAM No', 'UDYAM-GJ-24-0207943'),
                   _buildBankDetailRow('PAN', 'CIJPS4573E'),
-                  _buildBankDetailRow('Bank Name', 'STATE BANK OF INDIA'),
-                  _buildBankDetailRow('Branch', 'TANDALJA'),
-                  _buildBankDetailRow('A/c No.', '20224295241'),
-                  _buildBankDetailRow('IFSC Code', 'SBIN0010964'),
+
+                  pw.Divider(height: 6, thickness: 0.5),
+
+                  /// ✅ Updated HDFC Details
+                  _buildBankDetailRow('Bank Name', 'ALAVI Co Op BANK'),
+                  _buildBankDetailRow('Branch', 'FATEHGUNJ BRANCH'),
+                  _buildBankDetailRow('A/c No.', '004010100005401'),
+                  _buildBankDetailRow('IFSC Code', 'HDFC0CALAVI'),
+                  _buildBankDetailRow('A/c Name', 'H A ENTERPRISE'),
+                  _buildBankDetailRow('UPI ID', 'shakil.healthfull@okhdfcbank'),
                 ],
               ),
             ),
-            // Signature
+
+            /// 🔹 RIGHT SIDE — SIGNATURE + QR
             pw.Container(
-              width: 140,
+              width: 150,
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.center,
                 children: [
@@ -1149,7 +1164,9 @@ class BillCubit extends Cubit<BillState> {
                       fontWeight: pw.FontWeight.bold,
                     ),
                   ),
-                  pw.SizedBox(height: 15),
+
+                  pw.SizedBox(height: 12),
+
                   pw.Text(
                     'Authorised Signatory',
                     style: pw.TextStyle(
@@ -1157,13 +1174,33 @@ class BillCubit extends Cubit<BillState> {
                       fontWeight: pw.FontWeight.bold,
                     ),
                   ),
+
+                  pw.SizedBox(height: 12),
+
+                  /// 🔥 QR TITLE
+                  pw.Text(
+                    'Scan to Pay (GPay / UPI)',
+                    style: pw.TextStyle(
+                      fontSize: 8,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.green700,
+                    ),
+                  ),
+
+                  pw.SizedBox(height: 6),
+
+                  /// 🔥 QR IMAGE
+                  pw.Container(
+                    width: 90,
+                    height: 90,
+                    child: pw.Image(qrImage, fit: pw.BoxFit.contain),
+                  ),
                 ],
               ),
             ),
           ],
         ),
-
-        pw.SizedBox(height: 8), */
+        pw.SizedBox(height: 8),
 
         // Footer
         pw.Divider(thickness: 0.5),
@@ -1246,6 +1283,12 @@ class BillCubit extends Cubit<BillState> {
   // Load signature image from assets
   Future<pw.MemoryImage> _loadSignatureImage() async {
     final ByteData bytes = await rootBundle.load('assets/bill_sig.jpg');
+    return pw.MemoryImage(bytes.buffer.asUint8List());
+  }
+
+  // Load QR image from assets
+  Future<pw.MemoryImage> _loadQrImage() async {
+    final ByteData bytes = await rootBundle.load('assets/qr.jpeg');
     return pw.MemoryImage(bytes.buffer.asUint8List());
   }
 }
