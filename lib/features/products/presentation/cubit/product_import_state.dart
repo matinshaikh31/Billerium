@@ -1,6 +1,6 @@
-// State class
 class ProductImportState {
   final bool isImporting;
+  final bool isExporting; // NEW
   final bool isSuccess;
   final String? selectedFileName;
   final String? errorMessage;
@@ -11,6 +11,7 @@ class ProductImportState {
 
   ProductImportState({
     required this.isImporting,
+    required this.isExporting,
     required this.isSuccess,
     this.selectedFileName,
     this.errorMessage,
@@ -23,6 +24,7 @@ class ProductImportState {
   factory ProductImportState.initial() {
     return ProductImportState(
       isImporting: false,
+      isExporting: false,
       isSuccess: false,
       selectedFileName: null,
       errorMessage: null,
@@ -35,6 +37,7 @@ class ProductImportState {
 
   ProductImportState copyWith({
     bool? isImporting,
+    bool? isExporting,
     bool? isSuccess,
     String? selectedFileName,
     String? errorMessage,
@@ -45,8 +48,10 @@ class ProductImportState {
   }) {
     return ProductImportState(
       isImporting: isImporting ?? this.isImporting,
+      isExporting: isExporting ?? this.isExporting,
       isSuccess: isSuccess ?? this.isSuccess,
       selectedFileName: selectedFileName ?? this.selectedFileName,
+      // Intentionally not using ?? so callers can explicitly clear these
       errorMessage: errorMessage,
       successMessage: successMessage,
       addedCount: addedCount ?? this.addedCount,

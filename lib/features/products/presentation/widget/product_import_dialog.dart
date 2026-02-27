@@ -18,7 +18,7 @@ class ProductImportDialog extends StatelessWidget {
         child: Container(
           width: 500,
           padding: const EdgeInsets.all(24),
-          child: BlocConsumer<ProductImportCubit, ProductImportState>(
+          child: BlocConsumer<ProductImportExportCubit, ProductImportState>(
             listener: (context, state) {
               if (state.isSuccess) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -38,11 +38,12 @@ class ProductImportDialog extends StatelessWidget {
               }
             },
             builder: (context, state) {
+              final cubit = context.read<ProductImportExportCubit>();
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header
+                  // ── Header ──────────────────────────────────────────────
                   Row(
                     children: [
                       Icon(
@@ -76,7 +77,7 @@ class ProductImportDialog extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // Instructions
+                  // ── Instructions ─────────────────────────────────────────
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -113,14 +114,18 @@ class ProductImportDialog extends StatelessWidget {
                         const SizedBox(height: 8),
                         _buildInstructionRow('1. SKU (e.g HA0001)'),
                         _buildInstructionRow('2. Product Name (Required)'),
-                        _buildInstructionRow('3. Category ID (Required)'),
+                        _buildInstructionRow(
+                          '3. Category Name (Required — created if new)',
+                        ),
                         _buildInstructionRow('4. Price (Required)'),
                         _buildInstructionRow('5. Qty (Optional, default: 0)'),
-                        _buildInstructionRow('6. Discount % (Optional,or 0)'),
+                        _buildInstructionRow('6. Discount % (Optional, or 0)'),
                         _buildInstructionRow('7. Stock (Required)'),
                         const SizedBox(height: 12),
                         Text(
-                          '💡 Tip: Products with matching SKU  will be updated',
+                          '💡 Products with matching SKU will be updated. '
+                          'Category is matched by name (case-insensitive) '
+                          'and auto-created if not found.',
                           style: AppTextStyles.tableRowSecondary.copyWith(
                             fontStyle: FontStyle.italic,
                             fontSize: 12,
@@ -131,12 +136,22 @@ class ProductImportDialog extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // Download Sample Button
+                  // ── Download Sample Button ────────────────────────────────
                   OutlinedButton.icon(
-                    onPressed: () => _downloadSampleExcel(context),
-                    icon: const Icon(Icons.download, size: 18),
+                    onPressed: state.isExporting
+                        ? null
+                        : () => cubit.downloadSampleExcel(),
+                    icon: state.isExporting
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.download, size: 18),
                     label: Text(
-                      'Download Sample Excel',
+                      state.isExporting
+                          ? 'Downloading...'
+                          : 'Download Sample Excel',
                       style: GoogleFonts.inter(fontWeight: FontWeight.w600),
                     ),
                     style: OutlinedButton.styleFrom(
@@ -149,7 +164,7 @@ class ProductImportDialog extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // File Selection
+                  // ── File Selection ────────────────────────────────────────
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
@@ -159,7 +174,6 @@ class ProductImportDialog extends StatelessWidget {
                             ? AppColors.success
                             : AppColors.borderGrey,
                         width: 2,
-                        style: BorderStyle.solid,
                       ),
                       borderRadius: BorderRadius.circular(8),
                       color: AppColors.backgroundColor,
@@ -194,9 +208,7 @@ class ProductImportDialog extends StatelessWidget {
                         ElevatedButton.icon(
                           onPressed: state.isImporting
                               ? null
-                              : () => context
-                                    .read<ProductImportCubit>()
-                                    .selectExcelFile(),
+                              : () => cubit.selectExcelFile(),
                           icon: const Icon(Icons.folder_open, size: 18),
                           label: Text(
                             'Choose Excel File',
@@ -218,7 +230,7 @@ class ProductImportDialog extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // Action Buttons
+                  // ── Action Buttons ────────────────────────────────────────
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -236,9 +248,7 @@ class ProductImportDialog extends StatelessWidget {
                         onPressed:
                             state.isImporting || state.selectedFileName == null
                             ? null
-                            : () => context
-                                  .read<ProductImportCubit>()
-                                  .importProductsFromExcel(context),
+                            : () => cubit.importProductsFromExcel(context),
                         icon: state.isImporting
                             ? const SizedBox(
                                 width: 16,
@@ -285,113 +295,13 @@ class ProductImportDialog extends StatelessWidget {
           const SizedBox(width: 8),
           Icon(Icons.check_circle, size: 14, color: AppColors.success),
           const SizedBox(width: 8),
-          Text(
-            text,
-            style: AppTextStyles.tableRowSecondary.copyWith(fontSize: 13),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _downloadSampleExcel(BuildContext context) {
-    // Show info dialog about sample format
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.secondary,
-        title: Text('Sample Excel Format', style: AppTextStyles.dialogHeading),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Create an Excel file with these columns:',
-              style: AppTextStyles.dialogSubheading,
+          Expanded(
+            child: Text(
+              text,
+              style: AppTextStyles.tableRowSecondary.copyWith(fontSize: 13),
             ),
-            const SizedBox(height: 16),
-            _buildSampleTable(),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.warning.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                '⚠️ First row should be headers, data starts from row 2',
-                style: AppTextStyles.tableRowSecondary.copyWith(fontSize: 12),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('Got it', style: AppTextStyles.tableRowPrimary),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSampleTable() {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.borderGrey),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Table(
-        border: TableBorder.all(color: AppColors.borderGrey),
-        children: [
-          TableRow(
-            decoration: BoxDecoration(color: AppColors.headerBackground),
-            children: [
-              _buildTableCell('SKU', isHeader: true),
-              _buildTableCell('Name', isHeader: true),
-              _buildTableCell('Cat ID', isHeader: true),
-              _buildTableCell('Price', isHeader: true),
-              _buildTableCell('Qty', isHeader: true),
-              _buildTableCell('Disc%', isHeader: true),
-              _buildTableCell('Stock', isHeader: true),
-            ],
-          ),
-          TableRow(
-            children: [
-              _buildTableCell('PRD001'),
-              _buildTableCell('Laptop'),
-              _buildTableCell('cat123'),
-              _buildTableCell('50000'),
-              _buildTableCell('1'),
-              _buildTableCell('10'),
-              _buildTableCell('25'),
-            ],
-          ),
-          TableRow(
-            children: [
-              _buildTableCell('PRD002'),
-              _buildTableCell('Mouse'),
-              _buildTableCell('cat456'),
-              _buildTableCell('500'),
-              _buildTableCell('1'),
-              _buildTableCell('5'),
-              _buildTableCell('100'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTableCell(String text, {bool isHeader = false}) {
-    return Padding(
-      padding: const EdgeInsets.all(8),
-      child: Text(
-        text,
-        style: isHeader
-            ? AppTextStyles.tabelHeader.copyWith(fontSize: 11)
-            : AppTextStyles.tableRowSecondary.copyWith(fontSize: 10),
-        textAlign: TextAlign.center,
       ),
     );
   }

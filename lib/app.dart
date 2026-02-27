@@ -67,7 +67,7 @@ class BillingApp extends StatelessWidget {
                 ),
               ),
               BlocProvider(
-                create: (context) => ProductImportCubit(
+                create: (context) => ProductImportExportCubit(
                   productRepository: FirebaseProductRepository(),
                 ),
               ),

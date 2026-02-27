@@ -3,6 +3,7 @@ import 'package:billing_software/core/theme/app_text_styles.dart';
 import 'package:billing_software/core/utils/helpers.dart';
 import 'package:billing_software/core/widgets/responsive_widget.dart';
 import 'package:billing_software/core/widgets/pagination.dart';
+import 'package:billing_software/features/products/presentation/cubit/product_import_cubit.dart';
 import 'package:billing_software/features/products/presentation/widget/product_import_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -203,6 +204,29 @@ class _ProductsPageState extends State<ProductsPage> {
               ],
             ),
           ),
+          OutlinedButton.icon(
+            onPressed: () => context
+                .read<ProductImportExportCubit>()
+                .exportProductsToExcel(context),
+            icon: const Icon(Icons.download, size: 20),
+            label: Text(
+              'Export Excel',
+              style: GoogleFonts.inter(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: AppColors.primary),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+
+          // ── END ADD ──
+          const SizedBox(width: 12),
           // Import from Excel Button
           OutlinedButton.icon(
             onPressed: () => _showImportDialog(context),
