@@ -28,8 +28,8 @@ class CreateBillState {
     this.message,
     this.billDiscountPercent = 0,
     this.billDiscountAmount = 0,
-    this.cgstRate = 9,
-    this.sgstRate = 9,
+    this.cgstRate = 0,
+    this.sgstRate = 0,
     required this.billDate,
   });
 
@@ -42,6 +42,8 @@ class CreateBillState {
       message: null,
       billDiscountPercent: 0,
       billDiscountAmount: 0,
+      cgstRate: 0,
+      sgstRate: 0,
       billDate: DateTime.now(),
     );
   }

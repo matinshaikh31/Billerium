@@ -105,6 +105,7 @@ class BillingApp extends StatelessWidget {
                 create: (context) {
                   final cubit = PurchaseFormCubit(
                     purchaseRepo: FirebasePurchaseRepository(),
+                    productRepository: FirebaseProductRepository(),
                   );
                   // Set tax rates from settings
                   final settings = context.read<SettingCubit>().state.settings;

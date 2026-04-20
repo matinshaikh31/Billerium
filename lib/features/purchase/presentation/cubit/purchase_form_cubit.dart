@@ -2,19 +2,24 @@ import 'package:billing_software/features/purchase/domain/entity/purchase_item_m
 import 'package:billing_software/features/purchase/domain/entity/purchase_model.dart';
 import 'package:billing_software/features/purchase/domain/repo/purchase_repo.dart';
 import 'package:billing_software/features/purchase/presentation/cubit/purchase_form_state.dart';
+import 'package:billing_software/features/products/domain/repositories/product_repository.dart';
 import 'package:billing_software/features/settings/domain/entity/setting_model.dart';
+import 'package:billing_software/core/services/firebase.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class PurchaseFormCubit extends Cubit<PurchaseFormState> {
   final PurchaseRepo purchaseRepo;
+  final ProductRepository productRepository;
 
-  // Tax rates from settings (default 9% each)
-  int cgstRate = 9;
-  int sgstRate = 9;
+  // Tax rates from settings (default 0 - will be set from Firebase settings)
+  int cgstRate = 0;
+  int sgstRate = 0;
 
-  PurchaseFormCubit({required this.purchaseRepo})
-    : super(const PurchaseFormState());
+  PurchaseFormCubit({
+    required this.purchaseRepo,
+    required this.productRepository,
+  }) : super(const PurchaseFormState());
 
   // Set tax rates from settings
   void setTaxRates(SettingModel settings) {
@@ -117,7 +122,11 @@ class PurchaseFormCubit extends Cubit<PurchaseFormState> {
         updatedAt: now,
       );
 
+      // Create purchase
       await purchaseRepo.createPurchase(purchase);
+
+      // Update stock for all purchased items
+      await _updateProductStock(state.items);
 
       emit(const PurchaseFormState()); // Reset form
     } catch (e) {
@@ -127,6 +136,30 @@ class PurchaseFormCubit extends Cubit<PurchaseFormState> {
           error: 'Failed to create purchase: ${e.toString()}',
         ),
       );
+    }
+  }
+
+  /// Update stock quantity for all purchased products
+  Future<void> _updateProductStock(List<PurchaseItemModel> items) async {
+    try {
+      for (final item in items) {
+        // Get current product data
+        final productDoc = await FBFireStore.products.doc(item.productId).get();
+
+        if (productDoc.exists) {
+          final currentQty = (productDoc.data()?['qty'] ?? 0) as int;
+          final newQty = currentQty + item.quantity;
+
+          // Update product quantity
+          await FBFireStore.products.doc(item.productId).update({
+            'qty': newQty,
+            'updatedAt': Timestamp.now(),
+          });
+        }
+      }
+    } catch (e) {
+      // Log error but don't throw - purchase is already created
+      print('Error updating product stock: ${e.toString()}');
     }
   }
 
