@@ -3,6 +3,9 @@ import 'package:billing_software/features/billing/domain/repo/fbill_repository.d
 import 'package:billing_software/features/billing/domain/entity/bill_item_model.dart';
 import 'package:billing_software/features/billing/domain/entity/bill_model.dart';
 import 'package:billing_software/features/billing/domain/entity/payment_model.dart';
+import 'package:billing_software/features/customer/data/firebase_customer_analytics_repository.dart';
+import 'package:billing_software/features/customer/data/firebase_customer_repository.dart';
+import 'package:billing_software/features/customer/domain/entity/customer_model.dart';
 import 'package:billing_software/features/products/domain/entity/product_model.dart';
 import 'package:billing_software/features/products/domain/repositories/product_repository.dart';
 import 'package:billing_software/features/settings/domain/entity/setting_model.dart';
@@ -11,13 +14,16 @@ import 'package:billing_software/features/transactions/domain/models/transaction
 import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
 
 part 'create_bill_state.dart';
 
 class CreateBillCubit extends Cubit<CreateBillState> {
   final BillRepository billRepository;
   final ProductRepository productRepository;
+  final FirebaseCustomerRepository customerRepository =
+      FirebaseCustomerRepository();
+  final FirebaseCustomerAnalyticsRepository analyticsRepository =
+      FirebaseCustomerAnalyticsRepository();
 
   CreateBillCubit({
     required this.billRepository,
@@ -26,7 +32,6 @@ class CreateBillCubit extends Cubit<CreateBillState> {
 
   // Set tax rates from settings
   void setTaxRates(SettingModel settings) {
-    print('Setting tax rates: ${settings.CGST} ${settings.SGST}');
     emit(state.copyWith(cgstRate: settings.CGST, sgstRate: settings.SGST));
   }
 
@@ -178,6 +183,103 @@ class CreateBillCubit extends Cubit<CreateBillState> {
     emit(state.copyWith(customerGstNumber: gstNumber));
   }
 
+  // Select existing customer or create new one
+  Future<void> selectOrCreateCustomer(String name, String phone) async {
+    try {
+      // Search for existing customer by phone number
+      final customers = await customerRepository.searchCustomers(phone);
+
+      CustomerModel? customer;
+
+      if (customers.isNotEmpty) {
+        // Customer exists - use existing customer
+        customer = customers.first;
+
+        // Update controllers
+        customerNameController.text = customer.name;
+        customerPhoneController.text = customer.phone;
+
+        // Update state with customer info and balance
+        emit(
+          state.copyWith(
+            customerId: customer.id,
+            customerName: customer.name,
+            customerPhone: customer.phone,
+            customerGstNumber:
+                customer.email, // Can add GST field to customer later
+            customerBalance: customer.balance > 0
+                ? customer.balance
+                : 0, // Only positive balance can be used
+          ),
+        );
+      } else {
+        // Customer doesn't exist - create new customer
+        final now = Timestamp.now();
+        final newCustomer = CustomerModel(
+          id: '',
+          name: name.trim(),
+          phone: phone.trim(),
+          email: null,
+          address: null,
+          balance: 0,
+          totalPurchases: 0,
+          totalProfit: 0,
+          orderCount: 0,
+          createdAt: now,
+          updatedAt: now,
+        );
+
+        final customerId = await customerRepository.createCustomer(newCustomer);
+
+        // Update controllers
+        customerNameController.text = name.trim();
+        customerPhoneController.text = phone.trim();
+
+        // Update state with new customer
+        emit(
+          state.copyWith(
+            customerId: customerId,
+            customerName: name.trim(),
+            customerPhone: phone.trim(),
+            customerBalance: 0,
+          ),
+        );
+      }
+    } catch (e) {
+      // Error selecting/creating customer - silently fail
+    }
+  }
+
+  // Clear customer selection (for walk-in customers)
+  void clearCustomer() {
+    customerNameController.clear();
+    customerPhoneController.clear();
+    customerGstController.clear();
+
+    emit(
+      state.copyWith(
+        customerId: null,
+        customerName: null,
+        customerPhone: null,
+        customerGstNumber: null,
+        customerBalance: 0,
+        balanceToUse: 0,
+      ),
+    );
+  }
+
+  // Set how much customer balance to use
+  void setBalanceToUse(double amount) {
+    final maxBalance = state.customerBalance;
+    final maxNeeded = state.grandTotal;
+
+    // Can't use more than available balance or more than bill amount
+    final actualAmount = amount > maxBalance ? maxBalance : amount;
+    final finalAmount = actualAmount > maxNeeded ? maxNeeded : actualAmount;
+
+    emit(state.copyWith(balanceToUse: finalAmount));
+  }
+
   // Create bill
   Future<void> createBill() async {
     emit(state.copyWith(isLoading: true, message: null));
@@ -185,11 +287,14 @@ class CreateBillCubit extends Cubit<CreateBillState> {
     try {
       final String billNo = await generateBillNumber();
 
+      // Calculate total payment (cash + balance used)
+      final totalPaid = state.amountReceived + state.balanceToUse;
+
       // Determine bill status
       String billStatus;
-      if (state.amountReceived >= state.grandTotal) {
+      if (totalPaid >= state.grandTotal) {
         billStatus = 'Paid';
-      } else if (state.amountReceived > 0) {
+      } else if (totalPaid > 0) {
         billStatus = 'PartiallyPaid';
       } else {
         billStatus = 'Unpaid';
@@ -200,7 +305,7 @@ class CreateBillCubit extends Cubit<CreateBillState> {
       if (state.amountReceived > 0) {
         payments.add(
           PaymentModel(
-            id: const Uuid().v4(),
+            id: 'PAY-${DateTime.now().millisecondsSinceEpoch}',
             amount: state.amountReceived,
             mode: state.paymentMode,
             paidAt: Timestamp.now(),
@@ -216,8 +321,11 @@ class CreateBillCubit extends Cubit<CreateBillState> {
         id: '',
         billNo: billNo,
         items: state.cartItems,
-        customerName: customerNameController.text.trim().toLowerCase(),
-        customerPhone: customerPhoneController.text,
+        customerId: state.customerId, // Add customer ID
+        customerName:
+            state.customerName ??
+            customerNameController.text.trim().toLowerCase(),
+        customerPhone: state.customerPhone ?? customerPhoneController.text,
         customerGstNumber: state.customerGstNumber,
         totalBeforeDiscount: state.totalBeforeDiscount,
         subtotal: state.subtotal,
@@ -228,8 +336,8 @@ class CreateBillCubit extends Cubit<CreateBillState> {
         billDiscountPercent: state.billDiscountPercent,
         billDiscountAmount: state.calculatedBillDiscount,
         finalAmount: state.grandTotal,
-        amountPaid: state.amountReceived,
-        pendingAmount: state.pendingAmount,
+        amountPaid: totalPaid, // Total payment including balance used
+        pendingAmount: state.grandTotal - totalPaid,
         status: billStatus,
         payments: payments,
         createdAt: Timestamp.now(), // Actual creation timestamp
@@ -246,14 +354,54 @@ class CreateBillCubit extends Cubit<CreateBillState> {
           id: '',
           billId: billId,
           billNo: billNo,
-          customerName: customerNameController.text,
-          customerPhone: customerPhoneController.text,
+          customerId: state.customerId, // Add customer ID
+          customerName: state.customerName ?? customerNameController.text,
+          customerPhone: state.customerPhone ?? customerPhoneController.text,
           amount: state.amountReceived,
           mode: state.paymentMode,
           timestamp: Timestamp.now(),
         );
 
         await FBFireStore.transactions.add(transaction.toJson());
+      }
+
+      // Update customer balance and analytics if this is a regular customer
+      if (state.customerId != null) {
+        // Calculate balance change
+        final double balanceChange = state.balanceToUse > 0
+            ? -state
+                  .balanceToUse // Deduct balance used
+            : (state.grandTotal - totalPaid < 0
+                  ? 0.0
+                  : state.grandTotal - totalPaid); // Add unpaid amount as debt
+
+        // Update customer balance
+        if (balanceChange != 0) {
+          await customerRepository.updateBalance(
+            state.customerId!,
+            -balanceChange,
+          );
+        }
+
+        // Calculate profit (simplified - you can make this more accurate)
+        final profit = state.totalTax; // Using tax as proxy for profit
+
+        // Update customer analytics
+        await customerRepository.updateAnalytics(
+          customerId: state.customerId!,
+          purchaseAmount: state.grandTotal,
+          profit: profit,
+        );
+
+        // Update monthly analytics
+        await analyticsRepository.updateMonthlyAnalytics(
+          customerId: state.customerId!,
+          billDate: state.billDate,
+          billAmount: state.grandTotal,
+          profit: profit,
+          amountPaid: state.amountReceived,
+          balanceUsed: state.balanceToUse,
+        );
       }
 
       emit(

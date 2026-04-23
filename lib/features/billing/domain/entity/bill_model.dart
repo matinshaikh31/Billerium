@@ -7,6 +7,8 @@ class BillModel extends Equatable {
   final String id;
   final String billNo;
   final List<BillItemModel> items;
+  final String?
+  customerId; // Nullable - if null = walk-in customer, if not null = regular customer
   final String? customerName;
   final String? customerPhone;
   final String? customerGstNumber;
@@ -34,6 +36,7 @@ class BillModel extends Equatable {
     required this.id,
     required this.billNo,
     required this.items,
+    this.customerId,
     this.customerName,
     this.customerPhone,
     this.customerGstNumber,
@@ -62,6 +65,7 @@ class BillModel extends Equatable {
       items: (json['items'] as List)
           .map((item) => BillItemModel.fromJson(item))
           .toList(),
+      customerId: json['customerId'] as String?,
       customerName: json['customerName'] as String?,
       customerPhone: json['customerPhone'] as String?,
       customerGstNumber: json['customerGstNumber'] as String?,
@@ -97,6 +101,7 @@ class BillModel extends Equatable {
     return {
       'billNo': billNo,
       'items': items.map((item) => item.toJson()).toList(),
+      'customerId': customerId,
       'customerName': customerName,
       'customerPhone': customerPhone,
       'customerGstNumber': customerGstNumber,
@@ -124,6 +129,7 @@ class BillModel extends Equatable {
     String? id,
     String? billNo,
     List<BillItemModel>? items,
+    String? customerId,
     String? customerName,
     String? customerPhone,
     String? customerGstNumber,
@@ -148,6 +154,7 @@ class BillModel extends Equatable {
       id: id ?? this.id,
       billNo: billNo ?? this.billNo,
       items: items ?? this.items,
+      customerId: customerId ?? this.customerId,
       customerName: customerName ?? this.customerName,
       customerPhone: customerPhone ?? this.customerPhone,
       customerGstNumber: customerGstNumber ?? this.customerGstNumber,
@@ -178,6 +185,7 @@ class BillModel extends Equatable {
     id,
     billNo,
     items,
+    customerId,
     customerName,
     customerPhone,
     customerGstNumber,

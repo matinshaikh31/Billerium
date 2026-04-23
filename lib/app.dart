@@ -12,6 +12,8 @@ import 'package:billing_software/features/billing/presentation/cubit/edit_bill_c
 import 'package:billing_software/features/categories/data/repositories/firebase_category_repository.dart';
 import 'package:billing_software/features/categories/presentation/cubit/category_cubit.dart';
 import 'package:billing_software/features/categories/presentation/cubit/category_form_cubit.dart';
+import 'package:billing_software/features/customer/data/firebase_customer_repository.dart';
+import 'package:billing_software/features/customer/presentation/cubit/customer_cubit.dart';
 
 import 'package:billing_software/features/products/data/firebase_product_repository.dart';
 import 'package:billing_software/features/products/presentation/cubit/product_cubit.dart';
@@ -100,6 +102,11 @@ class BillingApp extends StatelessWidget {
               BlocProvider(
                 create: (context) =>
                     PurchaseCubit(purchaseRepo: FirebasePurchaseRepository()),
+              ),
+              BlocProvider(
+                create: (context) => CustomerCubit(
+                  customerRepository: FirebaseCustomerRepository(),
+                ),
               ),
               BlocProvider(
                 create: (context) {

@@ -10,6 +10,11 @@ class Routes {
   static const dashboard = "/";
   static const categories = "/categories";
   static const products = "/products";
+  static const customers = "/customers";
+  static const customerDetail = "/customers/detail";
+  static const customerTransactions = "/customers/transactions";
+  static const customerAnalytics = "/customers/analytics";
+  static const customerMigration = "/customers/migration";
   static const createBill = "/createBill";
   static const editBill = "/editBill";
   static const bills = "/bills";

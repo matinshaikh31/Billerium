@@ -7,6 +7,12 @@ import 'package:billing_software/features/billing/presentation/page/bill_page.da
 import 'package:billing_software/features/billing/presentation/page/create_bill_page.dart';
 import 'package:billing_software/features/billing/presentation/page/edit_bill_page.dart';
 import 'package:billing_software/features/categories/presentation/pages/categories_page.dart';
+import 'package:billing_software/features/customer/domain/entity/customer_model.dart';
+import 'package:billing_software/features/customer/presentation/page/customer_analytics_page.dart';
+import 'package:billing_software/features/customer/presentation/page/customer_detail_page.dart';
+import 'package:billing_software/features/customer/presentation/page/customer_migration_page.dart';
+import 'package:billing_software/features/customer/presentation/page/customer_transactions_page.dart';
+import 'package:billing_software/features/customer/presentation/page/customers_page.dart';
 import 'package:billing_software/features/dashboard/presentation/pages/dashboard.dart';
 import 'package:billing_software/features/products/presentation/page/prooduct_page.dart';
 import 'package:billing_software/features/purchase/presentation/page/create_purchase_page.dart';
@@ -65,6 +71,35 @@ final GoRouter appRoute = GoRouter(
           path: Routes.categories,
           pageBuilder: (context, state) =>
               const NoTransitionPage(child: CategoriesPage()),
+        ),
+        GoRoute(
+          path: Routes.customers,
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: CustomersPage()),
+        ),
+        GoRoute(
+          path: Routes.customerDetail,
+          pageBuilder: (context, state) {
+            final customer = state.extra as CustomerModel;
+            return NoTransitionPage(
+              child: CustomerDetailPage(customer: customer),
+            );
+          },
+        ),
+        GoRoute(
+          path: Routes.customerTransactions,
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: CustomerTransactionsPage()),
+        ),
+        GoRoute(
+          path: Routes.customerAnalytics,
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: CustomerAnalyticsPage()),
+        ),
+        GoRoute(
+          path: Routes.customerMigration,
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: CustomerMigrationPage()),
         ),
         GoRoute(
           path: Routes.createBill,

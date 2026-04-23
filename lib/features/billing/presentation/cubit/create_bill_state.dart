@@ -2,7 +2,16 @@ part of 'create_bill_cubit.dart';
 
 class CreateBillState {
   final List<BillItemModel> cartItems;
+
+  // Customer fields
+  final String?
+  customerId; // null = walk-in customer, not null = regular customer
+  final String? customerName;
+  final String? customerPhone;
   final String? customerGstNumber;
+  final double customerBalance; // Available balance that can be used
+  final double balanceToUse; // Amount to use from customer balance
+
   final double amountReceived;
   final String paymentMode;
   final bool isLoading;
@@ -21,7 +30,12 @@ class CreateBillState {
 
   CreateBillState({
     required this.cartItems,
+    this.customerId,
+    this.customerName,
+    this.customerPhone,
     this.customerGstNumber,
+    this.customerBalance = 0,
+    this.balanceToUse = 0,
     required this.amountReceived,
     required this.paymentMode,
     required this.isLoading,
@@ -36,6 +50,12 @@ class CreateBillState {
   factory CreateBillState.initial() {
     return CreateBillState(
       cartItems: [],
+      customerId: null,
+      customerName: null,
+      customerPhone: null,
+      customerGstNumber: null,
+      customerBalance: 0,
+      balanceToUse: 0,
       amountReceived: 0,
       paymentMode: 'Cash',
       isLoading: false,
@@ -101,15 +121,26 @@ class CreateBillState {
     return total < 0 ? 0 : total;
   }
 
-  // Calculate pending amount
+  // Calculate pending amount (after using balance)
   double get pendingAmount {
-    final pending = grandTotal - amountReceived;
+    final pending = grandTotal - amountReceived - balanceToUse;
     return pending < 0 ? 0 : pending;
+  }
+
+  // Calculate actual cash/payment needed (grand total - balance used)
+  double get actualPaymentNeeded {
+    final needed = grandTotal - balanceToUse;
+    return needed < 0 ? 0 : needed;
   }
 
   CreateBillState copyWith({
     List<BillItemModel>? cartItems,
+    String? customerId,
+    String? customerName,
+    String? customerPhone,
     String? customerGstNumber,
+    double? customerBalance,
+    double? balanceToUse,
     double? amountReceived,
     String? paymentMode,
     bool? isLoading,
@@ -122,7 +153,12 @@ class CreateBillState {
   }) {
     return CreateBillState(
       cartItems: cartItems ?? this.cartItems,
+      customerId: customerId ?? this.customerId,
+      customerName: customerName ?? this.customerName,
+      customerPhone: customerPhone ?? this.customerPhone,
       customerGstNumber: customerGstNumber ?? this.customerGstNumber,
+      customerBalance: customerBalance ?? this.customerBalance,
+      balanceToUse: balanceToUse ?? this.balanceToUse,
       amountReceived: amountReceived ?? this.amountReceived,
       paymentMode: paymentMode ?? this.paymentMode,
       isLoading: isLoading ?? this.isLoading,

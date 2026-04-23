@@ -115,65 +115,65 @@ class CategoryCard extends StatelessWidget {
             ],
           ),
 
-          const Spacer(),
+          // const Spacer(),
 
-          // ---------------- FOOTER (CATEGORY ID) ----------------
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 12 : 16,
-              vertical: isMobile ? 10 : 12,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.secondary,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Category ID',
-                        style: AppTextStyles.tableRowSecondary.copyWith(
-                          fontSize: isMobile ? 11 : 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        category.id,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.tableRowPrimary.copyWith(
-                          fontSize: isMobile ? 12 : 13,
-                          color: AppColors.categoryAccent,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // COPY BUTTON
-                IconButton(
-                  icon: const Icon(Icons.copy, size: 18),
-                  color: AppColors.primary,
-                  padding: const EdgeInsets.all(8),
-                  constraints: const BoxConstraints(),
-                  tooltip: 'Copy Category ID',
-                  style: IconButton.styleFrom(
-                    backgroundColor: AppColors.primary.withOpacity(0.1),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                  onPressed: () => _copyToClipboard(context, category.id),
-                ),
-              ],
-            ),
-          ),
+          // // ---------------- FOOTER (CATEGORY ID) ----------------
+          // Container(
+          //   padding: EdgeInsets.symmetric(
+          //     horizontal: isMobile ? 12 : 16,
+          //     vertical: isMobile ? 10 : 12,
+          //   ),
+          //   decoration: BoxDecoration(
+          //     color: AppColors.secondary,
+          //     borderRadius: BorderRadius.circular(8),
+          //   ),
+          //   child: Row(
+          //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          //     children: [
+          //       Expanded(
+          //         child: Column(
+          //           crossAxisAlignment: CrossAxisAlignment.start,
+          //           children: [
+          //             Text(
+          //               'Category ID',
+          //               style: AppTextStyles.tableRowSecondary.copyWith(
+          //                 fontSize: isMobile ? 11 : 12,
+          //                 fontWeight: FontWeight.w500,
+          //               ),
+          //             ),
+          //             const SizedBox(height: 4),
+          //             Text(
+          //               category.id,
+          //               maxLines: 1,
+          //               overflow: TextOverflow.ellipsis,
+          //               style: AppTextStyles.tableRowPrimary.copyWith(
+          //                 fontSize: isMobile ? 12 : 13,
+          //                 color: AppColors.categoryAccent,
+          //                 fontWeight: FontWeight.w500,
+          //               ),
+          //             ),
+          //           ],
+          //         ),
+          //       ),
+          //       const SizedBox(width: 8),
+          //       // COPY BUTTON
+          //       IconButton(
+          //         icon: const Icon(Icons.copy, size: 18),
+          //         color: AppColors.primary,
+          //         padding: const EdgeInsets.all(8),
+          //         constraints: const BoxConstraints(),
+          //         tooltip: 'Copy Category ID',
+          //         style: IconButton.styleFrom(
+          //           backgroundColor: AppColors.primary.withOpacity(0.1),
+          //           shape: RoundedRectangleBorder(
+          //             borderRadius: BorderRadius.circular(6),
+          //           ),
+          //         ),
+          //         onPressed: () => _copyToClipboard(context, category.id),
+          //       ),
+          //     ],
+          //   ),
+          // ),
         ],
       ),
     );

@@ -16,6 +16,7 @@ class DesktopSidebar extends StatelessWidget {
     SidebarItem("Dashboard", Routes.dashboard, Icons.dashboard_outlined),
     SidebarItem("Categories", Routes.categories, Icons.category_outlined),
     SidebarItem("Products", Routes.products, Icons.inventory_2_outlined),
+    SidebarItem("Customers", Routes.customers, Icons.people_outline),
     SidebarItem("Purchases", Routes.purchases, Icons.shopping_bag_outlined),
     SidebarItem("Create Bill", Routes.createBill, Icons.receipt_long_outlined),
     SidebarItem("Bills", Routes.bills, Icons.description_outlined),
@@ -118,6 +119,163 @@ class _SidebarItemWidget extends StatefulWidget {
 
 class _SidebarItemWidgetState extends State<_SidebarItemWidget> {
   bool isHovered = false;
+  bool isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final currentRoute = GoRouterState.of(context).uri.toString();
+    final isActive =
+        currentRoute == widget.item.route ||
+        currentRoute.startsWith("${widget.item.route}/");
+
+    // Check if any sub-item is active
+    final hasActiveSubItem =
+        widget.item.hasSubItems &&
+        widget.item.subItems!.any(
+          (subItem) =>
+              currentRoute == subItem.route ||
+              currentRoute.startsWith("${subItem.route}/"),
+        );
+
+    if (widget.item.hasSubItems) {
+      // Expandable item with sub-items
+      return Column(
+        children: [
+          MouseRegion(
+            onEnter: (_) => setState(() => isHovered = true),
+            onExit: (_) => setState(() => isHovered = false),
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: () {
+                setState(() => isExpanded = !isExpanded);
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: hasActiveSubItem
+                      ? AppColors.primary.withValues(alpha: 0.1)
+                      : (isHovered
+                            ? AppColors.primary.withValues(alpha: 0.05)
+                            : Colors.transparent),
+                  borderRadius: BorderRadius.circular(8),
+                  border: hasActiveSubItem
+                      ? Border(
+                          left: BorderSide(color: AppColors.primary, width: 3),
+                        )
+                      : null,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      widget.item.icon,
+                      color: hasActiveSubItem
+                          ? AppColors.primary
+                          : AppColors.textSecondary.withValues(alpha: 0.8),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        widget.item.label,
+                        style: GoogleFonts.inter(
+                          color: hasActiveSubItem
+                              ? AppColors.primary
+                              : AppColors.textSecondary.withValues(alpha: 0.9),
+                          fontWeight: hasActiveSubItem
+                              ? FontWeight.w600
+                              : FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      isExpanded ? Icons.expand_less : Icons.expand_more,
+                      color: AppColors.textSecondary.withValues(alpha: 0.6),
+                      size: 18,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (isExpanded)
+            ...widget.item.subItems!.map(
+              (subItem) => _SubItemWidget(item: subItem),
+            ),
+        ],
+      );
+    }
+
+    // Regular item without sub-items
+    return MouseRegion(
+      onEnter: (_) => setState(() => isHovered = true),
+      onExit: (_) => setState(() => isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () {
+          if (!isActive) context.go(widget.item.route);
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: isActive
+                ? AppColors.primary.withValues(alpha: 0.1)
+                : (isHovered
+                      ? AppColors.primary.withValues(alpha: 0.05)
+                      : Colors.transparent),
+            borderRadius: BorderRadius.circular(8),
+            border: isActive
+                ? Border(left: BorderSide(color: AppColors.primary, width: 3))
+                : null,
+          ),
+          child: Row(
+            children: [
+              Icon(
+                widget.item.icon,
+                color: isActive
+                    ? AppColors.primary
+                    : AppColors.textSecondary.withValues(alpha: 0.8),
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                widget.item.label,
+                style: GoogleFonts.inter(
+                  color: isActive
+                      ? AppColors.primary
+                      : AppColors.textSecondary.withValues(alpha: 0.9),
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------
+// Sub-Item Widget (indented)
+// ---------------------------
+class _SubItemWidget extends StatefulWidget {
+  final SidebarItem item;
+  const _SubItemWidget({required this.item});
+
+  @override
+  State<_SubItemWidget> createState() => _SubItemWidgetState();
+}
+
+class _SubItemWidgetState extends State<_SubItemWidget> {
+  bool isHovered = false;
 
   @override
   Widget build(BuildContext context) {
@@ -136,18 +294,15 @@ class _SidebarItemWidgetState extends State<_SidebarItemWidget> {
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          margin: const EdgeInsets.only(left: 24, right: 4, top: 2, bottom: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
             color: isActive
-                ? AppColors.primary.withOpacity(0.1)
+                ? AppColors.primary.withValues(alpha: 0.08)
                 : (isHovered
-                      ? AppColors.primary.withOpacity(0.05)
+                      ? AppColors.primary.withValues(alpha: 0.04)
                       : Colors.transparent),
-            borderRadius: BorderRadius.circular(8),
-            border: isActive
-                ? Border(left: BorderSide(color: AppColors.primary, width: 3))
-                : null,
+            borderRadius: BorderRadius.circular(6),
           ),
           child: Row(
             children: [
@@ -155,8 +310,8 @@ class _SidebarItemWidgetState extends State<_SidebarItemWidget> {
                 widget.item.icon,
                 color: isActive
                     ? AppColors.primary
-                    : AppColors.textSecondary.withOpacity(0.8),
-                size: 20,
+                    : AppColors.textSecondary.withValues(alpha: 0.7),
+                size: 18,
               ),
               const SizedBox(width: 12),
               Text(
@@ -164,9 +319,9 @@ class _SidebarItemWidgetState extends State<_SidebarItemWidget> {
                 style: GoogleFonts.inter(
                   color: isActive
                       ? AppColors.primary
-                      : AppColors.textSecondary.withOpacity(0.9),
+                      : AppColors.textSecondary.withValues(alpha: 0.85),
                   fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-                  fontSize: 14,
+                  fontSize: 13,
                 ),
               ),
             ],
@@ -409,5 +564,9 @@ class SidebarItem {
   final String label;
   final String route;
   final IconData icon;
-  const SidebarItem(this.label, this.route, this.icon);
+  final List<SidebarItem>? subItems;
+
+  const SidebarItem(this.label, this.route, this.icon, {this.subItems});
+
+  bool get hasSubItems => subItems != null && subItems!.isNotEmpty;
 }

@@ -5,6 +5,8 @@ class TransactionModel {
   final String id;
   final String billId;
   final String billNo; // ✅ ADDED
+  final String?
+  customerId; // Nullable - if null = walk-in customer, if not null = regular customer
   final String customerName;
   final String? customerPhone;
   final double amount;
@@ -15,6 +17,7 @@ class TransactionModel {
     required this.id,
     required this.billId,
     required this.billNo, // ✅ ADDED
+    this.customerId,
     required this.customerName,
     this.customerPhone,
     required this.amount,
@@ -27,6 +30,7 @@ class TransactionModel {
       id: id,
       billId: json['billId'] as String,
       billNo: json['billNo'] as String, // ✅ ADDED
+      customerId: json['customerId'] as String?,
       customerName: json['customerName'] as String,
       customerPhone: json['customerPhone'] as String?,
       amount: (json['amount'] as num).toDouble(),
@@ -45,6 +49,7 @@ class TransactionModel {
     return {
       'billId': billId,
       'billNo': billNo, // ✅ ADDED
+      'customerId': customerId,
       'customerName': customerName,
       'customerPhone': customerPhone,
       'amount': amount,
@@ -58,6 +63,7 @@ class TransactionModel {
     id,
     billId,
     billNo, // ✅ ADDED
+    customerId,
     customerName,
     customerPhone,
     amount,
